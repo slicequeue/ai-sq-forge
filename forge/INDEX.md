@@ -15,7 +15,7 @@
 | 프로토콜 | 용도 | 경로 |
 |---------|------|------|
 | [Design](protocols/design.md) | Q&A 기반 컴포넌트 설계 | `protocols/design.md` |
-| [Testing](protocols/testing.md) | 기본 테스트 + baseline 비교 | `protocols/testing.md` |
+| [Testing](protocols/testing.md) | 기본 테스트 + baseline 비교 + 자동 하네스 | `protocols/testing.md` |
 | [Maintenance](protocols/maintenance.md) | 실전 피드백 기반 A/S | `protocols/maintenance.md` |
 
 ## Common (공통 자원)

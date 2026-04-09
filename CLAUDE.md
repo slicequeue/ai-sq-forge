@@ -15,7 +15,7 @@
 forge/           → 메타 시스템 (블루프린트, 프로토콜, 공통 자원)
   forge/common/  → 프로젝트 공통 규칙/자원 (여러 스킬이 참조하는 원본)
 anvil/           → 컴포넌트 저장소 (skills, agents, commands, skill-chains, dispatchers)
-proving-grounds/ → 테스트 영역 (evals, 결과 비교)
+proving-grounds/ → 테스트 영역 (harnesses, evals, 결과 비교)
 maintenance/     → A/S 영역 (실전 피드백, 개선 로그)
 ```
 
@@ -33,13 +33,13 @@ maintenance/     → A/S 영역 (실전 피드백, 개선 로그)
 1. `forge/protocols/design.md` → Q&A로 요구사항 확정
 2. `forge/blueprints/{type}.blueprint.md` → 템플릿 기반 초안 작성
 3. `anvil/{type}/{name}/` → 컴포넌트 생성
-4. `forge/protocols/testing.md` → 기본 테스트 실행
-5. 테스트 통과 → 실전 배치 가능 상태
+4. `forge/protocols/testing.md` → 수동 테스트 또는 `/eval-harness` 자동 테스트
+5. 테스트 통과 → 하네스 정의 작성 (`proving-grounds/harnesses/`) → 실전 배치 가능 상태
 
 ### 2. 실전 배치 후 개선 (A/S)
 1. 실전 사용 대화 로그를 `maintenance/feedback/{component-name}/` 에 저장
 2. `forge/protocols/maintenance.md` 프로토콜로 분석 & 개선
-3. 개선 후 재테스트
+3. 개선 후 재테스트 (`/eval-harness {name} --skip-baseline`로 빠른 재검증)
 
 ## 컴포넌트 유형
 

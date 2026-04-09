@@ -19,6 +19,7 @@
 | [git-branch](commands/git-branch.md) | `/git-branch` | 프로젝트 브랜치 전략에 따라 작업 브랜치 생성 | `commands/git-branch.md` |
 | [git-commit](commands/git-commit.md) | `/git-commit` | 한국어 Conventional Commits 커밋 생성 | `commands/git-commit.md` |
 | [git-pr](commands/git-pr.md) | `/git-pr` | dev 대상 PR 생성/업데이트 | `commands/git-pr.md` |
+| [eval-harness](commands/eval-harness.md) | `/eval-harness` | 컴포넌트 자동 평가 하네스 실행 (6축 채점) | `commands/eval-harness.md` |
 
 ## Skill Chains
 
