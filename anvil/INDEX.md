@@ -24,6 +24,7 @@
 | [eval-harness](commands/eval-harness.md) | `/eval-harness` | 컴포넌트 자동 평가 하네스 실행 (6축 채점) | `commands/eval-harness.md` |
 | [git-worktree-add](commands/git-worktree-add.md) | `/git-worktree-add` | 병렬 작업용 git worktree 생성 | `commands/git-worktree-add.md` |
 | [git-worktree-remove](commands/git-worktree-remove.md) | `/git-worktree-remove` | git worktree 안전 제거 및 정리 | `commands/git-worktree-remove.md` |
+| [forge-deploy](commands/forge-deploy.md) | `/forge-deploy` | Forge 컴포넌트를 실전 프로젝트에 이식 (경로 리매핑·백업·배치 검증) | `commands/forge-deploy.md` |
 
 ## Skill Chains
 
