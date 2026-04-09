@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands/branch.md /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands/commit.md /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands/pr.md)",
+      "Bash(rmdir /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands)",
+      "Bash(ln -s ../../anvil/commands /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands)",
+      "Bash(rm /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands)",
+      "Bash(ln -s ../anvil/commands /Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/commands)",
+      "Read(//Users/kakao/workplace-slicequeue/ai/ai-sq-forge/.claude/**)"
+    ]
+  }
+}
