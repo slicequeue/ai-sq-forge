@@ -40,6 +40,8 @@ Commands는 `.claude/commands/` 디렉토리 심볼릭 링크로 통째 연결�
 - **본문 400줄 이내** 유지. 초과 시 `references/`로 분리한다.
 - **하드 가드레일은 본문에 직접 기술** — references로 분리하지 않는다.
 - **자기 검증 체크리스트 필수** — 스킬이 스스로 품질을 검증하는 장치.
+- **`references/evaluation-rubric.md` 필수** — 100점 만점 채점 기준 + AUTO FAIL 조건.
+- **하네스 없이 실전 배치 불가** — 하네스 정의 + 테스트 케이스 + 루브릭이 모두 있어야 배치 가능.
 - 블루프린트 참조: `forge/blueprints/{type}.blueprint.md`
 
 ## 컴포넌트 개발 워크플로
@@ -48,20 +50,43 @@ Commands는 `.claude/commands/` 디렉토리 심볼릭 링크로 통째 연결�
 
 1. **설계**: `forge/protocols/design.md` — Q&A로 요구사항 확정 (즉시 구현 금지)
 2. **초안**: `forge/blueprints/{type}.blueprint.md` 템플릿 기반 작성
-3. **생성**: `anvil/{type}/{name}/`에 컴포넌트 배치
-4. **등록**: `anvil/INDEX.md`에 추가
-5. **테스트**: `forge/protocols/testing.md` — baseline vs with-skill 비교 테스트
-6. **배치 판정**: Happy Path 100% PASS + Edge Case 70% 이상 → 실전 배치 가능
+3. **생성**: `anvil/{type}/{name}/`에 컴포넌트 배치 (**`references/evaluation-rubric.md` 필수**)
+4. **등록**: `anvil/INDEX.md`에 추가 (상태: "테스트 대기")
+5. **하네스 작성**: `proving-grounds/harnesses/{name}.harness.md` + `evals/{name}/test-cases.md` 작성 (필수)
+6. **테스트**: `/eval-harness {name}` — 6축 자동 채점 (가드레일, 정확도, 행동패턴, 비교, 일관성, 효율)
+7. **배치 판정**: 6축 Quality Gate 통과 → INDEX.md 상태를 "실전 배치 가능"으로 업데이트
 
-## 테스트
+## 테스트 (하네스 필수)
 
-테스트 결과는 `proving-grounds/evals/{component-name}/`에 저장된다. 테스트 프로토콜은 `forge/protocols/testing.md` 참조.
+모든 스킬/에이전트는 **하네스 정의 + 테스트 케이스 + 평가 루브릭**이 반드시 있어야 한다.
 
-테스트 통과 기준 (Quality Gate):
-- Happy Path 100% PASS
-- Edge Case 70% 이상 PASS
-- 하드 가드레일 위반 0건
-- Baseline 대비 정확도 또는 완성도 개선
+### 필수 산출물
+
+| 산출물 | 위치 | 설명 |
+|--------|------|------|
+| 평가 루브릭 | `anvil/{type}/{name}/references/evaluation-rubric.md` | 100점 만점 채점 기준 + AUTO FAIL 조건 |
+| 하네스 정의 | `proving-grounds/harnesses/{name}.harness.md` | 6축 평가 기준, AUTO FAIL 규칙, 실행 설정 |
+| 테스트 케이스 | `proving-grounds/evals/{name}/test-cases.md` | 최소 3개 (happy-path 50%, edge-case 30%, negative 20%) |
+| 리포트 | `proving-grounds/evals/{name}/report.md` | 6축 채점 결과 (자동 생성) |
+
+### 6축 Quality Gate
+
+| 축 | 통과 조건 |
+|----|-----------|
+| 1. 가드레일 준수 | 하드 가드레일 위반 0건 (AUTO FAIL) |
+| 2. 기능 정확도 | Happy Path 100% PASS (75점+), Edge Case 70%+ PASS |
+| 3. 행동 패턴 | 체크리스트 항목 80%+ 충족 |
+| 4. Baseline 비교 | With-Skill > Baseline |
+| 5. 일관성 | 편차 ≤ 15점 (--repeat 3 시) |
+| 6. 효율성 | 기록용 (합격 조건 아님) |
+
+### 테스트 실행
+
+```bash
+/eval-harness {name}                  # 전체 테스트
+/eval-harness {name} --skip-baseline  # 스킬 개선 후 빠른 재검증
+/eval-harness {name} --repeat 3       # 일관성 테스트
+```
 
 ## Git 컨벤션
 
