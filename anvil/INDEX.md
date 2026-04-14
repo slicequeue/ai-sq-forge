@@ -9,10 +9,10 @@
 | [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.2 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** | 100/100 (TC-1) | `skills/java-spring-coder/` |
 | [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.2 | dev 기준 변경 코드 자체 리뷰 (읽기 전용) | **실전 배치 가능** | 95/100 (TC-1) | `skills/self-code-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.1 | PR 피드백 수집·수정·push·답글 | **실전 배치 가능** | 95/100 (TC-1) | `skills/pr-feedback-resolver/` |
-| [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.0 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (멀티턴 합의) | **테스트 대기** | - | `skills/admin-prd-plan-designer/` |
-| [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.0 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE) | **테스트 대기** | - | `skills/admin-thymeleaf-ui/` |
-| [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **테스트 대기** | - | `skills/api-inventory-generator/` |
-| [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **테스트 대기** | - | `skills/java-layered-unit-testing/` |
+| [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.0 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (멀티턴 합의) | **실전 배치 가능** | 88/100 (TC-1) | `skills/admin-prd-plan-designer/` |
+| [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.0 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE) | **실전 배치 가능** | 95/100 (TC-1) | `skills/admin-thymeleaf-ui/` |
+| [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **실전 배치 가능** | 89/100 (TC-1) | `skills/api-inventory-generator/` |
+| [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **실전 배치 가능** | 91/100 (TC-1) | `skills/java-layered-unit-testing/` |
 
 ## Agents
 
