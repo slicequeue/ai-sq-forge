@@ -13,6 +13,7 @@
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.0 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE) | **실전 배치 가능** | 95/100 (TC-1) | `skills/admin-thymeleaf-ui/` |
 | [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **실전 배치 가능** | 89/100 (TC-1) | `skills/api-inventory-generator/` |
 | [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **실전 배치 가능** | 91/100 (TC-1) | `skills/java-layered-unit-testing/` |
+| [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.0 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 | **실전 배치 가능** | 93/100 (TC-1) | `skills/chaos-test-planner/` |
 
 ## Agents
 
@@ -74,3 +75,4 @@
 | java-layered-unit-testing | skill | 1.0 | 1.0 | 동기화 |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
+| chaos-test-planner | skill | 1.0 | 1.0 | [동기화: 2026-04-16] 역수입 |
