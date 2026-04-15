@@ -35,7 +35,9 @@
 
 ## Skill Chains
 
-(아직 없음)
+| 이름 | 버전 | 설명 | 상태 | 테스트 점수 | 경로 |
+|------|------|------|------|------------|------|
+| [git-workflow-bcp](skill-chains/git-workflow-bcp/CHAIN.md) | 1.0 | Branch → Commit(논리 분할) → PR 일괄 실행 | **실전 배치 가능** | 93/100 (TC-1) | `skill-chains/git-workflow-bcp/` |
 
 ## Dispatchers
 
@@ -49,7 +51,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-11 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-14 |
 
 ### pasta-japan-server 배포 현황
 
@@ -66,9 +68,9 @@
 | git-worktree-add | command | 1.0 | 1.0 | 동기화 |
 | git-worktree-remove | command | 1.0 | 1.0 | 동기화 |
 | forge-upstream | command | 1.0 | 1.0 | 동기화 |
-| admin-prd-plan-designer | skill | 1.0 | 1.0 | [동기화: 2026-04-14] 역수입 |
-| admin-thymeleaf-ui | skill | 1.0 | 1.0 | [동기화: 2026-04-14] 역수입 |
-| api-inventory-generator | skill | 1.0 | 1.0 | [동기화: 2026-04-14] 역수입 |
-| java-layered-unit-testing | skill | 1.0 | 1.0 | [동기화: 2026-04-14] 역수입 |
-| flyway | command | 1.0 | 1.0 | [동기화: 2026-04-14] 역수입 |
-| db-migration | command | 1.0 | 1.0 | [동기화: 2026-04-14] 역수입 |
+| admin-prd-plan-designer | skill | 1.0 | 1.0 | 동기화 |
+| admin-thymeleaf-ui | skill | 1.0 | 1.0 | 동기화 |
+| api-inventory-generator | skill | 1.0 | 1.0 | 동기화 |
+| java-layered-unit-testing | skill | 1.0 | 1.0 | 동기화 |
+| flyway | command | 1.0 | 1.0 | 동기화 |
+| db-migration | command | 1.0 | 1.0 | 동기화 |
