@@ -52,7 +52,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-14 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-16 |
 
 ### pasta-japan-server 배포 현황
 
@@ -61,7 +61,7 @@
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.2 | 1.2 | 동기화 |
 | java-spring-coder | skill | 1.2 | 1.2 | 동기화 |
-| self-code-reviewer | skill | 1.2 | 1.2 | 동기화 |
+| self-code-reviewer | skill | 1.3 | 1.3 | 동기화 |
 | pr-feedback-resolver | skill | 1.1 | 1.1 | 동기화 |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -75,4 +75,4 @@
 | java-layered-unit-testing | skill | 1.0 | 1.0 | 동기화 |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
-| chaos-test-planner | skill | 1.0 | 1.0 | [동기화: 2026-04-16] 역수입 |
+| chaos-test-planner | skill | 1.0 | 1.0 | 동기화 |
