@@ -18,7 +18,7 @@
 
 - [ ] Domain Entity가 `class`인가? (record 금지)
 - [ ] `@Getter`, `@ToString`, `@EqualsAndHashCode`만 사용했는가? (`@Setter`, `@Data` 금지)
-- [ ] JPA 어노테이션(`@Entity`, `@Table` 등)이 없는가?
+- [ ] **[가드레일급]** JPA 어노테이션(`@Entity`, `@Table`, `@Column` 등)이 없는가? → 위반 시 우선순위 1(가드레일)로 보고
 - [ ] not-null 필드는 primitive, nullable 필드는 Wrapper인가?
 - [ ] `@Builder`는 필드 10개 이상일 때만 사용했는가?
 - [ ] 비즈니스 로직이 Entity에 있는가? (Rich Domain)

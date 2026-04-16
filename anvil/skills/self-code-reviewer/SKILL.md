@@ -1,6 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
+version: "1.3"
+last-modified: "2026-04-16"
+changelog: "eval 피드백 반영: Domain JPA 위반을 가드레일급(우선순위 1)으로 격상, Service JPA 노출 검사 강화"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -15,6 +18,9 @@ description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.c
 2. **비교 기준 확인**: 기본 `dev`. 사용자가 다른 브랜치를 지정하면 해당 브랜치 사용
 3. **변경 범위 파악**: `git log dev..HEAD --oneline` + `git diff dev...HEAD --stat`
 4. **변경 파일 없으면**: 리뷰 대상 없음 안내
+5. **admin 모듈 포함 여부**: 변경 파일에 `admin/` 경로가 있는가?
+   - **YES** → 13~16 규칙 추가 로드. 01-architecture의 4-Tier를 admin에 적용하여 위반으로 오판하지 않도록 주의
+   - **NO** → 기존 01~12 규칙 적용
 
 ---
 
@@ -30,8 +36,8 @@ description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.c
 
 | 우선순위 | 관점 | 설명 |
 |---------|------|------|
-| 1 | **가드레일 위반** | 하드 가드레일 위반 여부 (즉시 수정 필요) |
-| 2 | **아키텍처 위반** | 의존성 방향, Domain 순수성, Repository 패턴 |
+| 1 | **가드레일 위반** | 하드 가드레일 위반 여부 (즉시 수정 필요). **Domain에 JPA 어노테이션(@Entity, @Table 등) 존재도 이 등급** |
+| 2 | **아키텍처 위반** | 의존성 방향, Repository 패턴, Service 계층의 JPA Entity 직접 노출 |
 | 3 | **컨벤션 위반** | 네이밍, Lombok, record/class, import 규칙 |
 | 4 | **설정 누락** | SecurityConstants, 환경변수 4곳, 마이그레이션 |
 | 5 | **테스트 품질** | 계층별 테스트, Fake/Spy, Testcontainers |
@@ -70,6 +76,10 @@ git diff dev...HEAD -- {path}
 | `08-test-code-convention.md` | TDD, Fake/Spy, 계층별 테스트 |
 | `09-guardrails.md` | Testcontainers, 커밋 보호, 마이그레이션 보호 |
 | `12-multipart-image-validation.md` | 이미지 업로드 검증 |
+| `13-admin-module-overview.md` | admin 모듈 구조, 4-Tier 예외 (admin/** 변경 시) |
+| `14-admin-thymeleaf-layout-convention.md` | Thymeleaf 레이아웃, URL-View-File 정합 (admin/** 변경 시) |
+| `15-admin-security-history-convention.md` | @PreAuthorize, AdminHistory 감사 로그 (admin/** 변경 시) |
+| `16-admin-static-assets-convention.md` | 페이지별 JS, sidebar, static 자산 (admin/** 변경 시) |
 
 ### Step 3. 항목별 검사
 
@@ -80,6 +90,26 @@ git diff dev...HEAD -- {path}
 - **환경변수 검사**: `application.yml`에 `${env.KEY}` 추가 시 → `application-jp-dev/stg/prd.yml`에 `${KEY}` 존재 확인
 - **시큐리티 경로 검사**: 새 API 엔드포인트 추가 시 → `SecurityConstants.airArray` 등록 확인
 - **마이그레이션 검사**: `obesity/` 하위 기존 파일 수정/삭제 여부 확인
+- **도메인 엔티티 NOT NULL 검증**: 생성자에서 NOT NULL 필드에 `Objects.requireNonNull` 검증 여부
+- **도메인 엔티티 Lombok**: `@Getter` + `@EqualsAndHashCode` 필수 적용 여부
+- **로깅 형식 검사**: `[ClassName.methodName]` 접두사 사용 여부, PII 금지, 민감정보 마스킹 여부
+- **Service 반환 타입 검사**: JPA 엔티티를 Service 밖으로 직접 노출하는지 여부
+- **재시도 로직 검증**: 재시도 로직이 있으면 실제 catch/retry가 동작하는지 로직 흐름 검증
+- **JPQL 페이지네이션 검사**: `JOIN FETCH` + `Page` 사용 시 `countQuery` 분리 여부
+- **페이지네이션 필터 파라미터 검사**: 페이지네이션 링크에 현재 필터 파라미터가 모두 포함되었는지
+- **민감정보 로깅 검사**: 쿠폰 코드 등 민감 정보가 INFO 로그에 평문으로 노출되는지
+
+#### admin 모듈 검사 (admin/** 변경 시에만)
+
+변경 파일이 admin 모듈이면 01~09 규칙 대신 13~16 규칙을 우선 적용:
+
+- **아키텍처**: 레이어 혼합형 구조가 정상 (4-Tier 위반으로 잘못 판단하지 않을 것)
+- **컨트롤러**: `@Controller` + Thymeleaf 뷰 반환 (NOT `@RestController`)
+- **템플릿**: `layout:decorate` 사용, URL-View-File 정합 (14 규칙)
+- **보안**: `@PreAuthorize` 어노테이션, `AdminHistoryService` 감사 로그 호출 (15 규칙)
+- **정적 자산**: 페이지별 JS 파일, sidebar 메뉴 정합 (16 규칙)
+- **sidebar 링크 정합**: 컨트롤러 `@GetMapping`과 sidebar 링크가 1:1 대응하는지 대조
+- **권한 마이그레이션**: `@PreAuthorize` 추가 시 SUPER_ADMIN permission 마이그레이션 존재 여부 검사
 
 ### Step 4. 리뷰 결과 보고
 
@@ -138,6 +168,7 @@ git diff dev...HEAD -- {path}
 5. [ ] **필수/권장 분리**: 위반(필수)과 개선(권장)을 올바르게 분류했는가?
 6. [ ] **코드 미변경**: 리뷰만 하고 코드를 수정하지 않았는가?
 7. [ ] **구체적 위치**: 위반 항목에 파일명:라인 번호를 포함했는가?
+8. [ ] **admin 모듈**: admin 변경이 있으면 13~16 규칙을 Read하고 대조했는가? 4-Tier 위반으로 오판하지 않았는가?
 
 ---
 
