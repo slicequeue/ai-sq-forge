@@ -1,6 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
+version: "1.2"
+last-modified: "2026-04-11"
+changelog: "실전 피드백 반영: 도메인 엔티티 검증, 로깅 규칙, TDD 비판적 검증, admin 마이그레이션, JPQL 페이지네이션"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -18,6 +21,9 @@ description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java
 3. **프로젝트 규칙 로드**: `.claude/rules/` 하위 규칙 파일을 Read 도구로 참조
 4. **기존 코드 패턴 파악**: 같은 도메인의 기존 Entity/Service/Controller 구조 확인
 5. **JDK 21 확인**: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`
+6. **admin 모듈 여부 확인**: 작업 대상이 `admin/` 패키지인가?
+   - **YES** → 13~16 규칙 추가 로드. 4-Tier 대신 레이어 혼합형, `@Controller`(NOT `@RestController`) 적용
+   - **NO** → 기존 01~12 규칙 적용
 
 ---
 
@@ -45,6 +51,20 @@ pghd/{domain}/web/             ← Controller, Request, Response
 ```
 
 **금지**: `domain/coupon/entity/`, `domain/coupon/repository/` 같은 기능 기반 하위 패키지 분리
+
+### admin 모듈 예외 (Phase 0에서 admin 확인 시에만 적용)
+
+admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**를 따른다.
+
+- `@Controller` 사용 (NOT `@RestController`), Thymeleaf 뷰 반환
+- 패키지: `controllers`, `service`, `repository` 등 직접 배치 (4-Tier X)
+- `AdminHistoryService` 주입·호출로 감사 로그 기록 (15 규칙)
+- Thymeleaf 레이아웃: `layout:decorate`, URL-View-File 정합 (14 규칙)
+- 페이지별 JS 파일 생성 (16 규칙)
+- 새 `@PreAuthorize` authority 추가 시 → SUPER_ADMIN permission에 해당 authority를 포함하는 마이그레이션 자동 포함
+- Bootstrap 버전 확인 필수 — **BS5이면 `data-bs-*` 문법, `bootstrap.Modal` API 사용. BS4(`data-toggle` 등) 문법 절대 금지**
+- 마이그레이션 SQL에서 스키마 접두사(`pasta.`) 절대 금지, JSON 컬럼 수정은 `JSON_ARRAY_APPEND` 패턴 사용
+- 상세: `.claude/rules/13-admin-module-overview.md` ~ `16-admin-static-assets-convention.md` 참조
 
 ### 의존성 규칙
 
@@ -157,7 +177,7 @@ pghd/{domain}/web/             ← Controller, Request, Response
 
 | 계층 | 허용 | 금지 |
 |------|------|------|
-| Domain Entity | `@Getter`, `@ToString`, `@EqualsAndHashCode` | `@Setter`, `@Data`, `@Builder`(10필드 미만) |
+| Domain Entity | `@Getter`, `@ToString`, `@EqualsAndHashCode` (**둘 다 필수**) | `@Setter`, `@Data`, `@Builder`(10필드 미만) |
 | JPA Entity | `@Getter`, `@NoArgsConstructor(PROTECTED)`, `@Builder`(생성자 레벨) | `@Setter`, `@Data` |
 | Service | `@RequiredArgsConstructor`, `@Log4j2`/`@Slf4j` | `@Data` |
 | Controller | `@RequiredArgsConstructor` | `@Data` |
@@ -176,10 +196,22 @@ pghd/{domain}/web/             ← Controller, Request, Response
 | 메서드 | 용도 | 위치 |
 |--------|------|------|
 | `of(필드들)` | 새 인스턴스 생성 | Domain Entity, VO |
+
+> **도메인 엔티티 생성자/팩토리 검증 규칙**
+> - 생성자에서 NOT NULL 필수 필드는 `Objects.requireNonNull(field, "field must not be null")`로 검증 필수
+> - `of()` 팩토리 메서드에서도 동일하게 입력 검증 필수 — null이 들어오면 즉시 실패해야 한다
+
 | `from(source)` | 다른 객체 → 이 객체 변환 | DTO, JpaEntity |
 | `toEntity()` | JpaEntity → Domain Entity | JpaEntity |
 | `to{Target}()` | 이 객체 → 다른 객체 변환 | DTO |
 | `forXxx()` | 특정 목적 생성 | DTO |
+
+### 로깅 규칙
+
+- **로그 접두사**: `[ClassName.methodName]` 형식 필수 — 예: `log.info("[CouponRedeemService.redeem] 쿠폰 사용 완료")`
+- **PII(userId 등) 로그 본문 포함 금지** — MDC에 이미 존재하므로 중복·유출 방지
+- **비즈니스 식별자**(couponCodeId, orderId 등)는 로그 본문에 포함 허용
+- **민감 정보 평문 INFO 로그 금지** — 쿠폰 코드 등은 반드시 마스킹 처리 (`****ABCD` 등)
 
 ---
 
@@ -190,18 +222,19 @@ pghd/{domain}/web/             ← Controller, Request, Response
 > **Phase별 분리 호출 금지. 한 번에 전체 Phase를 구현한다.**
 
 1. **기존 코드 패턴 확인** — 같은 도메인 기존 Entity/Service/Controller를 읽어 예외 처리, 응답 포맷, 타입 관례 파악
-2. TDD 문서의 모든 Phase TODO를 순서대로 한번에 구현
-3. 테스트도 모든 Phase 것을 함께 작성
-4. 전체 구현 완료 후 테스트 실행
+2. **TDD 비판적 검증** — TDD 문서를 무비판적으로 수용하지 않는다. 구현 시점에서 프로젝트 규칙(CQRS 분리, 도메인 풍부화, 상위 클래스 활용 등)과 대조하여 TDD 설계가 규칙에 위배되면 능동적으로 수정·보고한다
+3. TDD 문서의 모든 Phase TODO를 순서대로 한번에 구현
+4. 테스트도 모든 Phase 것을 함께 작성
+5. 전체 구현 완료 후 테스트 실행
    ```bash
    export JAVA_HOME=$(/usr/libexec/java_home -v 21)
    ./gradlew :{module}:test
    ```
-5. 테스트 실패 시 자동 수정 (5회 미만). **5회 이상 → 즉시 중단, 보고**
-6. pasta-api 모듈이면 `./gradlew :pasta-api:spotlessApply`
-7. **설정 체크** — 새 API 엔드포인트 → SecurityConstants airArray 등록, 새 환경변수 → 4곳 설정
-8. TDD 체크박스 업데이트 (`- [ ]` → `- [x]`)
-9. 변경 사항 보고 — **커밋하지 않음**
+6. 테스트 실패 시 자동 수정 (5회 미만). **5회 이상 → 즉시 중단, 보고**
+7. pasta-api 모듈이면 `./gradlew :pasta-api:spotlessApply`
+8. **설정 체크** — 새 API 엔드포인트 → SecurityConstants airArray 등록, 새 환경변수 → 4곳 설정
+9. TDD 체크박스 업데이트 (`- [ ]` → `- [x]`)
+10. 변경 사항 보고 — **커밋하지 않음**
 
 ### 모드 B: 단순 구현
 
@@ -240,6 +273,9 @@ pghd/{domain}/web/             ← Controller, Request, Response
 - `var` 키워드 금지 — 명시적 타입 선언
 - 와일드카드 import 금지
 - `@DisplayName` 한글, 구체적 시나리오 ("`성공한다`" 금지 → "`할인 금액과 사용 시각이 반환된다`")
+- `JOIN FETCH` + `Page` 조합 시 반드시 `countQuery` 분리 — 안 하면 메모리 내 페이지네이션 발생
+- `@RequestParam(required = false) String`의 빈 문자열 → 컨트롤러에서 `isBlank() → null` 정규화 처리
+- 서비스 시그니처 변경 시 테스트의 mock 호출도 반드시 동기화 업데이트
 
 ---
 
@@ -259,6 +295,7 @@ pghd/{domain}/web/             ← Controller, Request, Response
 10. [ ] **테스트 스타일**: `@DisplayName` 한글 구체적, Given-When-Then, AssertJ only?
 11. [ ] **설정**: SecurityConstants airArray, 환경변수 4곳, spotless?
 12. [ ] **가드레일**: 커밋 안 함, H2 없음, 마이그레이션 보호, stash 없음?
+13. [ ] **admin 모듈**: admin 작업이면 13~16 규칙 참조했는가? (@Controller, AdminHistory, Thymeleaf 레이아웃)
 
 ---
 

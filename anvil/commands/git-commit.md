@@ -3,6 +3,9 @@ name: git-commit
 description: "한국어 Conventional Commits 형식으로 커밋을 생성합니다."
 trigger: "/git-commit"
 args: ""
+version: "1.1"
+last-modified: "2026-04-11"
+changelog: "실전 피드백 반영: spotless 필수 실행 규칙 추가"
 ---
 
 # /commit
@@ -18,8 +21,9 @@ args: ""
 ## 실행 로직
 
 1. `git status` 및 `git diff dev`로 변경 사항 분석
-2. 변경 사항을 논리적 단위로 그룹화
-3. 적절한 커밋 타입 결정 후 `<type>: <한국어 요약>` 형식으로 커밋 생성
+2. **pasta-api 모듈 파일이 수정된 경우**: `./gradlew :pasta-api:spotlessApply` 실행 필수. spotless 포맷팅으로 인한 변경사항도 함께 stage한다.
+3. 변경 사항을 논리적 단위로 그룹화
+4. 적절한 커밋 타입 결정 후 `<type>: <한국어 요약>` 형식으로 커밋 생성
 
 ## 출력 형식
 

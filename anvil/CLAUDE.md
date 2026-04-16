@@ -36,7 +36,8 @@ Commands는 `.claude/commands/` 디렉토리 심볼릭 링크로 통째 연결�
 
 ## 컴포넌트 작성 규칙
 
-- **SKILL.md frontmatter**: `name`과 `description` 필수. description에 트리거 키워드를 포함해야 Claude Code가 자동 매칭한다.
+- **SKILL.md frontmatter**: `name`, `description`, `version`, `last-modified`, `changelog` 필수. description에 트리거 키워드를 포함해야 Claude Code가 자동 매칭한다.
+- **버전 관리**: 컴포넌트 변경 시 반드시 frontmatter의 `version`을 bump하고 `changelog`에 변경 내용을 기록한다. `--sync` 시 버전 비교로 변경 감지.
 - **본문 400줄 이내** 유지. 초과 시 `references/`로 분리한다.
 - **하드 가드레일은 본문에 직접 기술** — references로 분리하지 않는다.
 - **자기 검증 체크리스트 필수** — 스킬이 스스로 품질을 검증하는 장치.
@@ -102,4 +103,4 @@ Commands는 `.claude/commands/` 디렉토리 심볼릭 링크로 통째 연결�
 
 ## 공통 자원
 
-스킬에서 프로젝트 규칙을 참조할 때는 `forge/common/pasta-rules/{파일명}` 경로를 사용한다 (인덱스: `00-rules-index.mdc`).
+스킬에서 프로젝트 규칙을 참조할 때는 `forge/common/pasta-rules/{파일명}` 경로를 사용한다 (인덱스: `00-rules-index.md`).

@@ -3,6 +3,9 @@ name: git-pr
 description: "dev 브랜치를 대상으로 PR을 생성하거나 기존 PR 본문을 업데이트합니다."
 trigger: "/git-pr"
 args: ""
+version: "1.0"
+last-modified: "2026-04-10"
+changelog: "초기 배포"
 ---
 
 # /pr

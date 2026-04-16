@@ -22,4 +22,4 @@
 
 | 자원 | 설명 | 경로 |
 |------|------|------|
-| [pasta-rules](common/pasta-rules/00-rules-index.mdc) | pasta-japan 프로젝트 규칙 원본 (12개 .mdc) | `common/pasta-rules/` |
+| [pasta-rules](common/pasta-rules/00-rules-index.md) | pasta-japan 프로젝트 규칙 원본 (17개 .md) | `common/pasta-rules/` |

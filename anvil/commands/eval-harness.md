@@ -3,6 +3,9 @@ name: eval-harness
 description: "컴포넌트 자동 평가 하네스를 실행합니다. 하네스 정의 파일 기반으로 baseline vs with-skill 비교 테스트를 자동 실행하고 6축 채점 리포트를 생성합니다."
 trigger: "/eval-harness"
 args: "{컴포넌트명} [--tc TC-1,TC-2] [--repeat N] [--baseline-only] [--skip-baseline]"
+version: "1.0"
+last-modified: "2026-04-10"
+changelog: "초기 배포"
 ---
 
 # /eval-harness

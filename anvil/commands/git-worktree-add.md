@@ -3,6 +3,9 @@ name: git-worktree-add
 description: "병렬 작업을 위해 git worktree를 생성합니다. 새 브랜치 생성 또는 기존 브랜치 체크아웃을 지원합니다."
 trigger: "/git-worktree-add"
 args: "{작업 설명 또는 기존 브랜치명}"
+version: "1.0"
+last-modified: "2026-04-10"
+changelog: "초기 배포"
 ---
 
 # /git-worktree-add

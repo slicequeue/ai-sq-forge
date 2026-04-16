@@ -1,6 +1,9 @@
 ---
 name: pr-feedback-resolver
 description: "PR 리뷰 코멘트(CodeRabbit 포함)를 수집하여 수정 계획을 세우고 코드를 수정하는 스킬. PR 피드백 반영, CodeRabbit 대응, 리뷰 수정, PR 코멘트 처리 요청 시 사용. Use proactively when the user asks to handle PR feedback, CodeRabbit comments, or review modifications."
+version: "1.1"
+last-modified: "2026-04-11"
+changelog: "실전 피드백 반영: admin 모듈 예외 처리, 3분류 체계"
 ---
 
 # pr-feedback-resolver — PR 피드백 수정 스킬
@@ -34,6 +37,16 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" --paginate
 `{owner}/{repo}`는 `gh repo view --json owner,name`으로 확인.
 
 ### Step 2. 코멘트 분류
+
+모든 코멘트를 **반영 / 미반영 / 이미해결** 3분류로 전수 분류한 후, 반영 대상만 우선순위별로 처리한다.
+
+| 판정 | 기준 | 처리 |
+|------|------|------|
+| **반영** | 코드 품질 향상에 실질적으로 기여하는 지적 | 우선순위별 수정 |
+| **미반영** | 프로젝트 규칙과 충돌하거나 현재 맥락에 맞지 않는 지적 | 사유를 수정 계획 문서에 기록 |
+| **이미해결** | 이미 수정되었거나 다른 커밋에서 처리된 항목 | 해결 근거를 기록 |
+
+반영 대상의 우선순위:
 
 | 분류 | 식별 기준 | 우선순위 |
 |------|-----------|---------|
@@ -78,7 +91,8 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" --paginate
 
 1. 해당 파일·위치를 열고 요청 내용에 맞게 **코드 수정**
 2. `.claude/rules/` 규칙 준수 확인 (수정이 새로운 위반을 만들지 않는지)
-3. 수정 계획 문서의 체크박스 업데이트 (`- [x]`)
+3. **admin 모듈 예외**: admin 모듈 피드백 중 pasta-api 4-Tier 규칙을 적용한 지적(DTO→JPA 의존 제거, record 전환 등)은 admin이 레이어 혼합형(규칙 13)이므로 **"미반영 + 사유 설명"** 으로 처리한다. 수정 계획 문서에 미반영 사유를 명시하고, PR 답글에서도 근거를 설명한다.
+4. 수정 계획 문서의 체크박스 업데이트 (`- [x]`)
 
 ### Step 5. 커밋 & Push
 

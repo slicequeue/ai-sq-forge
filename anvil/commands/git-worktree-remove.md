@@ -3,6 +3,9 @@ name: git-worktree-remove
 description: "git worktree를 안전하게 제거합니다. 미커밋 변경사항 검사 후 정리합니다."
 trigger: "/git-worktree-remove"
 args: "{워크트리 경로 또는 브랜치명} [--force]"
+version: "1.0"
+last-modified: "2026-04-10"
+changelog: "초기 배포"
 ---
 
 # /git-worktree-remove

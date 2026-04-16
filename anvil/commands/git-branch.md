@@ -3,6 +3,9 @@ name: git-branch
 description: "프로젝트 브랜치 전략(api/{type}/name)에 따라 새로운 작업 브랜치를 생성합니다."
 trigger: "/git-branch"
 args: "{작업 설명 또는 브랜치명}"
+version: "1.0"
+last-modified: "2026-04-10"
+changelog: "초기 배포"
 ---
 
 # /branch

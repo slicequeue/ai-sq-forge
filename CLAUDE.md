@@ -24,7 +24,7 @@ maintenance/     → A/S 영역 (실전 피드백, 개선 로그)
 
 | 폴더 | 내용 |
 |------|------|
-| `forge/common/pasta-rules/` | pasta-japan 프로젝트 규칙 원본 (12개 .mdc 파일). 인덱스: `00-rules-index.mdc` |
+| `forge/common/pasta-rules/` | pasta-japan 프로젝트 규칙 원본 (17개 .md 파일). 인덱스: `00-rules-index.md` |
 
 스킬에서 프로젝트 규칙을 참조할 때는 `forge/common/pasta-rules/{파일명}` 경로를 사용한다.
 
