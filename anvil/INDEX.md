@@ -14,7 +14,7 @@
 | [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **실전 배치 가능** | 89/100 (TC-1) | `skills/api-inventory-generator/` |
 | [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **실전 배치 가능** | 91/100 (TC-1) | `skills/java-layered-unit-testing/` |
 | [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.1 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 | **실전 배치 가능** | 93/100 (TC-1) | `skills/chaos-test-planner/` |
-| [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.0 | 사용자 말투로 슬랙/PR/문서 작성 (SQ 톤 프로파일) | **실전 배치 가능** | 96/100 (TC-1) | `skills/sq-tone-writer/` |
+| [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.1 | 사용자 말투로 슬랙/PR/문서 작성 (SQ 톤 프로파일) | **실전 배치 가능** | 97/100 (TC-1) | `skills/sq-tone-writer/` |
 
 ## Agents
 
