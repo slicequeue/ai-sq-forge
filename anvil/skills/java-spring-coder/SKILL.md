@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.2"
-last-modified: "2026-04-11"
-changelog: "실전 피드백 반영: 도메인 엔티티 검증, 로깅 규칙, TDD 비판적 검증, admin 마이그레이션, JPQL 페이지네이션"
+version: "1.3"
+last-modified: "2026-04-17"
+changelog: "실전 피드백 반영: JPA @NotNull+@Column(nullable=false) 병행 필수 규칙 추가"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -179,6 +179,10 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 |------|------|------|
 | Domain Entity | `@Getter`, `@ToString`, `@EqualsAndHashCode` (**둘 다 필수**) | `@Setter`, `@Data`, `@Builder`(10필드 미만) |
 | JPA Entity | `@Getter`, `@NoArgsConstructor(PROTECTED)`, `@Builder`(생성자 레벨) | `@Setter`, `@Data` |
+
+> **JPA Entity NOT NULL 컬럼 어노테이션 규칙**
+> - `@Column(nullable = false)`와 `@NotNull`(jakarta.validation.constraints)을 **반드시 병행** 사용
+> - `@Column(nullable = false)`만 단독 사용 금지 — 프로젝트 기존 패턴과 일관성 유지 필수
 | Service | `@RequiredArgsConstructor`, `@Log4j2`/`@Slf4j` | `@Data` |
 | Controller | `@RequiredArgsConstructor` | `@Data` |
 

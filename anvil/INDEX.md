@@ -5,8 +5,8 @@
 | 이름 | 버전 | 설명 | 상태 | 테스트 점수 | 경로 |
 |------|------|------|------|------------|------|
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.1 | PRD 기획 요구사항 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/prd-designer/` |
-| [tdd-designer](skills/tdd-designer/SKILL.md) | 1.2 | TDD 기술 설계 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/tdd-designer/` |
-| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.2 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** | 100/100 (TC-1) | `skills/java-spring-coder/` |
+| [tdd-designer](skills/tdd-designer/SKILL.md) | 1.3 | TDD 기술 설계 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/tdd-designer/` |
+| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.3 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** | 100/100 (TC-1) | `skills/java-spring-coder/` |
 | [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.3 | dev 기준 변경 코드 자체 리뷰 (읽기 전용) | **실전 배치 가능** | 95/100 (TC-1) | `skills/self-code-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.1 | PR 피드백 수집·수정·push·답글 | **실전 배치 가능** | 95/100 (TC-1) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.0 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (멀티턴 합의) | **실전 배치 가능** | 88/100 (TC-1) | `skills/admin-prd-plan-designer/` |

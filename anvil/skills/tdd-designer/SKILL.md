@@ -1,9 +1,9 @@
 ---
 name: tdd-designer
 description: "TDD(기술 설계 문서) 작성 전문가. 'TDD 작성해줘', '구현 계획', '기술 설계', '아키텍처 설계' 요청 시 사용. PRD를 기반으로 시니어 개발자 관점의 아키텍처 분석, Phase별 TODO, 테스트 전략을 포함한 기술 문서를 작성한다."
-version: "1.2"
-last-modified: "2026-04-11"
-changelog: "실전 피드백 반영: 작업 폴더 경로, CQRS/상위 클래스 조사, 권한 마이그레이션, 검증 정책, 페이지네이션 설계"
+version: "1.3"
+last-modified: "2026-04-17"
+changelog: "실전 피드백 반영: Base class 재사용 조사, SecurityConstants 등록 체크 추가"
 ---
 
 # tdd-designer - TDD 기술 설계 문서 작성
@@ -69,6 +69,8 @@ PRD만으로 기술 결정이 불확실한 경우, 아래 질문으로 확정한
 8. **상위 클래스 구조**: 기존 엔티티/서비스에 상위 추상 클래스가 있는지 조사하여 활용 (예: `BaseEntity`, `AbstractService`)
 9. **도메인 모델 개선 가능성**: 기존 도메인을 풍부화(Rich Domain)할 수 있는지 검토 — 빈약한 도메인 모델에 비즈니스 로직을 담을 수 있으면 제안
 10. **검증 순서 비용 분석**: 비용이 낮은 검증부터 실행하도록 설계 (예: null 체크 → 포맷 검증 → DB 조회 → 외부 API 호출 순)
+11. **Base class 재사용 조사**: 예외(`BaseRuntimeException`), 응답(`BaseErrorResponse`), 엔티티(`BaseEntity`) 등 프로젝트 Base class가 있는지 확인하고, 신규 클래스에서 상속 활용 — detail/data 필드 등 기존 필드를 재발명하지 않는다
+12. **SecurityConstants 등록 확인**: 새 API 엔드포인트가 TDD에 포함되면, `SecurityConstants.airArray`에 해당 경로 등록 필요 여부를 Phase 목록에 명시 — **미등록 시 `@AuthenticationPrincipal`이 NPE 발생**
 
 인터랙티브 Q&A의 상세 예시는 `references/interactive-qa.md` 참조.
 

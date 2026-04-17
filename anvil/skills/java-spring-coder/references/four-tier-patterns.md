@@ -103,10 +103,11 @@ public class CouponCodeJpaEntity extends BaseTimeJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     @Column(nullable = false, unique = true)
     private String code;
 
-    @Column(nullable = false)
+    @Column(nullable = false)  // primitive 타입은 @NotNull 생략 허용
     private long discountAmount;
 
     private LocalDateTime usedAt;
