@@ -6,38 +6,38 @@ AI SQ Forge는 Claude Code용 AI 컴포넌트(Skills, Commands, Skill Chains 등
 
 핵심 아이디어는 **대장간(Forge)과 전장(Production)의 분리**다. Forge에서 컴포넌트를 단련하고, 실전 프로젝트에 배치하고, 실전에서 얻은 교훈을 다시 Forge로 가져와 품질을 높인다.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        AI SQ Forge (대장간)                       │
-│                                                                   │
-│   forge/          anvil/           proving-grounds/               │
-│   ├─ blueprints/  ├─ skills/       ├─ harnesses/                 │
-│   ├─ protocols/   ├─ commands/     ├─ evals/                     │
-│   └─ common/      ├─ skill-chains/ │  ├─ test-cases.md           │
-│                   └─ INDEX.md      │  └─ report.md               │
-│                     (Deploy        └─ (6축 자동 채점)              │
-│                      Registry)                                    │
-│                                                                   │
-│         ┌──── /forge-deploy ────┐                                │
-│         │                       │                                │
-│         ▼                       │                                │
-│   ┌──────────────────────────────────────────────┐               │
-│   │        실전 프로젝트 (예: pasta-japan-server)    │               │
-│   │                                                │               │
-│   │   .claude/                                     │               │
-│   │   ├─ skills/     ← 배포된 스킬이 실전 동작      │               │
-│   │   ├─ commands/   ← 배포된 커맨드               │               │
-│   │   ├─ rules/      ← 프로젝트 규칙 (변경 금지)    │               │
-│   │   └─ agent-memory/                             │               │
-│   │                                                │               │
-│   │   실전 사용 → 문제 발견 → 현장 수정             │               │
-│   │   Claude 메모리에 피드백 축적                   │               │
-│   │                                                │               │
-│   └──────────────────────────────────────────────┘               │
-│         │                       ▲                                │
-│         └── /forge-upstream ────┘                                │
-│              (역수입)                                              │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph FORGE["AI SQ Forge (대장간)"]
+        direction TB
+        subgraph forge_meta["forge/ — 메타 시스템"]
+            BP[blueprints/]
+            PT[protocols/]
+            CM[common/]
+        end
+        subgraph anvil["anvil/ — 컴포넌트 저장소"]
+            SK[skills/]
+            CMD[commands/]
+            SC[skill-chains/]
+            IDX[INDEX.md + Deploy Registry]
+        end
+        subgraph proving["proving-grounds/ — 테스트"]
+            HS[harnesses/]
+            EV["evals/ (test-cases + report)"]
+        end
+    end
+
+    subgraph PROD["실전 프로젝트 (pasta-japan-server)"]
+        direction TB
+        CLS[".claude/skills/ — 배포된 스킬"]
+        CLC[".claude/commands/ — 배포된 커맨드"]
+        CLR[".claude/rules/ — 프로젝트 규칙 ⛔수정금지"]
+        MEM["Claude 메모리 — 피드백 축적"]
+    end
+
+    anvil -- "/forge-deploy →" --> PROD
+    PROD -- "← /forge-upstream" --> anvil
+    PROD -. "실전 사용 → 문제 발견 → 현장 수정" .-> MEM
 ```
 
 ---
@@ -66,15 +66,23 @@ AI SQ Forge는 Claude Code용 AI 컴포넌트(Skills, Commands, Skill Chains 등
 
 ## 3. 순환 라이프사이클
 
-```
-    ①                ②               ③               ④
-  설계(Design)  →  개발(Build)  →  테스트(Test)  →  배포(Deploy)
-    │                                                   │
-    │                                                   ▼
-    │                                            ⑤ 실전 운영
-    │                                                   │
-    │               ⑦                ⑥                │
-    └── 개선(Improve) ← 피드백 수집(Upstream) ◄──────────┘
+```mermaid
+graph LR
+    A["① 설계\nDesign Protocol\nQ&A로 요구사항 확정"] --> B["② 개발\nBuild\n블루프린트 기반 생성"]
+    B --> C["③ 테스트\neval-harness\n6축 자동 채점"]
+    C --> D["④ 배포\nforge-deploy\n실전 프로젝트에 이식"]
+    D --> E["⑤ 실전 운영\nProduction\n일상 개발에 활용"]
+    E --> F["⑥ 피드백 수집\nforge-upstream\n변경사항 역수입"]
+    F --> G["⑦ 개선\nImprove\n--skip-baseline 재검증"]
+    G --> B
+
+    style A fill:#4A90D9,color:#fff
+    style B fill:#7B68EE,color:#fff
+    style C fill:#E67E22,color:#fff
+    style D fill:#27AE60,color:#fff
+    style E fill:#E74C3C,color:#fff
+    style F fill:#F39C12,color:#fff
+    style G fill:#8E44AD,color:#fff
 ```
 
 ### 각 단계 상세
@@ -182,19 +190,22 @@ AI SQ Forge는 Claude Code용 AI 컴포넌트(Skills, Commands, Skill Chains 등
 
 anvil/INDEX.md 하단의 Deploy Registry가 forge와 실전 프로젝트 간 연결을 추적한다.
 
-```
-┌─────────────────────┐        ┌──────────────────────────┐
-│   Forge (anvil/)     │        │   pasta-japan-server       │
-│                      │        │   .claude/                  │
-│  Skills (10개)       │◄──────►│  skills/ (10개)            │
-│  Commands (10개)     │  동기화 │  commands/ (8개)           │
-│  Skill Chains (1개)  │        │                            │
-│                      │        │                            │
-│  Deploy Registry     │        │                            │
-│  ├ 최종 배포일       │        │                            │
-│  ├ 컴포넌트별 버전   │        │                            │
-│  └ 동기화 상태       │        │                            │
-└─────────────────────┘        └──────────────────────────┘
+```mermaid
+graph LR
+    subgraph FORGE["Forge (anvil/)"]
+        FS["Skills 10개"]
+        FC["Commands 10개"]
+        FSC["Skill Chains 1개"]
+        DR["Deploy Registry\n- 최종 배포일\n- 컴포넌트별 버전\n- 동기화 상태"]
+    end
+
+    subgraph PROD["pasta-japan-server (.claude/)"]
+        PS["skills/ 10개"]
+        PC["commands/ 8개"]
+    end
+
+    FS <-- "동기화" --> PS
+    FC <-- "동기화" --> PC
 ```
 
 ### 동기화 상태 유형
@@ -210,30 +221,19 @@ anvil/INDEX.md 하단의 Deploy Registry가 forge와 실전 프로젝트 간 연
 
 ## 5. 컴포넌트 유형별 역할
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   사용자 요청                          │
-│                      │                                │
-│              ┌───────┴───────┐                       │
-│              ▼               ▼                       │
-│     ┌──────────────┐  ┌──────────────┐              │
-│     │  Dispatcher   │  │   직접 트리거  │              │
-│     │  (요청 라우팅) │  │  /git-commit  │              │
-│     └──────┬───────┘  └──────────────┘              │
-│            │                                         │
-│     ┌──────┼──────────────────┐                     │
-│     ▼      ▼                  ▼                     │
-│  ┌──────┐ ┌──────────┐ ┌──────────────┐           │
-│  │ Skill │ │ Command   │ │ Skill Chain   │           │
-│  │ 자동   │ │ 슬래시    │ │ 다단계 워크플로 │           │
-│  │ 트리거 │ │ 트리거    │ │ (BCP 등)      │           │
-│  └──────┘ └──────────┘ └──────────────┘           │
-│                                                     │
-│  예시:                                               │
-│  Skill: java-spring-coder, self-code-reviewer       │
-│  Command: /git-commit, /flyway, /db-migration       │
-│  Chain: /git-workflow-bcp (Branch→Commit→PR)        │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    REQ["사용자 요청"] --> DISP{"Dispatcher\n(요청 라우팅)"}
+    REQ --> DIRECT["직접 트리거\n/git-commit"]
+
+    DISP --> SKILL["Skill\n자동 트리거\n---\njava-spring-coder\nself-code-reviewer\nchaos-test-planner"]
+    DISP --> COMMAND["Command\n슬래시 트리거\n---\n/git-commit\n/flyway\n/db-migration"]
+    DISP --> CHAIN["Skill Chain\n다단계 워크플로\n---\n/git-workflow-bcp\n(Branch→Commit→PR)"]
+
+    style SKILL fill:#27AE60,color:#fff
+    style COMMAND fill:#3498DB,color:#fff
+    style CHAIN fill:#8E44AD,color:#fff
+    style DISP fill:#E67E22,color:#fff
 ```
 
 ---
@@ -242,49 +242,54 @@ anvil/INDEX.md 하단의 Deploy Registry가 forge와 실전 프로젝트 간 연
 
 ### 6축 자동 채점 시스템
 
-```
-                    eval-harness 실행
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-     TC-1 (Happy)   TC-2 (Edge)   TC-3 (Negative)
-     ┌────┴────┐    ┌────┴────┐   ┌────┴────┐
-     │Baseline │    │Baseline │   │Baseline │
-     │With-Skill│   │With-Skill│  │With-Skill│
-     └────┬────┘    └────┬────┘   └────┬────┘
-          │              │              │
-          └──────────────┼──────────────┘
-                         ▼
-              ┌─────────────────────┐
-              │    6축 자동 채점      │
-              │                     │
-              │  축1. 가드레일 (GATE) │ ← 1건이라도 위반 → AUTO FAIL
-              │  축2. 기능 정확도     │ ← 100점 만점, 75+ 필요
-              │  축3. 행동 패턴       │ ← 체크리스트 3/4+
-              │  축4. Baseline 비교  │ ← With-Skill > Baseline
-              │  축5. 일관성         │ ← 편차 ≤ 15점
-              │  축6. 효율성         │ ← 기록용
-              │                     │
-              │  → PASS: 실전 배치 가능│
-              │  → FAIL: 개선 필요    │
-              └─────────────────────┘
+```mermaid
+graph TD
+    START["/eval-harness 실행"] --> TC1["TC-1 Happy Path"]
+    START --> TC2["TC-2 Edge Case"]
+    START --> TC3["TC-3 Negative"]
+
+    TC1 --> B1["Baseline\n(스킬 없음)"]
+    TC1 --> W1["With-Skill\n(스킬 적용)"]
+    TC2 --> B2["Baseline"]
+    TC2 --> W2["With-Skill"]
+    TC3 --> B3["Baseline"]
+    TC3 --> W3["With-Skill"]
+
+    B1 & W1 & B2 & W2 & B3 & W3 --> SCORE
+
+    subgraph SCORE["6축 자동 채점"]
+        AX1["축1. 가드레일 GATE\n1건 위반 → AUTO FAIL"]
+        AX2["축2. 기능 정확도\n100점, 75+ 필요"]
+        AX3["축3. 행동 패턴\n체크리스트 3/4+"]
+        AX4["축4. Baseline 비교\nWith-Skill > Baseline"]
+        AX5["축5. 일관성\n편차 ≤ 15점"]
+        AX6["축6. 효율성\n기록용"]
+    end
+
+    SCORE --> PASS["PASS\n실전 배치 가능"]
+    SCORE --> FAIL["FAIL\n개선 필요"]
+
+    style PASS fill:#27AE60,color:#fff
+    style FAIL fill:#E74C3C,color:#fff
+    style AX1 fill:#C0392B,color:#fff
 ```
 
 ### 품질 게이트 흐름
 
-```
-설계 확정 → 개발 완료 → [테스트 대기] → eval-harness
-                                            │
-                                    ┌───────┴───────┐
-                                    ▼               ▼
-                               Quality Gate     Quality Gate
-                                 PASS              FAIL
-                                    │               │
-                                    ▼               ▼
-                            [실전 배치 가능]     개선 → 재테스트
-                                    │
-                                    ▼
-                              /forge-deploy
+```mermaid
+graph LR
+    A["설계 확정"] --> B["개발 완료"]
+    B --> C["테스트 대기"]
+    C --> D["eval-harness"]
+    D --> PASS{"Quality\nGate"}
+    PASS -->|"PASS ✓"| E["실전 배치 가능"]
+    PASS -->|"FAIL ✗"| F["개선"]
+    F --> D
+    E --> G["/forge-deploy"]
+
+    style E fill:#27AE60,color:#fff
+    style F fill:#E74C3C,color:#fff
+    style G fill:#3498DB,color:#fff
 ```
 
 ---
@@ -293,32 +298,31 @@ anvil/INDEX.md 하단의 Deploy Registry가 forge와 실전 프로젝트 간 연
 
 아래는 실제 운영에서 발생한 순환 사례다.
 
-```
-2026-04-14  /forge-upstream
-            pasta-japan-server에서 신규 스킬 6개 발견
-            → forge로 역수입 + 품질 강화 (frontmatter, rubric, Phase 0, 가드레일)
-            → eval-harness 전원 PASS (평균 90.8점)
-            → /forge-deploy로 강화 버전 재배포
+```mermaid
+timeline
+    title Forge 순환 운영 타임라인
 
-2026-04-15  git-workflow-bcp 스킬 체인 신규 생성
-            → Branch→Commit(논리 분할)→PR 자동화
-            → eval-harness 92.7점 EXCELLENT
+    section 2026-04-14 대량 역수입
+        forge-upstream : 실전에서 신규 스킬 6개 발견
+        역수입+강화 : frontmatter, rubric, Phase 0, 가드레일 추가
+        eval-harness : 4개 스킬 전원 PASS (평균 90.8점)
+        forge-deploy : 강화 버전 pasta-japan-server 재배포
 
-2026-04-16  /forge-upstream — chaos-test-planner 역수입
-            → eval-harness 93점
-            → self-code-reviewer 개선 (Domain JPA 가드레일 격상)
-            → 재배포
+    section 2026-04-15 스킬 체인
+        설계+개발 : git-workflow-bcp 신규 (Branch→Commit→PR)
+        eval-harness : 92.7점 EXCELLENT
 
-2026-04-17  실전 피드백 메모리 15개 분석
-            → 3개 누락 항목 도출:
-              - java-spring-coder: JPA @NotNull 병행 규칙
-              - tdd-designer: Base class 재사용 + SecurityConstants 체크
-            → 스킬 업그레이드 (v1.2→v1.3)
-            → eval-harness --skip-baseline 재검증 통과
-            → 재배포
+    section 2026-04-16 역수입+개선
+        forge-upstream : chaos-test-planner 역수입 (93점)
+        개선 : self-code-reviewer Domain JPA 가드레일 격상
+        forge-deploy : 2개 스킬 재배포
 
-            chaos-test-planner 실전 교훈 4건 역수입 (v1.0→v1.1)
-            → 전체 19개 컴포넌트 동기화 완료
+    section 2026-04-17 피드백 분석
+        메모리 분석 : 실전 피드백 15개 → 3개 누락 도출
+        업그레이드 : java-spring-coder v1.3, tdd-designer v1.3
+        eval-harness : --skip-baseline 재검증 통과
+        역수입 : chaos-test-planner 실전 교훈 4건 (v1.1)
+        완료 : 전체 19개 컴포넌트 동기화
 ```
 
 ---
