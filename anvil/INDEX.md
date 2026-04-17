@@ -15,6 +15,7 @@
 | [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **실전 배치 가능** | 91/100 (TC-1) | `skills/java-layered-unit-testing/` |
 | [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.1 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 | **실전 배치 가능** | 93/100 (TC-1) | `skills/chaos-test-planner/` |
 | [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.1 | 사용자 말투로 슬랙/PR/문서 작성 (SQ 톤 프로파일) | **실전 배치 가능** | 97/100 (TC-1) | `skills/sq-tone-writer/` |
+| [jira-bug-root-cause](skills/jira-bug-root-cause/SKILL.md) | 1.0 | Jira 버그 원인 규명 + QA 친화 코멘트 작성 | **실전 배치 가능** | 91/100 (TC-1) | `skills/jira-bug-root-cause/` |
 
 ## Agents
 
