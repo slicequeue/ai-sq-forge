@@ -78,3 +78,6 @@
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
+| sq-tone-writer | skill | 1.1 | 1.1 | 동기화 |
+| jira-bug-root-cause | skill | 1.0 | 1.0 | 동기화 |
+| chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
