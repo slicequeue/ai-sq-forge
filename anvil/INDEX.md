@@ -52,15 +52,15 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-16 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-17 |
 
 ### pasta-japan-server 배포 현황
 
 | 컴포넌트 | 유형 | 배포 버전 | forge 최신 | 상태 |
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
-| tdd-designer | skill | 1.2 | 1.2 | 동기화 |
-| java-spring-coder | skill | 1.2 | 1.2 | 동기화 |
+| tdd-designer | skill | 1.3 | 1.3 | 동기화 |
+| java-spring-coder | skill | 1.3 | 1.3 | 동기화 |
 | self-code-reviewer | skill | 1.3 | 1.3 | 동기화 |
 | pr-feedback-resolver | skill | 1.1 | 1.1 | 동기화 |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
