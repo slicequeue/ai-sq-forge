@@ -18,33 +18,33 @@ graph TB
     subgraph FORGE["AI SQ Forge (대장간)"]
         direction TB
         subgraph forge_meta["forge/ — 메타 시스템"]
-            BP["blueprints/\n컴포넌트 생성 템플릿"]
-            PT["protocols/\n설계·테스트·A/S 프로세스"]
-            CM["common/\n프로젝트 규칙 원본"]
+            BP["blueprints/<br/>컴포넌트 생성 템플릿"]
+            PT["protocols/<br/>설계·테스트·A/S 프로세스"]
+            CM["common/<br/>프로젝트 규칙 원본"]
         end
         subgraph anvil["anvil/ — 컴포넌트 저장소"]
-            SK["skills/\n10개 스킬"]
-            CMD["commands/\n10개 커맨드"]
-            SC["skill-chains/\n1개 체인"]
-            IDX["INDEX.md\nDeploy Registry"]
+            SK["skills/<br/>10개 스킬"]
+            CMD["commands/<br/>10개 커맨드"]
+            SC["skill-chains/<br/>1개 체인"]
+            IDX["INDEX.md<br/>Deploy Registry"]
         end
         subgraph proving["proving-grounds/ — 테스트"]
-            HS["harnesses/\n평가 하네스 정의"]
-            EV["evals/\nTC·리포트·채점 결과"]
+            HS["harnesses/<br/>평가 하네스 정의"]
+            EV["evals/<br/>TC·리포트·채점 결과"]
         end
     end
 
     subgraph PROD["실전 프로젝트 (pasta-japan-server)"]
         direction TB
-        CLS[".claude/skills/\n배포된 스킬이 실전 동작"]
-        CLC[".claude/commands/\n슬래시 커맨드로 작업 자동화"]
-        CLR[".claude/rules/\n프로젝트 코딩 규칙"]
-        MEM["Claude 메모리\n사용 중 발견된 교훈 축적"]
+        CLS[".claude/skills/<br/>배포된 스킬이 실전 동작"]
+        CLC[".claude/commands/<br/>슬래시 커맨드로 작업 자동화"]
+        CLR[".claude/rules/<br/>프로젝트 코딩 규칙"]
+        MEM["Claude 메모리<br/>사용 중 발견된 교훈 축적"]
     end
 
-    anvil -- "/forge-deploy\n(배포)" --> PROD
-    PROD -- "/forge-upstream\n(역수입)" --> anvil
-    PROD -. "실전 사용 중\n문제 발견 → 현장 수정" .-> MEM
+    anvil -- "/forge-deploy<br/>(배포)" --> PROD
+    PROD -- "/forge-upstream<br/>(역수입)" --> anvil
+    PROD -. "실전 사용 중<br/>문제 발견 → 현장 수정" .-> MEM
 ```
 
 ### 핵심 원칙 3가지
@@ -87,12 +87,12 @@ Forge는 4개 영역으로 구성된다. 각 영역이 뚜렷한 역할을 맡�
 
 ```mermaid
 graph LR
-    A["① 설계\nDesign Protocol\nQ&A로 요구사항 확정"] --> B["② 개발\nBuild\n블루프린트 기반 생성"]
-    B --> C["③ 테스트\neval-harness\n6축 자동 채점"]
-    C --> D["④ 배포\nforge-deploy\n실전 프로젝트에 이식"]
-    D --> E["⑤ 실전 운영\nProduction\n일상 개발에 활용"]
-    E --> F["⑥ 피드백 수집\nforge-upstream\n변경사항 역수입"]
-    F --> G["⑦ 개선\nImprove\n--skip-baseline 재검증"]
+    A["① 설계<br/>Design Protocol<br/>Q&A로 요구사항 확정"] --> B["② 개발<br/>Build<br/>블루프린트 기반 생성"]
+    B --> C["③ 테스트<br/>eval-harness<br/>6축 자동 채점"]
+    C --> D["④ 배포<br/>forge-deploy<br/>실전 프로젝트에 이식"]
+    D --> E["⑤ 실전 운영<br/>Production<br/>일상 개발에 활용"]
+    E --> F["⑥ 피드백 수집<br/>forge-upstream<br/>변경사항 역수입"]
+    F --> G["⑦ 개선<br/>Improve<br/>--skip-baseline 재검증"]
     G --> B
 
     style A fill:#4A90D9,color:#fff
@@ -183,7 +183,7 @@ graph LR
         FS["Skills 10개"]
         FC["Commands 10개"]
         FSC["Skill Chains 1개"]
-        DR["Deploy Registry\n- 최종 배포일\n- 컴포넌트별 버전\n- 동기화 상태"]
+        DR["Deploy Registry<br/>- 최종 배포일<br/>- 컴포넌트별 버전<br/>- 동기화 상태"]
     end
 
     subgraph PROD["pasta-japan-server (.claude/)"]
@@ -214,12 +214,12 @@ Claude Code에서 동작하는 컴포넌트는 3가지 유형이 있다. 각각 
 
 ```mermaid
 graph TD
-    REQ["사용자 요청"] --> DISP{"Dispatcher\n(요청 라우팅)"}
-    REQ --> DIRECT["직접 트리거\n/git-commit"]
+    REQ["사용자 요청"] --> DISP{"Dispatcher<br/>(요청 라우팅)"}
+    REQ --> DIRECT["직접 트리거<br/>/git-commit"]
 
-    DISP --> SKILL["Skill\n자동 트리거\n---\njava-spring-coder\nself-code-reviewer\nchaos-test-planner"]
-    DISP --> COMMAND["Command\n슬래시 트리거\n---\n/git-commit\n/flyway\n/db-migration"]
-    DISP --> CHAIN["Skill Chain\n다단계 워크플로\n---\n/git-workflow-bcp\n(Branch→Commit→PR)"]
+    DISP --> SKILL["Skill<br/>자동 트리거<br/>---<br/>java-spring-coder<br/>self-code-reviewer<br/>chaos-test-planner"]
+    DISP --> COMMAND["Command<br/>슬래시 트리거<br/>---<br/>/git-commit<br/>/flyway<br/>/db-migration"]
+    DISP --> CHAIN["Skill Chain<br/>다단계 워크플로<br/>---<br/>/git-workflow-bcp<br/>(Branch→Commit→PR)"]
 
     style SKILL fill:#27AE60,color:#fff
     style COMMAND fill:#3498DB,color:#fff
@@ -241,12 +241,12 @@ graph TD
 
 ```mermaid
 graph TD
-    START["/eval-harness 실행"] --> TC1["TC-1 Happy Path\n정상 요청"]
-    START --> TC2["TC-2 Edge Case\n경계 상황"]
-    START --> TC3["TC-3 Negative\n위반 유도"]
+    START["/eval-harness 실행"] --> TC1["TC-1 Happy Path<br/>정상 요청"]
+    START --> TC2["TC-2 Edge Case<br/>경계 상황"]
+    START --> TC3["TC-3 Negative<br/>위반 유도"]
 
-    TC1 --> B1["Baseline\n(스킬 없음)"]
-    TC1 --> W1["With-Skill\n(스킬 적용)"]
+    TC1 --> B1["Baseline<br/>(스킬 없음)"]
+    TC1 --> W1["With-Skill<br/>(스킬 적용)"]
     TC2 --> B2["Baseline"]
     TC2 --> W2["With-Skill"]
     TC3 --> B3["Baseline"]
@@ -255,16 +255,16 @@ graph TD
     B1 & W1 & B2 & W2 & B3 & W3 --> SCORE
 
     subgraph SCORE["6축 자동 채점"]
-        AX1["축1. 가드레일 GATE\n1건 위반 → AUTO FAIL"]
-        AX2["축2. 기능 정확도\n100점 만점, 75+ 필요"]
-        AX3["축3. 행동 패턴\n체크리스트 3/4+"]
-        AX4["축4. Baseline 비교\nWith-Skill > Baseline"]
-        AX5["축5. 일관성\n편차 ≤ 15점"]
-        AX6["축6. 효율성\n기록용"]
+        AX1["축1. 가드레일 GATE<br/>1건 위반 → AUTO FAIL"]
+        AX2["축2. 기능 정확도<br/>100점 만점, 75+ 필요"]
+        AX3["축3. 행동 패턴<br/>체크리스트 3/4+"]
+        AX4["축4. Baseline 비교<br/>With-Skill > Baseline"]
+        AX5["축5. 일관성<br/>편차 ≤ 15점"]
+        AX6["축6. 효율성<br/>기록용"]
     end
 
-    SCORE --> PASS["PASS\n실전 배치 가능"]
-    SCORE --> FAIL["FAIL\n개선 필요"]
+    SCORE --> PASS["PASS<br/>실전 배치 가능"]
+    SCORE --> FAIL["FAIL<br/>개선 필요"]
 
     style PASS fill:#27AE60,color:#fff
     style FAIL fill:#E74C3C,color:#fff
@@ -289,7 +289,7 @@ graph LR
     A["설계 확정"] --> B["개발 완료"]
     B --> C["테스트 대기"]
     C --> D["eval-harness"]
-    D --> PASS{"Quality\nGate"}
+    D --> PASS{"Quality<br/>Gate"}
     PASS -->|"PASS ✓"| E["실전 배치 가능"]
     PASS -->|"FAIL ✗"| F["개선"]
     F --> D
