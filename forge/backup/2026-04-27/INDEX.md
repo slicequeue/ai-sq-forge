@@ -6,19 +6,18 @@
 |------|------|------|------|------------|------|
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.1 | PRD 기획 요구사항 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/prd-designer/` |
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.3 | TDD 기술 설계 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/tdd-designer/` |
-| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.4 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** (역수입 후 재검증 필요) | 100/100 (TC-1, v1.3 시점) | `skills/java-spring-coder/` |
+| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.3 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** | 100/100 (TC-1) | `skills/java-spring-coder/` |
 | [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.4 | dev 기준 변경 코드 자체 리뷰 (읽기 전용) | **실전 배치 가능** | 95/100 (TC-1) | `skills/self-code-reviewer/` |
-| [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.3 | PR 피드백 수집·수정·push·답글 (sq-tone-writer 경유) | **실전 배치 가능** (역수입 후 재검증 필요) | 95/100 (TC-1, v1.2 시점) | `skills/pr-feedback-resolver/` |
+| [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.2 | PR 피드백 수집·수정·push·답글 | **실전 배치 가능** | 95/100 (TC-1) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.0 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (멀티턴 합의) | **실전 배치 가능** | 88/100 (TC-1) | `skills/admin-prd-plan-designer/` |
-| [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.1 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE, OAuth2/SecurityContext 격리 포함) | **실전 배치 가능** (역수입 후 재검증 필요) | 95/100 (TC-1, v1.0 시점) | `skills/admin-thymeleaf-ui/` |
+| [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.0 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE) | **실전 배치 가능** | 95/100 (TC-1) | `skills/admin-thymeleaf-ui/` |
 | [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **실전 배치 가능** | 89/100 (TC-1) | `skills/api-inventory-generator/` |
 | [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **실전 배치 가능** | 91/100 (TC-1) | `skills/java-layered-unit-testing/` |
 | [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.1 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 | **실전 배치 가능** | 93/100 (TC-1) | `skills/chaos-test-planner/` |
-| [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.2 | 사용자 말투로 슬랙/PR/문서/리뷰 답글 작성 (SQ 톤 프로파일) | **실전 배치 가능** (역수입 후 재검증 필요) | 97/100 (TC-1, v1.1 시점) | `skills/sq-tone-writer/` |
+| [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.1 | 사용자 말투로 슬랙/PR/문서 작성 (SQ 톤 프로파일) | **실전 배치 가능** | 97/100 (TC-1) | `skills/sq-tone-writer/` |
 | [jira-bug-root-cause](skills/jira-bug-root-cause/SKILL.md) | 1.0 | Jira 버그 원인 규명 + QA 친화 코멘트 작성 | **실전 배치 가능** | 91/100 (TC-1) | `skills/jira-bug-root-cause/` |
 | [chat-incident-report](skills/chat-incident-report/SKILL.md) | 1.0 | Google Chat 장애/CS 대응 메시지 (고정 6섹션 + CS 복붙 품질) | **실전 배치 가능** | 95/100 (3/3 PASS, Baseline +58.7점, TC-3 AUTO FAIL 4건 방어) | `skills/chat-incident-report/` |
 | [sq-today-reviewer](skills/sq-today-reviewer/SKILL.md) | 0.1 | 하루 Claude 작업 총체 리뷰 → 놓친 학습·공부 주제·반복 실수·소양·내일 액션 6섹션 성장 리포트 | **테스트 대기** | - | `skills/sq-today-reviewer/` |
-| [git-pr](skills/git-pr/SKILL.md) | 0.2 | PR 생성/갱신 — 사람 친화 표현 + 표 위주 + 100~200줄 양식 (commands/git-pr.md에서 승격, forge 일반화) | **테스트 대기** (하네스·루브릭·테스트케이스 작성됨, `/eval-harness git-pr` 실행 대기) | - | `skills/git-pr/` |
 
 ## Agents
 
@@ -32,7 +31,7 @@
 |------|------|--------|------|------|------|
 | [git-branch](commands/git-branch.md) | 1.0 | `/git-branch` | 프로젝트 브랜치 전략에 따라 작업 브랜치 생성 | ✓ | `commands/git-branch.md` |
 | [git-commit](commands/git-commit.md) | 1.1 | `/git-commit` | 한국어 Conventional Commits 커밋 생성 | ✓ | `commands/git-commit.md` |
-| [git-pr](commands/git-pr.md) | 2.0 | `/git-pr` | **스킬로 승격** — `skills/git-pr/SKILL.md`의 호환용 별칭 | ✓ | `commands/git-pr.md` |
+| [git-pr](commands/git-pr.md) | 1.0 | `/git-pr` | dev 대상 PR 생성/업데이트 | ✓ | `commands/git-pr.md` |
 | [eval-harness](commands/eval-harness.md) | 1.0 | `/eval-harness` | 컴포넌트 자동 평가 하네스 실행 (6축 채점) | forge 전용 | `commands/eval-harness.md` |
 | [git-worktree-add](commands/git-worktree-add.md) | 1.0 | `/git-worktree-add` | 병렬 작업용 git worktree 생성 | ✓ | `commands/git-worktree-add.md` |
 | [git-worktree-remove](commands/git-worktree-remove.md) | 1.0 | `/git-worktree-remove` | git worktree 안전 제거 및 정리 | ✓ | `commands/git-worktree-remove.md` |
@@ -59,7 +58,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-22 (역수입 동기화: 2026-04-27) |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-22 |
 
 ### pasta-japan-server 배포 현황
 
@@ -67,24 +66,23 @@
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
-| java-spring-coder | skill | 1.4 | 1.4 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 가드레일) |
+| java-spring-coder | skill | 1.3 | 1.3 | 동기화 |
 | self-code-reviewer | skill | 1.4 | 1.4 | 동기화 (2026-04-22 배포) |
-| pr-feedback-resolver | skill | 1.3 | 1.3 | 동기화 (2026-04-27 역수입: sq-tone-writer 경유 + in_reply_to 패턴) |
+| pr-feedback-resolver | skill | 1.2 | 1.2 | 동기화 (2026-04-22 배포) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
-| git-pr | command | 2.0 (별칭) | 2.0 (별칭) | 동기화 (2026-04-27 skill 승격) |
-| git-pr | skill | 0.1 | 0.2 (forge 일반화) | **forge 앞섬** — 일반화 + 하네스 작성. pasta 재배포는 `/eval-harness git-pr` 통과 후 |
+| git-pr | command | 1.0 | 1.0 | 동기화 |
 | git-worktree-add | command | 1.0 | 1.0 | 동기화 |
 | git-worktree-remove | command | 1.0 | 1.0 | 동기화 |
 | forge-upstream | command | 1.0 | 1.0 | 동기화 |
 | admin-prd-plan-designer | skill | 1.0 | 1.0 | 동기화 |
-| admin-thymeleaf-ui | skill | 1.1 | 1.1 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 섹션) |
+| admin-thymeleaf-ui | skill | 1.0 | 1.0 | 동기화 |
 | api-inventory-generator | skill | 1.0 | 1.0 | 동기화 |
 | java-layered-unit-testing | skill | 1.0 | 1.0 | 동기화 |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
-| sq-tone-writer | skill | 1.2 | 1.2 | 동기화 (2026-04-27 역수입: GitHub PR 리뷰어 답글 섹션) |
+| sq-tone-writer | skill | 1.1 | 1.1 | 동기화 |
 | jira-bug-root-cause | skill | 1.0 | 1.0 | 동기화 |
 | chat-incident-report | skill | 1.0 (실전) | 1.0 (역수입) | 동기화 (2026-04-22 역수입, 마스킹 — forge→pasta 배포 금지) |
 | gcp-infra-architect | agent | 1.2 | 1.2 | 동기화 (2026-04-22 신규 배포) |

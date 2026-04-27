@@ -1,9 +1,9 @@
 ---
 name: pr-feedback-resolver
 description: "PR 리뷰 코멘트(CodeRabbit 포함)를 수집하여 수정 계획을 세우고 코드를 수정하는 스킬. PR 피드백 반영, CodeRabbit 대응, 리뷰 수정, PR 코멘트 처리 요청 시 사용. Use proactively when the user asks to handle PR feedback, CodeRabbit comments, or review modifications."
-version: "1.3"
-last-modified: "2026-04-27"
-changelog: "실전 역수입: 답글 작성 시 sq-tone-writer 경유 의무화 + GitHub PR API /replies(404) → POST /comments + in_reply_to 패턴 정정. 자기검증 체크리스트 9번(답글 톤) 추가"
+version: "1.2"
+last-modified: "2026-04-20"
+changelog: "Insights 피드백 반영: 병렬 에이전트 트리아지 모드 추가, 브랜치 안전 검증 강화"
 ---
 
 # pr-feedback-resolver — PR 피드백 수정 스킬
@@ -128,32 +128,11 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" --paginate
 
 push 완료 **후에만** 답글을 작성한다.
 
-#### 톤 규칙 — `sq-tone-writer` 스킬 필수 사용
-
-답글 본문은 **반드시 `sq-tone-writer` 스킬로 작성**한다. AI 특유의 딱딱한 어조가 PR 답글에서 가장 두드러지기 때문에 스킬 경유가 필수.
-
-호출 파라미터:
-- **매체**: `GitHub PR 리뷰 답글`
-- **수신자**: `팀 동료` (시니어 포함)
-- **톤**: 반말 금지, `~습니다` 기반 존댓말 + `!`, `:)`, `...` 자연스럽게 섞기
-- **금지 표현**: `~것 같습니다`, `감사드립니다`, 과장 표현(`싹 제거`, `완벽하게`)
-- **답글 패턴**:
-  - 지적 수용 답글: (1) 수용·변경 한 줄 → (2) 왜 그 구조였는지 배경 → (3) 추후 개선 계획 → (4) 현 상태 안전성 근거 (필요 시)
-  - 제안 반영 답글: (1) 반영 선언 → (2) 구체 변경 → (3) 효과 + 감사 한 줄
-
-자세한 규칙·실전 샘플은 `sq-tone-writer/references/tone-examples.md` 의 "GitHub PR 리뷰 답글" 섹션 참조.
-
-#### 전송 명령
-
 ```bash
-# 리뷰 코멘트에 답글 달기 (in_reply_to 사용, /replies 엔드포인트 금지)
-gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
-  -X POST \
-  -F in_reply_to={원본_comment_id} \
-  -f body="{sq-tone-writer 로 작성한 본문}"
+# 리뷰 코멘트에 답글
+gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments/{comment_id}/replies" \
+  -f body="수정 완료했습니다. {간단 설명}"
 ```
-
-**주의**: `/comments/{id}/replies` 엔드포인트는 404 반환한다. 반드시 `POST /pulls/{PR번호}/comments` + `-F in_reply_to={id}` 로 스레드 연결.
 
 ---
 
@@ -171,7 +150,6 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 - CodeRabbit 제안은 "우선 반영 권장"으로 높음 우선순위에 포함
 - 수정이 다른 테스트를 깨뜨리지 않는지 테스트 실행 권장
 - 답글은 간결하게 ("수정 완료했습니다" + 핵심 변경 요약)
-- **답글 작성 시 `sq-tone-writer` 스킬 필수 사용** — AI 어투가 PR 답글에서 가장 도드라진다. 직접 답글 본문을 작성하지 말고 스킬로 톤 맞춤
 
 ---
 
@@ -187,7 +165,6 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 6. [ ] **push 확인**: 답글 전에 push가 완료되었는가?
 7. [ ] **규칙 준수**: 수정이 `.claude/rules/` 위반을 만들지 않았는가?
 8. [ ] **체크박스 업데이트**: 수정 계획 문서의 완료 항목을 체크했는가?
-9. [ ] **답글 톤**: `sq-tone-writer` 스킬을 경유해 작성했는가? (반말 없음, AI 표현 없음, 부드러운 소프트 디테일 포함)
 
 ---
 

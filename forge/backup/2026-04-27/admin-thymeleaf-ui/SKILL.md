@@ -1,9 +1,9 @@
 ---
 name: admin-thymeleaf-ui
 description: "moneyball `admin` 모듈에서 Thymeleaf + Thymeleaf Layout Dialect + AdminLTE(Bootstrap)로 관리자 화면을 만들거나 고칠 때 사용한다. `layout:decorate`, `layout/fragments`, `static/js`·`static/css` 배치, `@Controller`+`Model`, CSRF 메타·fetch 헤더, 사이드바·모달 프래그먼트, 관리자 이력·권한 패턴을 저장소 관례에 맞춘다. '어드민 페이지', 'Thymeleaf', '관리자 UI', 'AdminLTE', '사이드바 메뉴', '템플릿', 'static/js', 'layout:decorate', '모달', '관리자 화면 추가' 등이 나오면 반드시 이 스킬을 읽는다."
-version: "1.1"
-last-modified: "2026-04-27"
-changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-bean 패턴, save/restore 패턴), 자기검증 체크리스트 19~22번 추가, 트러블슈팅 표 항목(외부 API 후 403, OAuth2 로그인 실패, sandbox→prd 사고) 추가"
+version: "1.0"
+last-modified: "2026-04-14"
+changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
 ---
 
 # admin-thymeleaf-ui — Moneyball Admin UI (Thymeleaf)
@@ -45,7 +45,6 @@ changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-
 ### 4) Security by Convention
 - `@PreAuthorize`, CSRF 메타, 기존 권한 문자열 계열을 유지한다.
 - 상태 변경 fetch는 `_csrf` + `_csrf_header`를 사용한다.
-- **외부 OAuth2 Client 호출이 admin 세션 `SecurityContextHolder`를 오염시키지 않도록** 격리한다 (아래 "OAuth2/SecurityContext 격리" 섹션 참조).
 
 ### 5) Reuse Before Reinvent
 - 같은 도메인에서 Controller+HTML+JS 세트를 먼저 찾아 복제-수정한다.
@@ -75,9 +74,6 @@ changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-
 - **`catch(Exception)` 사용 금지** — 내부 에러 메시지(DB 에러 등)가 사용자에게 노출됨. 반드시 `catch(BaseRuntimeException)`으로 비즈니스 예외만 포착
 - **타임존 하드코딩 금지** — `ZoneId.of("Asia/Tokyo")` 등 직접 지정하지 않고 `@Value("${admin.display-timezone}")` 사용. HTML에서는 컨트롤러가 `@ModelAttribute("displayTimezone")`으로 전달한 변수 참조
 - **에러 페이지에서 `href="/"` 금지** — 반드시 `th:href="@{/}"` 사용 (컨텍스트 패스 대응)
-- **OAuth2 Client 커스터마이징 클래스를 무분별하게 `@Component`/`@Service`로 등록 금지** — Spring이 OAuth2 로그인 플로우(Google OIDC 등)에도 자동 연결하여 `saveAuthorizedClient` 등에 타 도메인 데이터가 유입됨. Dexcom 등 **특정 Provider 전용**이면 non-bean으로 만들고 `AuthorizedClientServiceOAuth2AuthorizedClientManager` 내부에서만 사용
-- **외부 OAuth2/API 호출 코드에서 `SecurityContextHolder.getContext().setAuthentication(...)` 금지** — admin 세션 Authentication이 외부 토큰으로 덮여 이후 요청이 403으로 끊긴다. 꼭 필요하면 controller에서 save → 호출 → finally restore 패턴 사용
-- **Non-bean 클래스에 `@Transactional` 금지** — Spring AOP 프록시가 적용되지 않아 트랜잭션이 무효. Non-bean이라면 `@Transactional` 제거 + Javadoc에 "프록시 미적용" 명시
 
 ### 반드시 수행
 1. 모드 선택 (`M1~M4`)
@@ -150,10 +146,6 @@ changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-
 | 16 | B | 폼 POST에 `catch(BaseRuntimeException)` + flash error (500 페이지 방지) |
 | 17 | B | `catch(Exception)` 미사용 (내부 에러 메시지 노출 방지) |
 | 18 | R | HTML `min`/`max`와 서버 검증 범위 동기화 |
-| 19 | B | 외부 OAuth2 Client 커스터마이징 시 non-bean 격리 (Google OIDC 로그인 영향 없음 검증) |
-| 20 | B | 외부 API 호출 시 admin 세션 `SecurityContext` 오염 방지 (save/restore 또는 setAuthentication 제거) |
-| 21 | B | 외부 API 의존성 추가 시 `application-jp-{env}.yml` 4곳 (local/dev/stg/prd) override 일치 |
-| 22 | R | DB 컬럼 참조 전 실제 스키마/마이그레이션 확인 (오타/미존재 컬럼 방지) |
 
 ---
 
@@ -163,12 +155,9 @@ changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-
 |------|-----------|-------------|
 | 404/Template not found | `return` 문자열 vs 파일 경로 | 오타, 폴더 위치 불일치 |
 | 403 (폼/fetch) | CSRF 메타, 권한 어노테이션 | 토큰 헤더 누락, authority 불일치 |
-| **외부 API 호출 성공 후 다음 요청 403** | `SecurityContextHolder.setAuthentication` 호출 지점 | 외부 OAuth2 토큰이 admin 세션 Authentication을 덮음 — controller에서 save/restore 필수 |
-| **OAuth2 로그인 자체 불가 (Google 로그인 실패 등)** | OAuth2 Client 관련 `@Component`/`@Service` 클래스 | Spring이 모든 Provider에 해당 Bean을 끼워넣음 → non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 로 전환 |
 | 메뉴 클릭 시 빈 화면 | 사이드바 링크 vs 매핑 URL | href 오타, GET 매핑 누락 |
 | 모달 버튼 무반응 | 페이지 JS 로드 위치/type | `type="module"` 누락, id 불일치 |
 | 다른 페이지까지 깨짐 | `script.html`/`head.html` 변경 | 전역 로드 순서 충돌 |
-| sandbox API가 prd에서 호출됨 | `application-jp-{env}.yml` 의 엔드포인트/credential override | `application.yml`만 수정하고 env별 파일 누락 |
 
 ---
 
@@ -194,40 +183,6 @@ changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-
 
 - B 항목 하나라도 FAIL이면 **0점(블로커)**.
 - 80점 미만이면 추가 보완 후 재평가한다.
-
----
-
-## OAuth2 / SecurityContext 격리 (외부 API 연동 시)
-
-admin 모듈은 Google OIDC 세션 기반 인증이다. 외부 OAuth2 Provider(Dexcom 등) 토큰을 이용한 API 호출이 **admin 세션에 영향을 주지 않도록** 반드시 아래를 지킨다.
-
-### OAuth2 Client 커스터마이징
-
-| 상황 | 권장 구조 |
-|------|-----------|
-| 특정 Provider 전용 AuthorizedClientService | **non-bean 클래스** + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 내부 주입 |
-| 여러 Provider에 공통 적용 | `@Service` 가능 (단 Google OIDC 등 로그인 플로우 영향 반드시 검증) |
-
-- `@Component`/`@Service` 등록은 Spring이 **모든 OAuth2 Provider 플로우에 자동 편입**시킨다. 예: Google 로그인 → `saveAuthorizedClient(email, ...)` 호출 시 커스텀 서비스가 email을 Long 파싱하려다 `NumberFormatException` → 로그인 실패
-- non-bean으로 만들 때는 `@Transactional` 같은 AOP 기반 어노테이션이 무효임을 인지 (프록시 미적용). 필요한 트랜잭션은 내부에서 직접 호출하는 Repository 단일 연산에 위임
-
-### SecurityContext 오염 방지
-
-- **외부 API용 서비스가 `SecurityContextHolder.getContext().setAuthentication(...)`을 호출하면**, 해당 요청 스레드의 인증 주체가 외부 토큰으로 바뀐다 → 응답 복귀 후 admin 세션의 후속 요청이 403으로 끊긴다.
-- 공용/다른 모듈의 서비스를 admin에서 호출할 때는 controller에서 반드시 아래 패턴으로 격리:
-
-```java
-Authentication saved = SecurityContextHolder.getContext().getAuthentication();
-try {
-  externalService.call(...);
-} finally {
-  if (saved != null) {
-    SecurityContextHolder.getContext().setAuthentication(saved);
-  }
-}
-```
-
-- 가능하면 외부 서비스 내부에서 `setAuthentication` 자체를 제거하고, 호출자가 명시적으로 `OAuth2AuthorizedClient`를 주입받아 쓰도록 리팩토링한다.
 
 ---
 

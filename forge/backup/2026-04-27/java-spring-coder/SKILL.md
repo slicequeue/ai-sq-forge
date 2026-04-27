@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.4"
-last-modified: "2026-04-27"
-changelog: "실전 가드레일 강화: Non-bean @Transactional 금지, OAuth2 Client non-bean 격리 패턴, SecurityContext.setAuthentication 금지(save/restore 패턴), env yml 4곳 override 검증, DB 컬럼 grep 확인. 자기검증 체크리스트 14·15·16번 추가"
+version: "1.3"
+last-modified: "2026-04-17"
+changelog: "실전 피드백 반영: JPA @NotNull+@Column(nullable=false) 병행 필수 규칙 추가"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -269,9 +269,6 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - **Application에서 Infrastructure 구체 클래스 직접 import 금지**
 - **Domain에 JPA/Spring 어노테이션 금지** — 순수 도메인 유지
 - **테스트 5회 이상 연속 실패 시 즉시 중단, 보고**
-- **Non-bean 클래스에 `@Transactional` 금지** — Spring AOP 프록시 기반이므로 Spring Bean(`@Component`/`@Service`/`@Repository` 등)에서만 동작. Non-bean이면 어노테이션 제거 + Javadoc에 "프록시 미적용으로 트랜잭션 없음" 명시. 필요하면 내부에서 `SimpleJpaRepository` 단일 연산(자체 트랜잭션 보장)만 사용하거나 Bean으로 승격
-- **OAuth2 Client 커스터마이징 클래스를 `@Component`/`@Service`로 무분별하게 등록 금지** — Spring이 모든 OAuth2 Provider 플로우(Google OIDC 포함)에 자동 편입시켜 타 Provider 로그인이 깨진다. Provider 전용이면 non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 내부 주입 방식 사용
-- **admin 세션 중 `SecurityContextHolder.setAuthentication(...)` 호출 금지** — 외부 OAuth2 토큰이 admin 인증을 덮어 이후 요청 403 유발. 호출이 불가피하면 controller에서 save/finally-restore 패턴 필수
 
 ### 소프트 가드레일
 
@@ -283,8 +280,6 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - `JOIN FETCH` + `Page` 조합 시 반드시 `countQuery` 분리 — 안 하면 메모리 내 페이지네이션 발생
 - `@RequestParam(required = false) String`의 빈 문자열 → 컨트롤러에서 `isBlank() → null` 정규화 처리
 - 서비스 시그니처 변경 시 테스트의 mock 호출도 반드시 동기화 업데이트
-- 외부 API 의존성 추가 시 **환경별 yml 4곳**(`application.yml`, `application-jp-dev.yml`, `application-jp-stg.yml`, `application-jp-prd.yml`) override 일치 확인 — 누락 시 prd가 sandbox URL 호출하는 사고 발생
-- DB 컬럼 참조 전 실제 스키마/마이그레이션 파일 grep 확인 — 추측성 컬럼명(`transmitter_id` 대신 `sensor_id`) 사용하지 말 것
 
 ---
 
@@ -305,9 +300,6 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 11. [ ] **설정**: SecurityConstants airArray, 환경변수 4곳, spotless?
 12. [ ] **가드레일**: 커밋 안 함, H2 없음, 마이그레이션 보호, stash 없음?
 13. [ ] **admin 모듈**: admin 작업이면 13~16 규칙 참조했는가? (@Controller, AdminHistory, Thymeleaf 레이아웃)
-14. [ ] **Spring Bean/AOP**: Non-bean 클래스에 `@Transactional` 같은 AOP 어노테이션 붙이지 않았는가? OAuth2 Client 커스터마이징은 non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 패턴 준수?
-15. [ ] **SecurityContext 격리**: 외부 OAuth2/API 호출이 admin 세션을 오염시키지 않는가? (save/restore 또는 setAuthentication 제거)
-16. [ ] **외부 API 환경 설정**: 신규 외부 의존성의 endpoint/credential을 local/dev/stg/prd yml 4곳에 모두 override 했는가?
 
 ---
 
