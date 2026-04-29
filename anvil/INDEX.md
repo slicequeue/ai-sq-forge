@@ -8,13 +8,13 @@
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.3 | TDD 기술 설계 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/tdd-designer/` |
 | [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.5 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** (v1.5 회귀 PASS, FQCN 하드 가드레일 + AUTO FAIL #6 + TC-4 신규 PASS) | 95/100 평균 (TC-1 99 / TC-2 92 / TC-3 PASS / TC-4 94) | `skills/java-spring-coder/` |
 | [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.5 | dev 기준 변경 코드 자체 리뷰 (읽기 전용) | **회귀 검증 대기** (v1.5: FQCN 검출 항목 + TC-4 테스트 파일 회귀 방지) | 95/100 (v1.4 기준, v1.5 회귀 필요) | `skills/self-code-reviewer/` |
-| [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.3 | PR 피드백 수집·수정·push·답글 (sq-tone-writer 경유) | **실전 배치 가능** | 97.7/100 (v1.3 회귀: 96.3 → 97.7, in_reply_to 정정 효과) | `skills/pr-feedback-resolver/` |
+| [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.4 | PR 피드백 수집·수정·push·답글 (사람 vs CodeRabbit 봇 호출 파라미터 분리) | **회귀 검증 대기** (v1.4 역수입: 봇 호출 파라미터 + 사람 답글 A-1/A-2/A-3 분류) | 97.7/100 (v1.3 기준) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.0 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (멀티턴 합의) | **실전 배치 가능** | 88/100 (TC-1) | `skills/admin-prd-plan-designer/` |
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.1 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE, OAuth2/SecurityContext 격리 포함) | **실전 배치 가능** | 95.3/100 (v1.1 회귀: 94.7 → 95.3, TC-2 +2) | `skills/admin-thymeleaf-ui/` |
 | [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **실전 배치 가능** | 89/100 (TC-1) | `skills/api-inventory-generator/` |
 | [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.1 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **회귀 검증 대기** (v1.1: FQCN 절대 금지 + AUTO FAIL #5 + TC-4 mock FQCN 회귀) | 91/100 (v1.0 기준, v1.1 회귀 필요) | `skills/java-layered-unit-testing/` |
 | [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.1 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 | **실전 배치 가능** | 93/100 (TC-1) | `skills/chaos-test-planner/` |
-| [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.2 | 사용자 말투로 슬랙/PR/문서/리뷰 답글 작성 (SQ 톤 프로파일) | **실전 배치 가능** | 97.2/100 (v1.2 회귀: 동률, 보너스 TC-6 PR 답글 97) | `skills/sq-tone-writer/` |
+| [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.3 | 사용자 말투로 슬랙/PR/문서/리뷰 답글 작성 (사람 + CodeRabbit 봇 톤 분기) | **회귀 검증 대기** (v1.3 역수입: 봇 평어 단정형 + 사람 A-1/A-2/A-3 + tone-examples 실전 샘플 100줄+) | 97.2/100 (v1.2 기준) | `skills/sq-tone-writer/` |
 | [jira-bug-root-cause](skills/jira-bug-root-cause/SKILL.md) | 1.0 | Jira 버그 원인 규명 + QA 친화 코멘트 작성 | **실전 배치 가능** | 91/100 (TC-1) | `skills/jira-bug-root-cause/` |
 | [chat-incident-report](skills/chat-incident-report/SKILL.md) | 1.0 | Google Chat 장애/CS 대응 메시지 (고정 6섹션 + CS 복붙 품질) | **실전 배치 가능** | 95/100 (3/3 PASS, Baseline +58.7점, TC-3 AUTO FAIL 4건 방어) | `skills/chat-incident-report/` |
 | [sq-today-reviewer](skills/sq-today-reviewer/SKILL.md) | 0.1 | 하루 Claude 작업 총체 리뷰 → 놓친 학습·공부 주제·반복 실수·소양·내일 액션 6섹션 성장 리포트 | **테스트 대기** | - | `skills/sq-today-reviewer/` |
@@ -69,7 +69,7 @@
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
 | java-spring-coder | skill | 1.4 | 1.5 | **재배포 필요** (v1.5 회귀 PASS 완료: 2026-04-29, 95/100 평균. PR #527 FQCN 가드레일 검증) |
 | self-code-reviewer | skill | 1.4 | 1.5 | **재배포 필요** (v1.5: PR #527 자체 리뷰 누락 → FQCN 검출 항목 추가, 회귀 검증 후 배포) |
-| pr-feedback-resolver | skill | 1.3 | 1.3 | 동기화 (2026-04-27 역수입: sq-tone-writer 경유 + in_reply_to 패턴) |
+| pr-feedback-resolver | skill | 1.3 | 1.4 | **재배포 필요** (v1.4 역수입 2026-04-29: CodeRabbit 봇 호출 파라미터 분리 + 사람 답글 A-1/A-2/A-3 분류) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
 | git-pr | command | 2.0 (별칭) | 2.0 (별칭) | 동기화 (2026-04-27 skill 승격) |
@@ -84,7 +84,7 @@
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
-| sq-tone-writer | skill | 1.2 | 1.2 | 동기화 (2026-04-27 역수입: GitHub PR 리뷰어 답글 섹션) |
+| sq-tone-writer | skill | 1.2 | 1.3 | **재배포 필요** (v1.3 역수입 2026-04-29: CodeRabbit 봇 톤 분기 + tone-examples 봇 답글 실전 샘플) |
 | jira-bug-root-cause | skill | 1.0 | 1.0 | 동기화 |
 | chat-incident-report | skill | 1.0 (실전) | 1.0 (역수입) | 동기화 (2026-04-22 역수입, 마스킹 — forge→pasta 배포 금지) |
 | gcp-infra-architect | agent | 1.2 | 1.2 | 동기화 (2026-04-22 신규 배포) |
