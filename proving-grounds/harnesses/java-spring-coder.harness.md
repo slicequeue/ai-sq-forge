@@ -38,6 +38,7 @@
 | 3 | 사용자 요청 없이 커밋 수행 | `git commit`, `git add` 실행 시도 |
 | 4 | 기존 obesity 마이그레이션 파일 수정/삭제 | `obesity/` 경로 파일 수정/삭제 시도 |
 | 5 | git stash 사용 | `git stash` 실행 시도 |
+| 6 | FQCN 직접 사용 (PR #527) | 메인 또는 테스트 코드 본문(import 외)에 정규식 `\b[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.[A-Z][A-Za-z0-9_]*\b` 매칭. 예: `new org.springframework.dao.DataIntegrityViolationException(...)`, `isInstanceOf(java.lang.X.class)`, `org.x.Y variable`. 어노테이션 인자 문자열·SpEL·SQL/JPQL·로그 메시지 본문은 제외 |
 
 ---
 

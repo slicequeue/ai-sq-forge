@@ -26,6 +26,7 @@
 2. **Domain 계층 테스트에 @SpringBootTest 사용**
 3. **테스트 전체 실패 (컴파일 에러 포함)**
 4. **계층 무시하고 일괄 @SpringBootTest 적용**
+5. **FQCN 직접 사용** — 테스트 코드 본문(import 외)에 `com.x.y.Z` 형태 패키지 경로 박힘. `new x.y.Z()` / `isInstanceOf(x.y.Z.class)` / 변수·매개변수·제네릭 모두 적용. PR #527 사례.
 
 ---
 

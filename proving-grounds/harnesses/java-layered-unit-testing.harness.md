@@ -35,6 +35,7 @@
 | 2 | Domain 계층에 @SpringBootTest | `@SpringBootTest` in Domain 테스트 |
 | 3 | 테스트 전체 실패 | 컴파일 에러 또는 전체 테스트 실패 |
 | 4 | 계층 무시 일괄 @SpringBootTest | 모든 테스트에 `@SpringBootTest` |
+| 5 | FQCN 직접 사용 (PR #527) | 테스트 코드 본문(import 외)에 정규식 `\b[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.[A-Z][A-Za-z0-9_]*\b` 매칭. 예: `new org.springframework.dao.X(...)`, `isInstanceOf(java.lang.RuntimeException.class)`. 어노테이션 인자 문자열·SpEL·SQL/JPQL 쿼리·로그 메시지 본문은 제외 |
 
 ---
 

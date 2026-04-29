@@ -4,13 +4,17 @@
 
 ---
 
-## 1. 아키텍처 (01-architecture-convention)
+## 1. 아키텍처 (01-architecture-convention + 19-architecture-boundaries)
 
 - [ ] 의존성 방향: `Web → Application → Domain ← Infrastructure` 위반 없는가?
 - [ ] Domain에서 Application/Infrastructure import가 없는가?
 - [ ] Application에서 Infrastructure 구체 클래스 직접 import가 없는가?
 - [ ] 패키지 구조가 `pghd/{domain}/{layer}/` flat 구조인가?
 - [ ] 다른 도메인 리포지토리/Infrastructure 직접 접근이 없는가? (Client 패턴 사용)
+- [ ] **[아키텍처 경계]** 다른 도메인의 `*JpaRepository`를 import하지 않는가?
+- [ ] **[아키텍처 경계]** 다른 도메인의 `*JpaEntity`를 import하지 않는가?
+- [ ] **[아키텍처 경계]** 동일 인터페이스 구현체가 여러 개일 때 `@Qualifier`로 명시적 주입하는가?
+- [ ] **[아키텍처 경계]** Service/Client 삭제 시 프로젝트 전체에서 사용처가 없는가?
 - [ ] S2S API URL이 `/{service}/{version}/{domain}/{version}/{resource}` 형식인가?
 - [ ] Spring Bean 이름 충돌 방지를 위해 클래스명에 도메인 접두사가 있는가?
 
@@ -52,6 +56,11 @@
 ## 7. 일반 규칙 (07-general-project-convention)
 
 - [ ] Explicit Import인가? (와일드카드 `import java.util.*` 금지)
+- [ ] **FQCN 직접 사용 없는가?** (코드 본문에 `com.x.y.Z` 형태 패키지 경로 박지 않았는가)
+  - 검사 대상: 변수 선언, 매개변수, 제네릭, `new x.y.Z()`, `x.y.Z.class`, 캐치 절
+  - **테스트 파일도 동일 검사** — mock 예외(`new org.springframework.dao.DataIntegrityViolationException(...)`)와 `isInstanceOf(x.y.Z.class)` 패턴이 PR #527에서 누수됨
+  - 검사 제외: 어노테이션 인자 문자열, SpEL, JPQL/SQL 쿼리, 로그 메시지 본문
+  - 검출 시 → **필수 수정** 등급으로 보고 (`07-general-project-convention.md` "Explicit Imports — 전체 패키지 경로 직접 사용 금지" 명시 위반)
 - [ ] Early Return 패턴을 따르는가?
 - [ ] 로깅이 `@Log4j2`/`@Slf4j` + `[ClassName.methodName]` 형식인가?
 - [ ] 서비스 메서드 네이밍: `getAll*`, `get*OrElseNull`, `find*`, `exist*` 패턴인가?

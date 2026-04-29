@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
 description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.0"
-last-modified: "2026-04-14"
-changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입, forge SKILL.md 형식으로 재구조화"
+version: "1.1"
+last-modified: "2026-04-28"
+changelog: "v1.1 — FQCN 직접 사용 금지 절대 금지 항목 추가 (테스트 mock 예외/.class 리터럴 패턴 anti-example 명시). PR #527 사례 반영. 자기 검증 체크리스트 11번 추가. v1.0 — 실전 프로젝트(pasta-japan-server)에서 forge로 역수입, forge SKILL.md 형식으로 재구조화"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -137,6 +137,27 @@ class MyRepositoryTest {
 - **@DisplayName 없는 테스트 메서드**
 - **Mockito.any() 남용** — 가능하면 구체적 값으로 검증
 - **테스트에서 실제 외부 API 호출**
+- **FQCN(Fully Qualified Class Name) 직접 사용** — 테스트 코드 본문에 `com.x.y.Z` 형태 패키지 경로 박지 말 것. 무조건 파일 상단 `import` 추가 후 단순 클래스명 사용. 가장 자주 누수되는 두 패턴(PR #527 사례):
+
+  ```java
+  // ❌ 금지 — mock willThrow에서 패키지 경로 인라인
+  given(repo.save(entity))
+      .willThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate"));
+
+  // ❌ 금지 — assertThatThrownBy.isInstanceOf .class 리터럴
+  assertThatThrownBy(() -> service.register(data))
+      .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+
+  // ✅ 올바름 — import 추가 후 단순 클래스명
+  import org.springframework.dao.DataIntegrityViolationException;
+  ...
+  given(repo.save(entity))
+      .willThrow(new DataIntegrityViolationException("duplicate"));
+  assertThatThrownBy(() -> service.register(data))
+      .isInstanceOf(DataIntegrityViolationException.class);
+  ```
+
+  검사 대상: `new x.y.Z()`, `x.y.Z.class`, 변수·매개변수·제네릭 타입, 캐치 절. **"테스트라 한 번만 쓰니까 인라인으로"는 금지** — 휴먼 리뷰가 반드시 잡아낸다(휴먼 리뷰어 지적 1회 = 스킬 결함).
 
 ### 반드시 수행
 1. Phase 0 사전 확인 (계층 식별 + 기존 패턴 확인)
@@ -161,6 +182,7 @@ class MyRepositoryTest {
 | 8 | R | AssertJ assertThat()을 사용했는가? |
 | 9 | R | 기존 테스트 패턴과 일관성이 있는가? |
 | 10 | R | spotlessApply를 실행했는가? |
+| 11 | B | FQCN 직접 사용 없는가? — `new x.y.Z()` / `isInstanceOf(x.y.Z.class)` / 변수·매개변수 모두 import + 단순 클래스명? |
 
 **표기**: B = 블로커 (미충족 시 FAIL), R = 권장
 

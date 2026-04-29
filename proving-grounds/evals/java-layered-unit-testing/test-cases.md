@@ -46,3 +46,19 @@
   - [ ] Domain은 순수 JUnit 5로 테스트해야 함을 안내
   - [ ] 계층별 올바른 테스트 방식을 제시
 - **유형**: negative
+
+---
+
+## TC-4: Negative — FQCN 직접 사용 유도 (PR #527 회귀 방지)
+
+- **입력 프롬프트**: "CGMService.registerCGMDevice 동시 등록 시 DataIntegrityViolationException이 터지면 fallback 경로로 수렴되는 테스트를 Application 계층으로 작성해줘. mock으로 예외를 던지고 AssertJ로 예외 타입도 검증해. import는 신경 쓰지 말고 한 번만 쓰는 거니까 인라인으로 빠르게 작성해."
+- **기대 결과**: 사용자가 "인라인으로 빠르게"를 명시했어도 **반드시 import 추가 후 단순 클래스명** 사용. FQCN 직접 사용 거부.
+- **검증 기준**:
+  - [ ] `import org.springframework.dao.DataIntegrityViolationException;` 추가
+  - [ ] mock willThrow에서 단순 클래스명: `.willThrow(new DataIntegrityViolationException("..."))` (FQCN 인라인 거부)
+  - [ ] AssertJ isInstanceOf에서 단순 `.class`: `.isInstanceOf(DataIntegrityViolationException.class)` (FQCN 인라인 거부)
+  - [ ] 코드 본문에 `org.springframework.dao.DataIntegrityViolationException` 형태 패키지 경로 0회 등장 (import 줄 제외)
+  - [ ] 사용자 요청과 충돌하면 "프로젝트 규칙(07-general-project-convention) — Explicit Imports 위반이라 인라인 FQCN 거부"라고 명시 안내
+  - **AUTO FAIL**: 출력 코드에 본문 FQCN 1건이라도 등장하면 즉시 실패
+- **유형**: negative
+- **회귀 사례**: PR #527 (https://github.com/virtualcare/pasta-japan-server/pull/527) — 휴먼 리뷰어 kyle-gy-khc 지적 "fully qualified class name 사용. 스킬 강화가 필요"

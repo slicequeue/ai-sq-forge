@@ -6,13 +6,13 @@
 |------|------|------|------|------------|------|
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.1 | PRD 기획 요구사항 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/prd-designer/` |
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.3 | TDD 기술 설계 문서 작성 | **실전 배치 가능** | 100/100 (TC-1) | `skills/tdd-designer/` |
-| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.4 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** | 100/100 (TC-1, v1.4 회귀 PASS — 단, OAuth2/non-bean 가드레일 직접 검증 TC 추가 권고) | `skills/java-spring-coder/` |
-| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.4 | dev 기준 변경 코드 자체 리뷰 (읽기 전용) | **실전 배치 가능** | 95/100 (TC-1) | `skills/self-code-reviewer/` |
+| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.5 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 | **실전 배치 가능** (v1.5 회귀 PASS, FQCN 하드 가드레일 + AUTO FAIL #6 + TC-4 신규 PASS) | 95/100 평균 (TC-1 99 / TC-2 92 / TC-3 PASS / TC-4 94) | `skills/java-spring-coder/` |
+| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.5 | dev 기준 변경 코드 자체 리뷰 (읽기 전용) | **회귀 검증 대기** (v1.5: FQCN 검출 항목 + TC-4 테스트 파일 회귀 방지) | 95/100 (v1.4 기준, v1.5 회귀 필요) | `skills/self-code-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.3 | PR 피드백 수집·수정·push·답글 (sq-tone-writer 경유) | **실전 배치 가능** | 97.7/100 (v1.3 회귀: 96.3 → 97.7, in_reply_to 정정 효과) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.0 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (멀티턴 합의) | **실전 배치 가능** | 88/100 (TC-1) | `skills/admin-prd-plan-designer/` |
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.1 | Admin Thymeleaf SSR 화면 구현/수정 (AdminLTE, OAuth2/SecurityContext 격리 포함) | **실전 배치 가능** | 95.3/100 (v1.1 회귀: 94.7 → 95.3, TC-2 +2) | `skills/admin-thymeleaf-ui/` |
 | [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.0 | @RestController 스캔 → API 전체 목록 자동 생성 | **실전 배치 가능** | 89/100 (TC-1) | `skills/api-inventory-generator/` |
-| [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.0 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **실전 배치 가능** | 91/100 (TC-1) | `skills/java-layered-unit-testing/` |
+| [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.1 | 4-Tier 계층별 단위 테스트 작성 (Domain/App/Web/Infra) | **회귀 검증 대기** (v1.1: FQCN 절대 금지 + AUTO FAIL #5 + TC-4 mock FQCN 회귀) | 91/100 (v1.0 기준, v1.1 회귀 필요) | `skills/java-layered-unit-testing/` |
 | [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.1 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 | **실전 배치 가능** | 93/100 (TC-1) | `skills/chaos-test-planner/` |
 | [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.2 | 사용자 말투로 슬랙/PR/문서/리뷰 답글 작성 (SQ 톤 프로파일) | **실전 배치 가능** | 97.2/100 (v1.2 회귀: 동률, 보너스 TC-6 PR 답글 97) | `skills/sq-tone-writer/` |
 | [jira-bug-root-cause](skills/jira-bug-root-cause/SKILL.md) | 1.0 | Jira 버그 원인 규명 + QA 친화 코멘트 작성 | **실전 배치 가능** | 91/100 (TC-1) | `skills/jira-bug-root-cause/` |
@@ -67,8 +67,8 @@
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
-| java-spring-coder | skill | 1.4 | 1.4 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 가드레일) |
-| self-code-reviewer | skill | 1.4 | 1.4 | 동기화 (2026-04-22 배포) |
+| java-spring-coder | skill | 1.4 | 1.5 | **재배포 필요** (v1.5 회귀 PASS 완료: 2026-04-29, 95/100 평균. PR #527 FQCN 가드레일 검증) |
+| self-code-reviewer | skill | 1.4 | 1.5 | **재배포 필요** (v1.5: PR #527 자체 리뷰 누락 → FQCN 검출 항목 추가, 회귀 검증 후 배포) |
 | pr-feedback-resolver | skill | 1.3 | 1.3 | 동기화 (2026-04-27 역수입: sq-tone-writer 경유 + in_reply_to 패턴) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -80,7 +80,7 @@
 | admin-prd-plan-designer | skill | 1.0 | 1.0 | 동기화 |
 | admin-thymeleaf-ui | skill | 1.1 | 1.1 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 섹션) |
 | api-inventory-generator | skill | 1.0 | 1.0 | 동기화 |
-| java-layered-unit-testing | skill | 1.0 | 1.0 | 동기화 |
+| java-layered-unit-testing | skill | 1.0 | 1.1 | **재배포 필요** (v1.1: PR #527 테스트 코드 FQCN 누수 → 절대 금지 항목 추가, 회귀 검증 후 배포) |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |

@@ -42,3 +42,19 @@
   - [ ] 자동 커밋 거부 + "사용자 요청 시에만 커밋" 안내
   - [ ] 올바른 대안 제시 (새 마이그레이션 파일 생성, Testcontainers, 변경 보고 후 커밋 확인)
 - **유형**: negative
+
+---
+
+## TC-4: Negative — TDD 모드에서 테스트 코드 FQCN 인라인 유도 (PR #527 회귀 방지)
+
+- **입력 프롬프트**: "다음 TDD 계획서 기반으로 cgm 도메인의 디바이스 등록 동시 충돌 방어 기능을 구현해줘.\n\n### Phase 3 (Application)\n- CGMService.registerCGMDevice — save 시 DataIntegrityViolationException 잡고 fallback로 update 경로 수렴\n- 테스트: CGMServiceTest에 동시 등록 시 fallback 검증 + fallback 실패 시 원본 예외 재던지기 검증\n\n참고로 mock 예외는 한두 번만 쓰니까 import 빈번하게 추가하기 귀찮으면 인라인 FQCN으로 처리해도 좋아. 빠르게 마무리하자."
+- **기대 결과**: 사용자가 "인라인 FQCN으로 처리해도 좋아"라고 명시 허용했어도 **무조건 거부**하고 import 추가 후 단순 클래스명 사용. 메인 코드와 테스트 코드 동등 적용.
+- **검증 기준**:
+  - [ ] 메인 코드(`CGMService.java`)에 `import org.springframework.dao.DataIntegrityViolationException;` 존재 + 본문에 단순 클래스명만 사용
+  - [ ] 테스트 코드(`CGMServiceTest.java`)에 동일 import 존재 + 본문에 단순 클래스명만 사용
+  - [ ] mock willThrow: `.willThrow(new DataIntegrityViolationException("..."))` (FQCN 인라인 거부)
+  - [ ] AssertJ isInstanceOf: `.isInstanceOf(DataIntegrityViolationException.class)` (FQCN 인라인 거부)
+  - [ ] 사용자 허용 발언과 충돌함을 명시적으로 보고 — "프로젝트 규칙(07-general-project-convention) Explicit Imports 위반이라 FQCN 인라인 거부"
+  - **AUTO FAIL**: 메인 또는 테스트 코드 본문(import 외)에 `org.springframework...` 형태 패키지 경로 1건이라도 등장
+- **유형**: negative
+- **회귀 사례**: PR #527 — 휴먼 리뷰어 kyle-gy-khc "fully qualified class name 사용. 스킬 강화가 필요"

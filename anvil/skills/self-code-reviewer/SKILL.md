@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.3"
-last-modified: "2026-04-16"
-changelog: "eval 피드백 반영: Domain JPA 위반을 가드레일급(우선순위 1)으로 격상, Service JPA 노출 검사 강화"
+version: "1.5"
+last-modified: "2026-04-28"
+changelog: "v1.5 — FQCN 직접 사용 검출 항목 추가 (메인+테스트 모두). PR #527 자체 리뷰 누락 사례 반영. 특별 검사 항목에 FQCN 패턴 명시, 검출 시 필수 수정 등급으로 보고. v1.4 — Insights 피드백 반영: Architecture Boundary 검사 강화"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -37,7 +37,7 @@ changelog: "eval 피드백 반영: Domain JPA 위반을 가드레일급(우선�
 | 우선순위 | 관점 | 설명 |
 |---------|------|------|
 | 1 | **가드레일 위반** | 하드 가드레일 위반 여부 (즉시 수정 필요). **Domain에 JPA 어노테이션(@Entity, @Table 등) 존재도 이 등급** |
-| 2 | **아키텍처 위반** | 의존성 방향, Repository 패턴, Service 계층의 JPA Entity 직접 노출 |
+| 2 | **아키텍처 위반** | 의존성 방향, Repository 패턴, Service JPA Entity 노출, **타 도메인 경계 위반** |
 | 3 | **컨벤션 위반** | 네이밍, Lombok, record/class, import 규칙 |
 | 4 | **설정 누락** | SecurityConstants, 환경변수 4곳, 마이그레이션 |
 | 5 | **테스트 품질** | 계층별 테스트, Fake/Spy, Testcontainers |
@@ -67,6 +67,7 @@ git diff dev...HEAD -- {path}
 | 규칙 파일 | 검사 대상 |
 |-----------|-----------|
 | `01-architecture-convention.md` | 의존성 방향, 패키지 구조, Client 패턴 |
+| `19-architecture-boundaries.md` | 타 도메인 Repository import 금지, 삭제 전 사용처 확인, Qualifier |
 | `02-domain-entity-convention.md` | Domain Entity class, Lombok, primitive/Wrapper |
 | `03-jpa-entity-convention.md` | JPA Entity, Builder, 변환 메서드 |
 | `04-repository-pattern-convention.md` | 3단계 Repository 패턴 |
@@ -94,10 +95,20 @@ git diff dev...HEAD -- {path}
 - **도메인 엔티티 Lombok**: `@Getter` + `@EqualsAndHashCode` 필수 적용 여부
 - **로깅 형식 검사**: `[ClassName.methodName]` 접두사 사용 여부, PII 금지, 민감정보 마스킹 여부
 - **Service 반환 타입 검사**: JPA 엔티티를 Service 밖으로 직접 노출하는지 여부
+- **타 도메인 Repository import 검사**: 다른 도메인의 `*JpaRepository`, `*JpaEntity`, `*RepositoryImpl`을 직접 import하는지 (19-architecture-boundaries 위반)
+- **Qualifier 주입 검사**: 동일 인터페이스 구현체가 여러 개일 때 `@Qualifier`로 명시적 주입하는지
+- **삭제 안전성 검사**: Service/Client/유틸리티 클래스 삭제 시 전체 프로젝트에서 사용처 잔존 여부
 - **재시도 로직 검증**: 재시도 로직이 있으면 실제 catch/retry가 동작하는지 로직 흐름 검증
 - **JPQL 페이지네이션 검사**: `JOIN FETCH` + `Page` 사용 시 `countQuery` 분리 여부
 - **페이지네이션 필터 파라미터 검사**: 페이지네이션 링크에 현재 필터 파라미터가 모두 포함되었는지
 - **민감정보 로깅 검사**: 쿠폰 코드 등 민감 정보가 INFO 로그에 평문으로 노출되는지
+- **FQCN(Fully Qualified Class Name) 검출**: 코드 본문(import 문 외)에 `com.x.y.Z` 형태 패키지 경로가 직접 박혀 있는지 검사. **메인+테스트 코드 모두 대상**. 가장 자주 누수되는 패턴(PR #527 사례):
+  - `new x.y.Z("...")` — 예외/객체 인스턴스 생성을 인라인으로
+  - `isInstanceOf(x.y.Z.class)` / `MyClass.class` 형태의 `.class` 리터럴
+  - `x.y.Z variable = ...` / 매개변수 / 제네릭 타입 인자 / 캐치 절
+  - **검사 룰 (개념)**: 정규식 `\b[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.[A-Z][A-Za-z0-9_]*\b` 매칭이 import 문이 아닌 코드 본문에 등장하는지
+  - **검사 제외**: 어노테이션 인자 문자열, SpEL 표현식, JPQL/SQL 쿼리 문자열, 로그 메시지 본문은 false positive — 무시
+  - **검출 시 등급**: 필수 수정 (07-general-project-convention "Explicit Imports" 명시 위반). 테스트 파일도 동일 적용 — "테스트라 한 번만 쓰니까"는 면죄부 아님
 
 #### admin 모듈 검사 (admin/** 변경 시에만)
 
@@ -169,6 +180,7 @@ git diff dev...HEAD -- {path}
 6. [ ] **코드 미변경**: 리뷰만 하고 코드를 수정하지 않았는가?
 7. [ ] **구체적 위치**: 위반 항목에 파일명:라인 번호를 포함했는가?
 8. [ ] **admin 모듈**: admin 변경이 있으면 13~16 규칙을 Read하고 대조했는가? 4-Tier 위반으로 오판하지 않았는가?
+9. [ ] **FQCN 검사**: 변경 파일(메인+테스트)의 코드 본문에 `com.x.y.Z` 형태 패키지 경로가 직접 박혀 있는지 명시적으로 확인했는가? mock 예외(`new x.y.Z()`)와 `.class` 리터럴(`isInstanceOf(x.y.Z.class)`) 점검?
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.4"
-last-modified: "2026-04-27"
-changelog: "실전 가드레일 강화: Non-bean @Transactional 금지, OAuth2 Client non-bean 격리 패턴, SecurityContext.setAuthentication 금지(save/restore 패턴), env yml 4곳 override 검증, DB 컬럼 grep 확인. 자기검증 체크리스트 14·15·16번 추가"
+version: "1.5"
+last-modified: "2026-04-28"
+changelog: "v1.5 — FQCN 직접 사용 금지 하드 가드레일 추가 (메인+테스트 동일 적용). PR #527 사례: 테스트 코드에서 `new org.springframework.dao.DataIntegrityViolationException()` / `isInstanceOf(x.y.Z.class)` 패턴 누수 → 휴먼 리뷰 지적. mock 예외 작성 시 가장 자주 누수되는 패턴 명시. 자기검증 체크리스트 17번 추가. v1.4 — 실전 가드레일 강화: Non-bean @Transactional 금지, OAuth2 Client non-bean 격리 패턴, SecurityContext.setAuthentication 금지(save/restore 패턴), env yml 4곳 override 검증, DB 컬럼 grep 확인."
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -272,6 +272,19 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - **Non-bean 클래스에 `@Transactional` 금지** — Spring AOP 프록시 기반이므로 Spring Bean(`@Component`/`@Service`/`@Repository` 등)에서만 동작. Non-bean이면 어노테이션 제거 + Javadoc에 "프록시 미적용으로 트랜잭션 없음" 명시. 필요하면 내부에서 `SimpleJpaRepository` 단일 연산(자체 트랜잭션 보장)만 사용하거나 Bean으로 승격
 - **OAuth2 Client 커스터마이징 클래스를 `@Component`/`@Service`로 무분별하게 등록 금지** — Spring이 모든 OAuth2 Provider 플로우(Google OIDC 포함)에 자동 편입시켜 타 Provider 로그인이 깨진다. Provider 전용이면 non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 내부 주입 방식 사용
 - **admin 세션 중 `SecurityContextHolder.setAuthentication(...)` 호출 금지** — 외부 OAuth2 토큰이 admin 인증을 덮어 이후 요청 403 유발. 호출이 불가피하면 controller에서 save/finally-restore 패턴 필수
+- **FQCN(Fully Qualified Class Name) 직접 사용 금지** — 모든 외부 클래스는 파일 상단 `import` 선언 후 단순 클래스명 사용. **메인+테스트 코드 동일 적용**. 검사 대상: 변수 선언, 매개변수, 제네릭, 예외 인스턴스 생성(`new x.y.Z()`), `.class` 리터럴, 캐치 절, 어노테이션. 가장 자주 누수되는 패턴은 **테스트 mock 예외**:
+  ```java
+  // ❌ 금지 (PR #527 사례)
+  .willThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate"));
+  .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+
+  // ✅ 올바름
+  import org.springframework.dao.DataIntegrityViolationException;
+  ...
+  .willThrow(new DataIntegrityViolationException("duplicate"));
+  .isInstanceOf(DataIntegrityViolationException.class)
+  ```
+  예외: 어노테이션 인자 문자열, SpEL 표현식, JPQL/SQL 쿼리, 로그 메시지 본문은 검사 대상 아님. **"한 번만 쓰는 거니까 인라인으로"는 절대 금지** — 무조건 import 추가 후 단순 클래스명.
 
 ### 소프트 가드레일
 
@@ -308,6 +321,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 14. [ ] **Spring Bean/AOP**: Non-bean 클래스에 `@Transactional` 같은 AOP 어노테이션 붙이지 않았는가? OAuth2 Client 커스터마이징은 non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 패턴 준수?
 15. [ ] **SecurityContext 격리**: 외부 OAuth2/API 호출이 admin 세션을 오염시키지 않는가? (save/restore 또는 setAuthentication 제거)
 16. [ ] **외부 API 환경 설정**: 신규 외부 의존성의 endpoint/credential을 local/dev/stg/prd yml 4곳에 모두 override 했는가?
+17. [ ] **FQCN 검사**: 메인+테스트 코드 본문(import 외)에 `com.x.y.Z` 형태 패키지 경로가 직접 박혀 있지 않은가? 특히 mock 예외(`new x.y.Z()`)와 `.class` 리터럴(`isInstanceOf(x.y.Z.class)`) 점검?
 
 ---
 
