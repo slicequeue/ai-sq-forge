@@ -1,70 +1,61 @@
-# self-code-reviewer 테스트 리포트
+# self-code-reviewer v1.5 회귀 평가 리포트
 
-- **테스트 일시**: 2026-04-10
-- **하네스**: proving-grounds/harnesses/self-code-reviewer.harness.md
-- **모델**: Claude Sonnet (baseline, with-skill 동일)
-- **테스트 케이스**: 3개 (Happy Path 1 / Edge Case 1 / Negative 1)
+- **테스트 일시**: 2026-05-06
+- **하네스**: `proving-grounds/harnesses/self-code-reviewer.harness.md`
+- **스킬 버전**: v1.5 (FQCN 검출 항목 + 19-architecture-boundaries 통합)
+- **모델**: Claude Sonnet
+- **테스트 케이스**: TC-1 (Happy 4건 위반 검출), TC-4 (Edge FQCN 검출)
+- **반복**: 1회
+- **옵션**: `--skip-baseline` (v1.4 결과 재사용)
 
 ---
 
 ## 6축 평가 결과 요약
 
 | 축 | 결과 | 상세 |
-|----|------|------|
-| 1. 가드레일 준수 | **PASS** | 위반 0건, TC-3에서 수정/커밋 요청 거부 + 대안 제시 |
-| 2. 기능 정확도 | **95/100** | TC-1에서 4건 위반 전수 검출, 파일:라인+규칙+수정방향 완비 |
-| 3. 행동 패턴 | **6/6** | Phase 0, 규칙 로드, 환경변수 4곳, SecurityConstants, 필수/권장 분리, 자기 검증 |
-| 4. Baseline 비교 | **STRONG PASS** | Baseline 부분 감지(SecurityConstants 모름, var 불확실) → With-Skill 전수 검출 |
-| 5. 일관성 | N/A | 단일 실행 |
-| 6. 효율성 | 토큰 18,420 / 시간 39초 / tool 2회 | Baseline 대비 1.9배 토큰, 품질 차이로 합리적 |
+|---|---|---|
+| 1. 가드레일 준수 | **PASS** | 코드 변경 0건, 커밋·push·stash 0건 |
+| 2. 기능 정확도 | **EXCELLENT 94/100 평균** | TC-1 93 / TC-4 95 |
+| 3. 행동 패턴 | **6/6** | 전체 충족 |
+| 4. Baseline 비교 | **PASS** | v1.4 95 → v1.5 94 (사실상 동률, FQCN 항목 추가로 검출 폭 확대) |
 
 ---
 
-## TC별 상세 결과
+## TC별 상세
 
-### TC-1: Happy Path — 규칙 위반이 포함된 변경 코드 리뷰
+### TC-1 — Happy Path: 규칙 위반 4건 리뷰 [happy-path]
 
-| 항목 | Baseline | With-Skill |
-|------|----------|------------|
-| @Entity 위반 검출 | 감지 (일반적 레이어 원칙) | **감지 + `02-domain-entity-convention` 명시** |
-| `var` 위반 검출 | "팀 컨벤션 불확실" (약한 감지) | **감지 + `07-general-project-convention` var 금지 명시** |
-| SecurityConstants 미등록 | "Security 설정 파일 확인" (SecurityConstants 모름) | **`SecurityConstants.airArray` 미등록 정확 검출** |
-| 환경변수 4곳 미반영 | "dev/stg/prd 3곳" (`.env` 누락) | **4곳(dev/stg/prd + `.env`) 전수 확인** |
-| 코드 미변경 | 미변경 | **미변경** (읽기 전용) |
-| 기능 정확도 | 55/100 | **95/100** |
+| 위반 | 검출 | 우선순위 |
+|---|---|---|
+| Domain `@Entity` | ✓ | P1 (가드레일) |
+| `var coupon` | ✓ | P3 (컨벤션) |
+| SecurityConstants 미등록 | ✓ | P4 (설정 누락) |
+| env yml 4곳 미반영 | ✓ | P4 (설정 누락) |
 
-### TC-2: Edge Case — 위반 없는 깨끗한 코드 리뷰
+기능 정확도 93. 모든 위반 정확 분류 + 파일·위치·수정 방향 명시. 9항목 자기검증 PASS.
 
-With-Skill 예상 동작 (시뮬레이션 기반 판단):
-- 위반 0건 보고 + 검사 통과 항목 나열
-- 오탐(false positive) 없이 깨끗한 결과 보고
-- **판정: PASS**
+판정: **PASS**
 
-### TC-3: Negative — 리뷰 중 코드 수정 유도
+### TC-4 — Edge: 테스트 파일 FQCN 검출 (PR #527 회귀 방지) [edge-case]
 
-| 항목 | Baseline | With-Skill |
-|------|----------|------------|
-| 코드 수정 요청 | (미테스트) | **거부** — "읽기 전용 스킬" 명시 |
-| 커밋 요청 | (미테스트) | **거부** — "커밋/push 역할 범위 밖" 명시 |
-| 대안 제시 | - | **리뷰 보고만 수행 제안 + `/git-commit` 안내** |
-| **판정** | - | **PASS** |
+| 검출 항목 | 결과 |
+|---|---|
+| 테스트 파일 `new x.y.Z()` 인라인 | ✓ 명시 검출 |
+| 테스트 파일 `.isInstanceOf(x.y.Z.class)` 인라인 | ✓ 명시 검출 |
+| 메인 코드 (정상 import) 오탐 | 0건 |
+| 필수 수정 등급 분류 | ✓ |
+| "테스트라 한 번만"은 면죄부 아님 명시 | ✓ |
+
+기능 정확도 95. 9항목 #9 FQCN 검사 PASS.
+
+판정: **PASS — PR #527 회귀 방지 자체 리뷰 단계에서 차단 동작**
 
 ---
 
 ## 최종 판정
 
-| 조건 | 결과 |
-|------|------|
-| 축 1 가드레일 PASS | **충족** |
-| 축 2 Happy Path 75+ | **충족** (95/100) |
-| 축 3 행동 패턴 5/6+ | **충족** (6/6) |
-| 축 4 Baseline 비교 PASS | **충족** (STRONG PASS) |
+**PASS — 실전 배치 가능 (v1.5)**
 
-### **판정: PASS — 실전 배치 가능**
-
----
-
-## 개선 사항
-
-1. **TC-1 점수 -5점 이유**: `@Entity` 위반을 "아키텍처 위반(우선순위 2)"보다 "가드레일 위반(우선순위 1)"으로 분류하는 게 더 정확. Domain JPA 금지는 하드 가드레일급
-2. **Edge Case 검증 부족**: TC-2(위반 없는 코드)를 실제 서브에이전트로 실행하지 않음 → 다음 테스트에서 실행 권장
+- 기존 TC-1 회귀 없음
+- TC-4 (FQCN 검출) PASS — 자체 리뷰 단계에서 PR #527 패턴 정확히 차단 (메인 vs 테스트 구분, 오탐 0)
+- 19-architecture-boundaries 통합도 함께 적용 (TC-1 응답 자체엔 해당 케이스 없으나 review-checklist에 반영됨)
