@@ -59,7 +59,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-04-28 (git-pr 0.2 재배포; 역수입 동기화: 2026-04-27) |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-05-06 (PR #527 FQCN 가드레일 + 봇 톤 분기 5건 일괄 재배포) |
 
 ### pasta-japan-server 배포 현황
 
@@ -67,9 +67,9 @@
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
-| java-spring-coder | skill | 1.4 | 1.5 | **재배포 필요** (v1.5 회귀 PASS 완료: 2026-04-29, 95/100 평균. PR #527 FQCN 가드레일 검증) |
-| self-code-reviewer | skill | 1.4 | 1.5 | **재배포 필요** (v1.5 회귀 PASS 2026-05-06: 94/100 평균. FQCN 검출 + 19-arch-boundaries 추가) |
-| pr-feedback-resolver | skill | 1.3 | 1.4 | **재배포 필요** (v1.4 회귀 PASS 2026-05-06: 94.5/100 평균. 봇/사람 매체 분기 동작) |
+| java-spring-coder | skill | 1.5 | 1.5 | 동기화 (2026-05-06 재배포: PR #527 FQCN 하드 가드레일 + AUTO FAIL #6, 회귀 95/100) |
+| self-code-reviewer | skill | 1.5 | 1.5 | 동기화 (2026-05-06 재배포: FQCN 검출 + 19-arch-boundaries, 회귀 94/100) |
+| pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
 | git-pr | command | 2.0 (별칭) | 2.0 (별칭) | 동기화 (2026-04-27 skill 승격) |
@@ -80,11 +80,11 @@
 | admin-prd-plan-designer | skill | 1.0 | 1.0 | 동기화 |
 | admin-thymeleaf-ui | skill | 1.1 | 1.1 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 섹션) |
 | api-inventory-generator | skill | 1.0 | 1.0 | 동기화 |
-| java-layered-unit-testing | skill | 1.0 | 1.1 | **재배포 필요** (v1.1 회귀 PASS 2026-05-06: 93.5/100 평균. FQCN 절대 금지 + AUTO FAIL #5) |
+| java-layered-unit-testing | skill | 1.1 | 1.1 | 동기화 (2026-05-06 재배포: FQCN 절대 금지 + AUTO FAIL #5, 회귀 93.5/100) |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
-| sq-tone-writer | skill | 1.2 | 1.3 | **재배포 필요** (v1.3 회귀 PASS 2026-05-06: 95.5/100 평균. CodeRabbit 봇 톤 분기 완벽 동작) |
+| sq-tone-writer | skill | 1.3 | 1.3 | 동기화 (2026-05-06 재배포: CodeRabbit 봇 톤 분기 + tone-examples 100줄+, 회귀 95.5/100) |
 | jira-bug-root-cause | skill | 1.0 | 1.0 | 동기화 |
 | chat-incident-report | skill | 1.0 (실전) | 1.0 (역수입) | 동기화 (2026-04-22 역수입, 마스킹 — forge→pasta 배포 금지) |
 | gcp-infra-architect | agent | 1.2 | 1.2 | 동기화 (2026-04-22 신규 배포) |
