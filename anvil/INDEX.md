@@ -21,12 +21,18 @@
 | [chat-incident-report](skills/chat-incident-report/SKILL.md) | 1.0 | Google Chat 장애/CS 대응 메시지 (고정 6섹션 + CS 복붙 품질) | **실전 배치 가능** | **역수입전용** | 95/100 (3/3 PASS, Baseline +58.7점, TC-3 AUTO FAIL 4건 방어) | `skills/chat-incident-report/` |
 | [sq-today-reviewer](skills/sq-today-reviewer/SKILL.md) | 0.3 | 하루 Claude 작업 총체 리뷰 → 놓친 학습·공부 주제(실무/CS이론 2트랙)·반복 실수·소양·내일 액션 6섹션 성장 리포트 | **테스트 대기** (harness/test-cases 작성됨, `/eval-harness` 미실행) | 일반 | - | `skills/sq-today-reviewer/` |
 | [git-pr](skills/git-pr/SKILL.md) | 0.2 | PR 생성/갱신 — 사람 친화 표현 + 표 위주 + 100~200줄 양식 (commands/git-pr.md에서 승격, forge 일반화) | **실전 배치 가능** (일관성 미검증 — `--repeat 3` 권장) | 일반 | 95.25/100 (TC-1 94 / TC-2 96 / TC-3 93 / TC-4 98) | `skills/git-pr/` |
+| [tolgee](skills/tolgee/SKILL.md) | 0.1 | Tolgee i18n 콘솔과 properties 파일 동기화 (push/pull/diff, KEEP 모드 기본) | **테스트 대기** (2026-05-19 pasta-japan-server에서 forge-upstream 역수입 — 하네스·루브릭 미작성) | 일반 | - | `skills/tolgee/` |
 
 ## Agents
 
 | 이름 | 버전 | 설명 | 상태 | 배포정책 | 테스트 점수 | 경로 |
 |------|------|------|------|---------|------------|------|
 | [gcp-infra-architect](agents/gcp-infra-architect/gcp-infra-architect.md) | 1.2 | GCP 특화 글로벌 인프라 설계·검토 파트너 (헬스케어 4개국 규제 + Terraform IaC + Phase 1.5 + 멀티턴·풀패키지 결정 트리) | **실전 배치 가능 (완전 검증 + 일관성 PASS)** | 일반 | 94.1/100 (v1.2, TC-2 3회 편차 4점, 방법론 통일 확보) | `agents/gcp-infra-architect/` |
+| [acceptance-tester](agents/acceptance-tester/acceptance-tester.md) | 0.1 | 인수 테스트·통합 테스트 전문 에이전트 (08-test-code-convention 우선, MockMvc + SpringBootTest) | **테스트 대기** (2026-05-19 pasta-japan-server에서 forge-upstream 역수입 — 평가 루브릭·하네스 미작성) | 일반 | - | `agents/acceptance-tester/` |
+| [apidog-mock-api-generator](agents/apidog-mock-api-generator/apidog-mock-api-generator.md) | 0.1 | Apidog OpenAPI 스펙 → Mock Controller + DTO + Swagger 문서 자동 생성 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/apidog-mock-api-generator/` |
+| [bug-analyzer](agents/bug-analyzer/bug-analyzer.md) | 0.1 | 스택트레이스 분석 → docs/bugs/ 버그 분석 문서 생성 (정상 vs 문제 흐름 비교 도표 포함). jira-bug-root-cause와 역할 경계 정리 필요 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/bug-analyzer/` |
+| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.1 | docs/plans/ 작업 계획서 기반 코딩·단위 테스트 구현. java-spring-coder 스킬과 역할 중복 — 통합 검토 필요 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/coding-implementer/` |
+| [prd-plan-designer](agents/prd-plan-designer/prd-plan-designer.md) | 0.1 | PRD + TDD 통합 작성 에이전트. prd-designer / tdd-designer / admin-prd-plan-designer 스킬과 역할 중복 — 통합 검토 필요 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/prd-plan-designer/` |
 
 ## Commands
 
@@ -61,7 +67,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-05-06 (PR #527 FQCN 가드레일 + 봇 톤 분기 5건 일괄 재배포) |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-05-06 (PR #527 FQCN 가드레일 + 봇 톤 분기 5건 일괄 재배포). 2026-05-19 forge-upstream 6건 역수입 (agents 5 + skill tolgee) |
 | poc-meal-recommender | `/Users/kakao/workplace-kakao/global/pasta-japan/work/poc-meal-recommender` | 2026-05-14 (POC 미니 세트 신규 배포: 스킬 8 + 커맨드 6 + rules 20) |
 
 ### pasta-japan-server 배포 현황
@@ -91,6 +97,14 @@
 | jira-bug-root-cause | skill | 1.0 | 1.0 | 동기화 |
 | chat-incident-report | skill | 1.0 (실전) | 1.0 (역수입) | 동기화 (2026-04-22 역수입, 마스킹 — forge→pasta 배포 금지) |
 | gcp-infra-architect | agent | 1.2 | 1.2 | 동기화 (2026-04-22 신규 배포) |
+| tolgee | skill | 0.1 | 0.1 | **2026-05-19 forge-upstream 신규 역수입** (실전 전용 → forge 등록, 하네스 미작성) |
+| acceptance-tester | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** (실전 전용 → forge 등록, 하네스 미작성) |
+| apidog-mock-api-generator | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** |
+| bug-analyzer | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** — jira-bug-root-cause와 역할 경계 정리 필요 |
+| coding-implementer | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** — java-spring-coder 스킬과 역할 중복 |
+| prd-plan-designer | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** — prd-designer/tdd-designer/admin-prd-plan-designer 스킬과 역할 중복 |
+
+> **2026-05-19 동기화 부채**: forge 측 11개 스킬이 v1.2 패턴(Phase 1.5 + 결정 트리 + 자기 검증 v2.0)으로 일괄 업그레이드되어 pasta 배포 버전과 불일치 상태. 회귀 평가 통과 후 `/forge-deploy --sync` 권장. 또한 pasta SKILL.md 다수에 frontmatter 메타(version/last-modified/changelog)가 누락되어 있어 재배포 시 자동 복원.
 
 ### poc-meal-recommender 배포 현황
 
