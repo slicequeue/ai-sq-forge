@@ -1,9 +1,9 @@
 ---
 name: admin-thymeleaf-ui
 description: "moneyball `admin` 모듈에서 Thymeleaf + Thymeleaf Layout Dialect + AdminLTE(Bootstrap)로 관리자 화면을 만들거나 고칠 때 사용한다. `layout:decorate`, `layout/fragments`, `static/js`·`static/css` 배치, `@Controller`+`Model`, CSRF 메타·fetch 헤더, 사이드바·모달 프래그먼트, 관리자 이력·권한 패턴을 저장소 관례에 맞춘다. '어드민 페이지', 'Thymeleaf', '관리자 UI', 'AdminLTE', '사이드바 메뉴', '템플릿', 'static/js', 'layout:decorate', '모달', '관리자 화면 추가' 등이 나오면 반드시 이 스킬을 읽는다."
-version: "1.1"
-last-modified: "2026-04-27"
-changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-bean 패턴, save/restore 패턴), 자기검증 체크리스트 19~22번 추가, 트러블슈팅 표 항목(외부 API 후 403, OAuth2 로그인 실패, sandbox→prd 사고) 추가"
+version: "1.2"
+last-modified: "2026-05-19"
+changelog: "v1.2 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(기존 admin 패턴 정합 명시, 가정 vs 확인 분리, sidebar/templates 위치 사전 확인). | v1.1 — 실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규, 자기검증 19~22번 추가, 트러블슈팅 표 항목 추가"
 ---
 
 # admin-thymeleaf-ui — Moneyball Admin UI (Thymeleaf)
@@ -154,6 +154,9 @@ changelog: "실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규(non-
 | 20 | B | 외부 API 호출 시 admin 세션 `SecurityContext` 오염 방지 (save/restore 또는 setAuthentication 제거) |
 | 21 | B | 외부 API 의존성 추가 시 `application-jp-{env}.yml` 4곳 (local/dev/stg/prd) override 일치 |
 | 22 | R | DB 컬럼 참조 전 실제 스키마/마이그레이션 확인 (오타/미존재 컬럼 방지) |
+| 23 | B | **(v1.2) 기존 admin 패턴 사전 스캔** — `admin/src/main/resources/templates/` 와 `static/js/` 의 기존 페이지 1건을 모범 패턴으로 읽고 정합? (혼자 발명 금지) |
+| 24 | R | **(v1.2) 확인 vs 가정 분리** — 권한 문자열·sidebar 메뉴 ID·URL 매핑 중 어느 것을 코드에서 확인하고 어느 것을 가정했는지 분리 표기? 가정 항목은 PR 본문에 명시? |
+| 25 | R | **(v1.2) 변경 영향도 가정 표기** — 전역 JS·전역 CSS·layout fragment 수정 시 영향받는 페이지 목록을 추정으로만 적지 않고 `grep`으로 실제 사용처 식별 후 보고? |
 
 ---
 

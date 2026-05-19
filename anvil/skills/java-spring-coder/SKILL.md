@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.5"
-last-modified: "2026-04-28"
-changelog: "v1.5 — FQCN 직접 사용 금지 하드 가드레일 추가 (메인+테스트 동일 적용). PR #527 사례: 테스트 코드에서 `new org.springframework.dao.DataIntegrityViolationException()` / `isInstanceOf(x.y.Z.class)` 패턴 누수 → 휴먼 리뷰 지적. mock 예외 작성 시 가장 자주 누수되는 패턴 명시. 자기검증 체크리스트 17번 추가. v1.4 — 실전 가드레일 강화: Non-bean @Transactional 금지, OAuth2 Client non-bean 격리 패턴, SecurityContext.setAuthentication 금지(save/restore 패턴), env yml 4곳 override 검증, DB 컬럼 grep 확인."
+version: "1.6"
+last-modified: "2026-05-19"
+changelog: "v1.6 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(Phase 0 현황 파악 실행 여부, 확인 vs 가정 분리, TDD 미존재 시 가정 표기). Phase 0 #4(기존 코드 패턴 파악)는 이미 현황 파악 본질이라 명문화. | v1.5 — FQCN 직접 사용 금지 하드 가드레일 추가. PR #527 사례. v1.4 — 실전 가드레일 강화: Non-bean @Transactional 금지, OAuth2 Client non-bean 격리, SecurityContext save/restore."
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -322,6 +322,9 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 15. [ ] **SecurityContext 격리**: 외부 OAuth2/API 호출이 admin 세션을 오염시키지 않는가? (save/restore 또는 setAuthentication 제거)
 16. [ ] **외부 API 환경 설정**: 신규 외부 의존성의 endpoint/credential을 local/dev/stg/prd yml 4곳에 모두 override 했는가?
 17. [ ] **FQCN 검사**: 메인+테스트 코드 본문(import 외)에 `com.x.y.Z` 형태 패키지 경로가 직접 박혀 있지 않은가? 특히 mock 예외(`new x.y.Z()`)와 `.class` 리터럴(`isInstanceOf(x.y.Z.class)`) 점검?
+18. [ ] **(v1.6) Phase 0 현황 파악 실행**: 작업 계획서 탐색·기존 도메인 코드 탐색·JDK/admin 모듈 확인을 실제로 수행했는가? (생략하고 가정으로 구현 진행 금지)
+19. [ ] **(v1.6) 확인 vs 가정 분리**: TDD가 없어 코드만 보고 시그니처를 결정한 경우, 결정 근거(기존 도메인의 어느 패턴을 따랐는지)를 커밋 메시지 또는 PR 본문에 명시했는가?
+20. [ ] **(v1.6) 도메인 외부 컬럼/메서드 가정 금지**: 인접 도메인의 Repository·Entity를 호출하지 않고, 자체 Service에서 데이터 가공했는가? (19-architecture-boundaries 위반 자가 점검)
 
 ---
 

@@ -3,9 +3,9 @@ name: forge-deploy
 description: "Forge에서 개발·검증한 컴포넌트를 실전 프로젝트에 이식합니다. 경로 리매핑, 기존 컴포넌트 백업, 배치 상태 검증을 자동으로 수행합니다."
 trigger: "/forge-deploy"
 args: "{대상 프로젝트 경로} [--component 컴포넌트명] [--dry-run]"
-version: "1.1"
-last-modified: "2026-04-10"
-changelog: "Deploy Registry 연동, --sync, 커맨드 이식 프로세스, 버전 관리 추가"
+version: "1.2"
+last-modified: "2026-05-19"
+changelog: "v1.2: 배포정책 필드(`일반`/`역수입전용`/`forge전용`) 가드 추가 — 정책 위반 컴포넌트 이식 자동 차단. 경로 리매핑 매핑 테이블 내장(`forge/common/pasta-rules/` → `.claude/rules/`)으로 수동 sed 치환 제거 | v1.1: Deploy Registry 연동, --sync, 커맨드 이식 프로세스, 버전 관리 추가"
 ---
 
 # /forge-deploy
@@ -46,10 +46,14 @@ Forge(`anvil/`)에서 개발·테스트를 거친 컴포넌트를 **실전 프�
    - "실전 배치 가능" → 이식 가능
    - 그 외 (테스트 대기, 개선 중 등) → 이식 불가 (경고)
    - 배치 상태 컬럼이 없는 컴포넌트(Commands 등) → "[미검증]" 경고 표시 후 포함 여부 확인
-3. forge 전용 컴포넌트 자동 제외:
-   - forge-deploy — forge 내부 전용 커맨드, 실전 프로젝트에 배포하지 않음
-   - eval-harness — forge 내부 전용 커맨드
-4. --component 옵션이 있으면 해당 컴포넌트만 필터링
+3. **배포정책 가드 (v1.2 신규)** — `anvil/INDEX.md`의 배포정책 컬럼을 읽고 정책별로 처리:
+   - `일반` → 이식 가능
+   - `역수입전용` → **이식 불가**. "실전 → forge 한 방향 동기화 컴포넌트입니다. forge→실전 배포가 차단되었습니다." 경고 후 자동 제외.
+     예: `chat-incident-report` (실전에서 마스킹 처리 후 forge에 보존되는 컴포넌트)
+   - `forge전용` → **이식 불가**. forge 내부 전용 컴포넌트.
+     예: `forge-deploy`, `eval-harness`
+   ※ 정책 컬럼이 누락되었으면 `일반`으로 간주하되 "[정책 미지정] 일반으로 처리" 표시.
+4. --component 옵션이 있으면 해당 컴포넌트만 필터링 (단, 정책 가드는 항상 우선)
 
 4. 사용자에게 이식 대상 목록을 제시하고 확인 요청:
 
@@ -93,31 +97,53 @@ Forge(`anvil/`)에서 개발·테스트를 거친 컴포넌트를 **실전 프�
 
 ### Phase 3. 경로 리매핑
 
+**v1.2 내장 매핑 테이블** (자동 적용):
+
+```yaml
+path_remapping:
+  # 공통 자원
+  - from: "forge/common/pasta-rules/"
+    to: ".claude/rules/"
+  - from: "forge/common/"
+    to: ".claude/shared/"
+  # 컴포넌트 본체
+  - from: "anvil/skills/"
+    to: ".claude/skills/"
+  - from: "anvil/agents/"
+    to: ".claude/agents/"
+  - from: "anvil/commands/"
+    to: ".claude/commands/"
+  - from: "anvil/skill-chains/"
+    to: ".claude/skill-chains/"
+  # 이식 제외 (남으면 경고)
+  exclude_with_warning:
+    - "proving-grounds/"
+    - "maintenance/"
+    - "forge/blueprints/"
+    - "forge/protocols/"
+```
+
 ```
 1. 이식 대상 컴포넌트의 모든 파일(SKILL.md + references/*) 스캔
-2. forge 내부 경로 참조를 자동 탐색:
-   - forge/common/pasta-rules/{파일명} → ?
-   - anvil/skills/{name}/ → ?
-   - anvil/commands/{name}.md → ?
-   - proving-grounds/ → (이식 제외 대상)
-   - .claude/rules/ → 유지 (이미 올바른 경로)
+2. 내장 매핑 테이블로 자동 치환 시도. 매칭되지 않는 forge 내부 경로 참조는 잔여 목록에 기록.
+3. exclude_with_warning에 매칭되는 참조가 있으면 → 사용자에게 경고:
+   "{파일}:{줄} → '{경로}' 참조는 실전 환경에 존재하지 않습니다. 어떻게 처리할까요? (제거 / 주석 처리 / 그대로)"
+4. 대상 프로젝트의 디렉토리 존재 검증:
+   - `.claude/rules/`, `.claude/skills/`, `.claude/commands/`, `.claude/agents/` 등 매핑 대상 경로 존재 여부 확인
+   - 없으면: 생성 여부 질문
+5. 리매핑 결과 요약을 사용자에게 제시 (전체 확인 1회 — v1.1과 달리 항목별 질문 생략):
 
-3. 대상 프로젝트에서 매칭되는 경로 자동 탐색:
-   - .claude/rules/ 존재 확인 → forge/common/pasta-rules/ 대응
-   - .claude/skills/ 존재 확인 → anvil/skills/ 대응
-   - .claude/commands/ 존재 확인 → anvil/commands/ 대응
+   경로 리매핑 결과 (자동):
+   - forge/common/pasta-rules/ → .claude/rules/  ({N}건)
+   - anvil/skills/.../references/ → .claude/skills/.../references/  ({M}건)
+   - [잔여 — 사용자 결정 필요] proving-grounds/.../ ({K}건)
 
-4. 리매핑 계획을 사용자에게 제시하고 확인:
+   진행할까요? (잔여 항목별 처리 방식 변경하려면 알려주세요)
 
-   경로 리매핑 계획:
-   forge/common/pasta-rules/{파일명} → .claude/rules/{파일명}
-   anvil/skills/java-spring-coder/references/ → .claude/skills/java-spring-coder/references/
-   /git-commit (커맨드 참조) → .claude/commands/git-commit-workflow/ (또는 대응 경로)
-
-   이대로 변환할까요? (수정할 경로가 있으면 알려주세요)
-
-5. 사용자 확인/수정 후 리매핑 규칙 확정
+6. 사용자 확인 후 리매핑 규칙 확정
 ```
+
+**리매핑 자동화의 가치**: v1.1 이전에는 매 배포마다 `sed`로 수동 치환했음 (2026-04-22 `gcp-infra-architect.md` 2건). v1.2부터 내장 매핑으로 0건 수동 작업.
 
 ### Phase 4. 백업
 
@@ -240,6 +266,7 @@ Phase 6. 리포트
 3. **사용자 확인 없이 실행 금지** — Phase 1(대상 선정), Phase 2(충돌 분석), Phase 3(경로 리매핑) 각각에서 사용자 확인을 받아야 다음 단계 진행.
 4. **대상 프로젝트의 rules/ 파일 수정 금지** — 규칙 파일은 참조만 하고 절대 수정/삭제하지 않음.
 5. **proving-grounds/ 이식 금지** — 하네스, 테스트 케이스, 리포트는 forge 전용. 이식 대상에서 제외.
+6. **배포정책 위반 금지** — `역수입전용`/`forge전용`은 어떤 옵션·플래그로도 우회 불가. 정책 변경은 INDEX.md에서 명시적 수정이 필요.
 
 ### 소프트 가드레일 (권장)
 

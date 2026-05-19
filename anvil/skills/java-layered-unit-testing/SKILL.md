@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
 description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.1"
-last-modified: "2026-04-28"
-changelog: "v1.1 — FQCN 직접 사용 금지 절대 금지 항목 추가 (테스트 mock 예외/.class 리터럴 패턴 anti-example 명시). PR #527 사례 반영. 자기 검증 체크리스트 11번 추가. v1.0 — 실전 프로젝트(pasta-japan-server)에서 forge로 역수입, forge SKILL.md 형식으로 재구조화"
+version: "1.2"
+last-modified: "2026-05-19"
+changelog: "v1.2 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(계층 추정 vs 확정 분리, 가정 기반 fixture 표기, 기존 테스트 스타일 정렬 근거). | v1.1 — FQCN 직접 사용 금지 절대 금지 항목. PR #527 사례 반영. v1.0 — 실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -183,6 +183,9 @@ class MyRepositoryTest {
 | 9 | R | 기존 테스트 패턴과 일관성이 있는가? |
 | 10 | R | spotlessApply를 실행했는가? |
 | 11 | B | FQCN 직접 사용 없는가? — `new x.y.Z()` / `isInstanceOf(x.y.Z.class)` / 변수·매개변수 모두 import + 단순 클래스명? |
+| 12 | R | **(v1.2) 계층 식별 근거 명시** — 대상 클래스의 패키지 경로 / 의존성으로 계층을 확정했는가? 추정 시 "추정" 표기? |
+| 13 | R | **(v1.2) Fixture 가정 표기** — 비즈니스 의미 없는 임의값(예: `"test@test.com"`)이 아니라 실제 도메인에서 유효한 값을 사용했는가? 가정값은 주석으로 표기? |
+| 14 | R | **(v1.2) 기존 테스트 스타일 정렬** — 동일 패키지의 기존 테스트와 `@Nested` 그룹핑·`@DisplayName` 한국어 톤·AssertJ 사용 패턴이 일치하는가? |
 
 **표기**: B = 블로커 (미충족 시 FAIL), R = 권장
 

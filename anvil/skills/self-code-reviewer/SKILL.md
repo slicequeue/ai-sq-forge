@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.5"
-last-modified: "2026-04-28"
-changelog: "v1.5 — FQCN 직접 사용 검출 항목 추가 (메인+테스트 모두). PR #527 자체 리뷰 누락 사례 반영. 특별 검사 항목에 FQCN 패턴 명시, 검출 시 필수 수정 등급으로 보고. v1.4 — Insights 피드백 반영: Architecture Boundary 검사 강화"
+version: "1.6"
+last-modified: "2026-05-19"
+changelog: "v1.6: blueprint v2.0 패턴 이식 — 자기 검증 v2.0 확장(확인 vs 가정 분리, 변경 범위 추론 근거 명시). 본질이 분석형이라 Phase 1.5 현황 파악은 기존 Step 1(git log/diff)로 충족. | v1.5 — FQCN 직접 사용 검출 항목 추가 (메인+테스트 모두). PR #527 자체 리뷰 누락 사례 반영. v1.4 — Insights 피드백 반영: Architecture Boundary 검사 강화"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -181,6 +181,8 @@ git diff dev...HEAD -- {path}
 7. [ ] **구체적 위치**: 위반 항목에 파일명:라인 번호를 포함했는가?
 8. [ ] **admin 모듈**: admin 변경이 있으면 13~16 규칙을 Read하고 대조했는가? 4-Tier 위반으로 오판하지 않았는가?
 9. [ ] **FQCN 검사**: 변경 파일(메인+테스트)의 코드 본문에 `com.x.y.Z` 형태 패키지 경로가 직접 박혀 있는지 명시적으로 확인했는가? mock 예외(`new x.y.Z()`)와 `.class` 리터럴(`isInstanceOf(x.y.Z.class)`) 점검?
+10. [ ] **(v1.6) 확인 vs 가정 분리**: 리뷰 결과의 "수정 방향"이 (a) 규칙 본문에 명시된 것 / (b) 리뷰어 가정·추론 중 어느 것인지 분리 표기했는가? 추론 기반 수정 제안은 "근거: 리뷰어 판단" 명시.
+11. [ ] **(v1.6) 변경 의도 파악 근거**: PR 제목·커밋 메시지·연결된 PRD/TDD 중 어느 것을 변경 의도 파악 근거로 썼는지 보고서 헤더에 명시했는가? (의도 미파악 시 리뷰가 표면적 컨벤션 위반 검사에 그칠 위험)
 
 ---
 

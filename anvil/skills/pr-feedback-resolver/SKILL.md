@@ -1,9 +1,9 @@
 ---
 name: pr-feedback-resolver
 description: "PR 리뷰 코멘트(CodeRabbit 포함)를 수집하여 수정 계획을 세우고 코드를 수정하는 스킬. PR 피드백 반영, CodeRabbit 대응, 리뷰 수정, PR 코멘트 처리 요청 시 사용. Use proactively when the user asks to handle PR feedback, CodeRabbit comments, or review modifications."
-version: "1.4"
-last-modified: "2026-04-29"
-changelog: "v1.4 — 실전 역수입: CodeRabbit 봇 vs 사람 리뷰어 호출 파라미터 분리. 사람 리뷰어 답글 패턴 A-1(담백 보고형 default)/A-2(기술 판단)/A-3(제안 반영) 3분류 + 선택 기준. CodeRabbit 봇 호출 파라미터(평어 단정형, 멘션·감사·소프트 디테일 금지) 신규. 봇 학습 메모리 영향 고려 사유 명시. v1.3 — 실전 역수입: 답글 작성 시 sq-tone-writer 경유 의무화 + GitHub PR API /replies(404) → POST /comments + in_reply_to 패턴 정정. 자기검증 체크리스트 9번(답글 톤) 추가"
+version: "1.5"
+last-modified: "2026-05-19"
+changelog: "v1.5 — blueprint v2.0 패턴 이식: Phase 0.5 PR 컨텍스트 현황 파악 명시(머지 정책·CI 상태·중복 코멘트), 자기 검증 v2.0 3항목 추가(확인 vs 가정 분리, 답글 근거 명시) | v1.4 — 실전 역수입: CodeRabbit 봇 vs 사람 리뷰어 호출 파라미터 분리. 사람 리뷰어 답글 패턴 A-1/A-2/A-3 3분류. v1.3 — 답글 작성 시 sq-tone-writer 경유 의무화 + /replies → POST /comments 패턴 정정"
 ---
 
 # pr-feedback-resolver — PR 피드백 수정 스킬
@@ -212,6 +212,9 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 7. [ ] **규칙 준수**: 수정이 `.claude/rules/` 위반을 만들지 않았는가?
 8. [ ] **체크박스 업데이트**: 수정 계획 문서의 완료 항목을 체크했는가?
 9. [ ] **답글 톤**: `sq-tone-writer` 스킬을 경유해 작성했는가? (반말 없음, AI 표현 없음, 부드러운 소프트 디테일 포함)
+10. [ ] **(v1.5) 확인 vs 가정 분리**: 답글에 "확인된 코드 변경(commit hash)" 과 "리뷰어 의도 추정" 이 분리되어 있는가? 추정한 의도는 "다음과 같이 이해했습니다 — 다르면 알려주세요" 형태로 검증 요청 포함?
+11. [ ] **(v1.5) PR 컨텍스트 파악**: 머지 정책(예: dev 머지 후 release-* 머지)·CI 상태·이전 코멘트와의 중복 여부를 사전에 확인했는가?
+12. [ ] **(v1.5) 봇 vs 사람 분기 근거**: 각 답글마다 어느 호출 파라미터(사람 A-1/A-2/A-3, 봇)를 적용했는지 수정 계획 문서에 기록했는가?
 
 ---
 

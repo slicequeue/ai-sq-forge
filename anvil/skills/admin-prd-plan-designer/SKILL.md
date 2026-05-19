@@ -1,9 +1,9 @@
 ---
 name: admin-prd-plan-designer
 description: "moneyball `admin` 모듈 전용 PRD/TDD 계획 문서를 작성할 때 사용한다. 단발성 문서 생성이 아니라 사용자와 멀티턴 대화를 통해 요구사항을 수집·정제·합의하고, PRD와 TDD를 분리 또는 하이브리드(PRD+TDD 통합) 형태로 산출한다. SSR(Thymeleaf), `@Controller`, `templates/static`, `sidebar/security/admin history` 관례를 기준으로 작성한다. 'admin 기획 문서', '관리자 PRD', 'admin TDD', '하이브리드 계획서', '구현 전략 대화', 'Phase TODO', '테스트 전략' 요청 시 반드시 사용한다."
-version: "1.0"
-last-modified: "2026-04-14"
-changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
+version: "1.1"
+last-modified: "2026-05-19"
+changelog: "v1.1: agent.blueprint v2.0 패턴 이식 — Phase 0.3 현황 파악(admin 모듈 스캔), 멀티턴 vs 풀패키지 결정 트리 명문화(기존 멀티턴 default 유지 + 풀패키지 분기 추가), 자기 평가표 v2.0 항목 추가 | v1.0: 실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
 ---
 
 # admin-prd-plan-designer - Moneyball Admin PRD/TDD 설계
@@ -27,6 +27,34 @@ changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
 - PRD에 클래스명/패키지/쿼리/세부 코드 작성 금지.
 - TDD에 비즈니스 배경만 장문으로 작성 금지.
 - HYBRID는 PRD/TDD를 섞어 흐리게 쓰는 것이 아니라, **PRD 섹션과 TDD 섹션을 명시적으로 분리한 단일 문서**로 작성한다.
+
+---
+
+## Phase 0.3. 현황 파악 (v1.1 신규)
+
+**원칙**: admin 모듈 작업은 기존 admin 구조와 정합해야 한다. 가정 대신 실제 admin 코드·룰로 시작.
+
+| 확인 대상 | 명령 | 가치 |
+|-----------|-----|------|
+| admin 모듈 구조 | `find admin/ -type d -maxdepth 3` | 패키지 구조 파악 (`@Controller`/templates/static 위치) |
+| 기존 admin 컨트롤러 | `grep -rh "@Controller\|@PreAuthorize" admin/src/main/java/` | URL·권한·sidebar 패턴 식별 |
+| sidebar 메뉴 | `grep -r "sidebar" admin/src/main/resources/templates/` | URL-View-File 정합 검증 (14 룰) |
+| AdminHistory 사용처 | `grep -r "AdminHistoryService\\|AdminFunction" admin/src/main/java/` | 감사 로그 패턴 (15 룰) |
+| 13~16 룰 본문 | `.claude/rules/13~16-admin-*.md` | 작성 전 정독 |
+
+확인 결과를 결정 로그 상단에 "현황 확인" 섹션으로 기록.
+
+---
+
+## Phase 0.4. 진행 방식 결정 (v1.1 신규)
+
+이 스킬은 **멀티턴 합의 default**이지만, 풀패키지 요청을 명시적으로 처리한다.
+
+| 요청 키워드 | 진행 방식 | 근거 |
+|------------|----------|------|
+| 기본 / "같이 만들어보자" / "단계별로" | **멀티턴 default** (Phase 0.5) | 합의·논의형 스킬의 본질 |
+| "**제출용**", "**리뷰용**", "**완성판**", "**HYBRID 패키지**", "**일괄로 만들어**" | **풀패키지** — 1턴에 최소 합의 5항목 묶음 질문 + 답변 후 즉시 산출 | deliverable 명시 |
+| 애매할 때 | 멀티턴 default + "풀패키지로 일괄 산출 원하시면 알려주세요" 병기 | 안전 |
 
 ---
 
@@ -297,15 +325,18 @@ changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
 
 ---
 
-## 정량 자기 평가표 (100점)
+## 정량 자기 평가표 (100점, v1.1 갱신)
 
 | 항목 | 배점 |
 |---|---|
-| 타입 분리 정확성 | 20 |
-| Admin 컨텍스트 반영도 | 20 |
-| 템플릿 충족도(PRD/TDD/HYBRID) | 20 |
-| 멀티턴 합의 품질 | 20 |
-| Phase 실행 가능성/리스크 명확성 | 20 |
+| 타입 분리 정확성 | 15 |
+| Admin 컨텍스트 반영도 | 15 |
+| 템플릿 충족도(PRD/TDD/HYBRID) | 15 |
+| 멀티턴 합의 품질 | 15 |
+| Phase 실행 가능성/리스크 명확성 | 15 |
+| **(v1.1) Phase 0.3 현황 파악 수행 (admin 모듈 스캔 + 13~16 룰 정독)** | 10 |
+| **(v1.1) 확인된 것 vs 가정한 것 분리 (가정마다 재평가 트리거)** | 10 |
+| **(v1.1) 진행 방식(멀티턴/풀패키지) 판단 근거 명시** | 5 |
 
 ---
 

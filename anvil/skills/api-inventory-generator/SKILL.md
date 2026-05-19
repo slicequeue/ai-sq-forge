@@ -1,9 +1,9 @@
 ---
 name: api-inventory-generator
 description: "프로젝트의 모든 @RestController를 스캔하여 API 전체 목록 문서를 자동 생성한다. 모듈별·Method별·인증별 통계와 엔드포인트 상세 목록을 단일 마크다운 파일로 산출한다. SecurityConstants 패턴 기반 인증 유형 자동 분류를 지원한다. 'API 목록', 'API 인벤토리', 'API 전수 조사', '엔드포인트 목록', 'REST API 현황' 요청 시 사용한다."
-version: "1.0"
-last-modified: "2026-04-14"
-changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입, SKILL.md 형식으로 구조화"
+version: "1.1"
+last-modified: "2026-05-19"
+changelog: "v1.1: blueprint v2.0 패턴 이식 — Phase 0의 SecurityConstants/소스 디렉토리 확인을 '현황 파악'으로 명문화. 자기 검증 v2.0 3항목 추가(스캔 누락 모듈 명시, 추정 vs 확정 분리) | v1.0: 실전 프로젝트(pasta-japan-server)에서 forge로 역수입, SKILL.md 형식으로 구조화"
 ---
 
 # api-inventory-generator — API 전체 목록 자동 생성
@@ -116,6 +116,9 @@ SecurityConstants.java의 배열 패턴 기반 자동 분류:
 | 3 | 총 엔드포인트 수가 합리적인가? (프로젝트 규모 대비) |
 | 4 | 모듈별 분류가 올바른가? |
 | 5 | '?' 미분류 항목에 대한 설명이 있는가? |
+| 6 | **(v1.1) 스캔 범위 명시**: 결과 파일 헤더에 "스캔 대상 디렉토리 / 제외된 모듈" 명시되었는가? |
+| 7 | **(v1.1) 추정 vs 확정 분리**: 인증 분류 중 SecurityConstants 매칭 실패 항목은 "추정" 표시 또는 '?' 분류로 분리되어 있는가? |
+| 8 | **(v1.1) SecurityConstants 부재 시 가정 표기**: SecurityConstants 파일이 없을 때 인증 분류 결과를 "확인됨"으로 표기하지 않고 "추정"으로 표기했는가? |
 
 ---
 

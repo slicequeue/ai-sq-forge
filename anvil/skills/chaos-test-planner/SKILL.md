@@ -1,9 +1,9 @@
 ---
 name: chaos-test-planner
 description: "QA팀/개발팀의 장애 테스트 요청을 받아 Chaos Monkey 기반 실행 가능 여부를 검토하고, 테스트 계획서와 실행 커맨드를 생성하는 스킬. '장애 테스트', '카오스 몽키', 'chaos monkey', 'chaos test', 'QA 장애 요청', '장애 시뮬레이션', '장애 주입', '레이턴시 테스트', '서비스 지연 테스트', '장애 복구 테스트' 등의 요청 시 사용한다. QA팀에서 장애 시나리오를 전달하거나, 특정 API/서비스의 장애 영향을 검증하고 싶다는 요청이 오면 반드시 이 스킬을 사용한다."
-version: "1.1"
-last-modified: "2026-04-17"
-changelog: "실전 피드백 역수입: 모듈 구조 경고, Auto-Configuration 프로필 조건, 버전 3.1.0, 실전 교훈 4건 추가"
+version: "1.2"
+last-modified: "2026-05-19"
+changelog: "v1.2: blueprint v2.0 패턴 이식 — Phase 1.5 Cloud Run·프로필 현황 확인 명시(가정 차단), 자기 검증 5항목 추가 | v1.1: 실전 피드백 역수입(모듈 구조 경고, Auto-Configuration 프로필 조건, 버전 3.1.0, 실전 교훈 4건) | v1.0: 초안"
 ---
 
 # chaos-test-planner — 장애 테스트 검토 & 계획 스킬
@@ -82,6 +82,23 @@ grep -r "class.*Client" --include="*.java" -l
 ```
 
 **FQCN 확인 필수**: `watchedCustomServices`에 넣을 때는 전체 패키지명이 필요하다. 파일 경로에서 패키지명을 역추론하거나, 파일 상단 `package` 선언을 확인한다.
+
+---
+
+## Phase 1.5. 환경 현황 파악 (v1.2 신규)
+
+**원칙**: Cloud Run 프로필·환경 변수·이전 실험 상태를 **추측하지 않는다**. 명시적으로 확인.
+
+| 확인 대상 | 명령/도구 | 가치 |
+|-----------|----------|------|
+| 현재 chaos-monkey 프로필 상태 | `gcloud run services describe {service} --format='value(spec.template.metadata.annotations,spec.template.spec.containers[0].env)'` | `chaos-monkey` 프로필 잔존 여부 (2026-04-16 사고 재발 차단) |
+| 별도 Cloud Run 인스턴스 존재 | `gcloud run services list --filter="metadata.name ~ chaos"` | 기존 stg 영향 없이 진행 가능 여부 |
+| 이전 실험 결과 | `ls docs/works/chaos-monkey-장애테스트/plan-*.md \| tail -3` | 동일 시나리오 중복 방지, 교훈 재사용 |
+| 의존성 버전 | `grep -h "chaos-monkey-spring-boot" *.gradle */build.gradle` | 3.1.0 외 버전이면 작동 안 함 |
+
+**접근 불가 시**: 사용자에게 출력 요청. "프로필 모름 → 일단 계획서 작성" 금지.
+
+확인 결과는 테스트 계획서의 "사전 조건" 위에 "현재 상태" 박스로 기록.
 
 ---
 
@@ -295,3 +312,16 @@ QA팀 요청에 여러 시나리오가 포함되어 있으면:
 - 2026-04-16: `chaos.monkey.enabled: true`로 설정해도 `chaos-monkey` 프로필 없으면 actuator 404 → 프로필 필수
 - 2026-04-16: CGLIB 프록시 불가 클래스(`@Component` + private 생성자) → `exclude-classes`로 제외하거나, 불필요한 `@Component` 제거
 - 교훈: **테스트 후 반드시 Cloud Run 프로필에서 `chaos-monkey` 제거 + disable 확인**, 별도 인스턴스 사용 권장
+
+---
+
+## 자기 검증 체크리스트 (v1.2 신규)
+
+테스트 계획서 작성 완료 후 반드시 확인:
+
+1. [ ] **(v1.2) Phase 1.5 현황 파악**: Cloud Run 프로필·이전 실험·의존성 버전 중 가능한 것을 실제 확인했는가?
+2. [ ] **(v1.2) 확인된 것 vs 가정한 것 분리**: "현재 상태" 박스에 명확히 구분되었는가? 가정 항목마다 재평가 트리거 기록?
+3. [ ] **FQCN 확인**: 대상 Bean의 전체 패키지명을 코드베이스에서 grep으로 검증했는가? (역추론 금지)
+4. [ ] **비활성화 절차**: 계획서 마지막에 disable + 상태 확인 단계가 명시되었는가?
+5. [ ] **별도 인스턴스 확인**: 기존 stg가 아닌 별도 Cloud Run 사용을 사전 조건에 명시했는가?
+6. [ ] **이전 교훈 인용**: 2026-02-11 / 2026-04-16 교훈 중 해당하는 것을 우려 지점으로 전달했는가?

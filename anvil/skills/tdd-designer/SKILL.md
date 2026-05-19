@@ -1,9 +1,9 @@
 ---
 name: tdd-designer
 description: "TDD(기술 설계 문서) 작성 전문가. 'TDD 작성해줘', '구현 계획', '기술 설계', '아키텍처 설계' 요청 시 사용. PRD를 기반으로 시니어 개발자 관점의 아키텍처 분석, Phase별 TODO, 테스트 전략을 포함한 기술 문서를 작성한다."
-version: "1.3"
-last-modified: "2026-04-17"
-changelog: "실전 피드백 반영: Base class 재사용 조사, SecurityConstants 등록 체크 추가"
+version: "1.4"
+last-modified: "2026-05-19"
+changelog: "v1.4: agent.blueprint v2.0 패턴 이식 — Phase 0.5 현황 파악(기존 코드·도메인 스캔 + Apidog), 멀티턴 vs 풀패키지 결정 트리, 확인 vs 가정 분리, 자기 검증 4항목 추가 | v1.3: 실전 피드백(Base class 재사용 조사, SecurityConstants 등록 체크) | v1.2 이전: 초안~숙성"
 ---
 
 # tdd-designer - TDD 기술 설계 문서 작성
@@ -40,7 +40,46 @@ TDD는 PRD 소스 없이 작성하지 않는다. 아래 우선순위로 확보�
 
 ---
 
+## Phase 0.5. 현황 파악 (v1.4 신규)
+
+**원칙**: 가정 대신 실제 코드·도메인으로 시작한다. PRD 소스만으로 TDD를 작성하지 않는다.
+
+| 확인 대상 | 명령/도구 | 가치 |
+|-----------|----------|------|
+| 기존 동일·유사 도메인 | `grep -r "{도메인 키워드}" src/main/java/` | 기존 모델·서비스·Repository 식별 |
+| Base class·공통 추상화 | `find . -name "Base*.java" -not -path "*/test/*"` | Phase 1 #11 Base class 재사용 조사 자동화 |
+| Repository 패턴 | `ls src/main/java/.../infrastructure/persistence/` | 3단계 패턴 일관성 확보 |
+| SecurityConstants | `cat src/main/.../SecurityConstants.java` | 새 API 경로 등록 누락 사전 차단 |
+| Apidog API 스펙 | Apidog MCP `read_project_oas` | 기존 API 시그니처와 충돌 방지 |
+| 마이그레이션 현황 | `ls src/main/resources/db/migration/ \| tail -5` | 다음 Flyway 버전 번호 결정 |
+
+**확인된 것 vs 가정한 것 분리 표기**: TDD 본문 "2. 시스템 아키텍처" 위에 컨텍스트 박스 추가.
+
+```markdown
+## 컨텍스트 (Phase 0.5 결과)
+
+### 확인됨
+- `{도메인}Service` 기존 존재 — 본 TDD는 메서드 추가
+- `Base{X}Exception` 활용 가능 — `detail` 필드 재사용
+
+### 가정 (재평가 트리거 포함)
+- "동시 호출 N건 이하"로 가정 — 부하 측정 후 캐싱 필요 여부 재검토
+```
+
+**접근 불가 시**: 사용자에게 출력 요청. "현황 확인 후 진행"이 신뢰도에 우수.
+
+---
+
 ## Phase 1. 인터랙티브 Q&A (기술 결정 확정)
+
+### 멀티턴 vs 풀패키지 결정 트리 (v1.4 신규)
+
+| 요청 키워드 | 진행 방식 |
+|------------|----------|
+| "TDD 작성", "**구현 계획서**", "**제출용**", "**리뷰용**", "**설계안 패키지**", "**완성판**" | **풀패키지** — Q&A 묶음 1회 + TDD 1.0 일괄 산출 |
+| "같이 설계해보자", "Phase 별로", "**한 섹션씩**" | **멀티턴 점진** — Phase 단위 합의 |
+| 애매할 때 | **풀패키지 + "턴별 분할 원하시면" 병기** |
+
 
 PRD만으로 기술 결정이 불확실한 경우, 아래 질문으로 확정한다.
 **한 번에 5개 이하의 질문만** 던진다.
@@ -149,6 +188,10 @@ Good/Bad 예시는 `references/good-bad-examples.md` 참조.
 13. [ ] DB 마이그레이션 작성 시 현재 DB 이름 확인이 체크리스트에 포함되었는가?
 14. [ ] 검증 정책이 Phase에 명시되었는가? (발급/수정/삭제 시 서버 측 검증 조건 표)
 15. [ ] 페이지네이션 설계 시 countQuery 분리, 필터 유지, 정렬 파라미터가 기본 체크에 포함되었는가?
+16. [ ] **(v1.4) Phase 0.5 현황 파악을 수행했는가?** (기존 도메인 grep + Base class find + SecurityConstants 확인 + Apidog 중 가능한 것)
+17. [ ] **(v1.4) "확인됨 vs 가정" 컨텍스트 박스가 TDD 본문에 포함되었는가?**
+18. [ ] **(v1.4) 가정 항목마다 재평가 트리거가 기록되었는가?**
+19. [ ] **(v1.4) 요청 유형(멀티턴/풀패키지) 판단 근거를 명시했는가?**
 
 ---
 
