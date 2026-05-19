@@ -32,6 +32,9 @@ alwaysApply: true
 - [14-admin-thymeleaf-layout-convention.md](14-admin-thymeleaf-layout-convention.md): admin Thymeleaf 레이아웃, fragment, URL-View-File 정합 규칙.
 - [15-admin-security-history-convention.md](15-admin-security-history-convention.md): admin 권한, CSRF, OIDC, AdminHistory 기록 규칙.
 - [16-admin-static-assets-convention.md](16-admin-static-assets-convention.md): admin 페이지 JS, 전역 스크립트, sidebar, static 자산 규칙.
+- [17-branch-discipline.md](17-branch-discipline.md): 런타임 브랜치 안전 규칙. 커밋 전 브랜치 확인, 보호 브랜치 커밋 금지, PR 머지 후 전환.
+- [18-planning-before-implementation.md](18-planning-before-implementation.md): AI 도구 구현 전 계획 수립 규칙. 멀티파일 변경 시 계획 → 승인 → 구현 순서.
+- [19-architecture-boundaries.md](19-architecture-boundaries.md): 모듈 간 아키텍처 경계 강제. 타 도메인 Repository import 금지, 삭제 전 사용처 확인.
 
 ## Find by topic
 
@@ -53,6 +56,9 @@ alwaysApply: true
 - admin Thymeleaf layout, fragment, view 경로: [14-admin-thymeleaf-layout-convention.md](14-admin-thymeleaf-layout-convention.md)
 - admin 보안, `@PreAuthorize`, OIDC, 감사 로그: [15-admin-security-history-convention.md](15-admin-security-history-convention.md)
 - admin JS, sidebar, static 자산: [16-admin-static-assets-convention.md](16-admin-static-assets-convention.md)
+- 브랜치 확인, 보호 브랜치 커밋 금지, PR 머지 후 전환: [17-branch-discipline.md](17-branch-discipline.md)
+- AI 구현 전 계획 수립, 검증 없이 단정 금지: [18-planning-before-implementation.md](18-planning-before-implementation.md)
+- 타 도메인 Repository 금지, 삭제 전 사용처 확인, Qualifier: [19-architecture-boundaries.md](19-architecture-boundaries.md)
 
 ## Always applied (alwaysApply: true)
 
@@ -60,3 +66,6 @@ alwaysApply: true
 - [07-general-project-convention.md](07-general-project-convention.md)
 - [09-guardrails.md](09-guardrails.md)
 - [10-worktree-safety-convention.md](10-worktree-safety-convention.md)
+- [17-branch-discipline.md](17-branch-discipline.md)
+- [18-planning-before-implementation.md](18-planning-before-implementation.md)
+- [19-architecture-boundaries.md](19-architecture-boundaries.md)

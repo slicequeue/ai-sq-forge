@@ -9,6 +9,9 @@
 3. **문답 설계**: 새 컴포넌트 생성 시 반드시 `forge/protocols/design.md` 프로토콜을 따라 사용자와 Q&A를 거친 후 구현
 4. **측정 가능**: `/eval-harness`로 6축 자동 채점 (가드레일, 정확도, 행동패턴, 비교, 일관성, 효율성)
 5. **지속 개선**: 실전 피드백 → 개선 → `/eval-harness --skip-baseline`로 재검증
+6. **현황 파악 우선 (Phase 1.5)**: 설계·분석형 컴포넌트는 **가정 대신 실제 현황**으로 시작. 가능하면 읽기 전용 명령(`gcloud`, `find *.tf`, `grep` 등)으로 실제 상태 확보 후 설계 진행. 접근 불가 시 사용자에게 출력 요청. **"가정 10개 쓰고 진행"보다 "현황 확인 후 진행"**이 설계 신뢰도에 우수. ([증거: gcp-infra-architect v0.1 → v0.2 전면 재작성 사례](./docs/infra-design/pasta-global-expansion-v0.1/SESSION-SUMMARY.md))
+7. **확인된 사실 vs 가정 분리**: 응답에 "확인된 것 vs 가정한 것"을 명시적으로 분리 표기. 가정 기반 결정은 재평가 트리거와 함께 기록.
+8. **요청 유형 감지 (v2.0)**: "설계안/제출용/문서/deliverable/패키지/리뷰용" 키워드 감지 시 **풀패키지 default**. 단순 분석·논의는 멀티턴 점진. 애매할 때 풀패키지 + "턴별 분할 원하시면" 선택지 병기. ([근거: gcp-infra-architect v1.1 TC-2 일관성 이슈 v1.2에서 해결](./proving-grounds/evals/gcp-infra-architect/report-v1.2.md))
 
 ## 디렉토리 구조
 
@@ -32,11 +35,12 @@ maintenance/     → A/S 영역 (실전 피드백, 개선 로그)
 
 ### 1. 신규 컴포넌트 개발
 1. `forge/protocols/design.md` → Q&A로 요구사항 확정
-2. `forge/blueprints/{type}.blueprint.md` → 템플릿 기반 초안 작성
-3. `anvil/{type}/{name}/` → 컴포넌트 생성 (**`references/evaluation-rubric.md` 필수 포함**)
-4. **하네스 정의 작성** → `proving-grounds/harnesses/{name}.harness.md` + `test-cases.md` 작성
-5. `/eval-harness {name}` → 6축 자동 채점 실행
-6. 테스트 통과 → `anvil/INDEX.md` 상태 업데이트 → 실전 배치 가능
+2. **Phase 1.5 현황 파악** → 대상 프로젝트·시스템의 실제 상태 확보 (가정 제거)
+3. `forge/blueprints/{type}.blueprint.md` → 템플릿 기반 초안 작성
+4. `anvil/{type}/{name}/` → 컴포넌트 생성 (**`references/evaluation-rubric.md` 필수 포함**)
+5. **하네스 정의 작성** → `proving-grounds/harnesses/{name}.harness.md` + `test-cases.md` 작성 (Happy 2 + Edge 1 + **Negative 1 필수**)
+6. `/eval-harness {name}` → 6축 자동 채점 실행. **Happy Path 중 1개는 `--repeat 3` 일관성 테스트 권고**
+7. 테스트 통과 + 일관성 PASS → `anvil/INDEX.md` 상태 업데이트 → 실전 배치 가능
 
 ### 2. 실전 배치 후 개선 (A/S)
 1. 실전 사용 대화 로그를 `maintenance/feedback/{component-name}/`에 저장
