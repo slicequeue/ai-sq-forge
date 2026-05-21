@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.7"
+version: "1.8"
 last-modified: "2026-05-21"
-changelog: "v1.7 — 2026-05-21 pasta 배포 사례 반영: (1) Bean 이름 상수 패턴 — 다중 모듈 공유 시 `shared/.../constant/{Domain}BeanNameConstants` 위치 강제, 단일 모듈은 등록자 클래스 내. (2) TransactionTemplate 전파 명시 의무화 + REQUIRES_NEW 판단 가이드(외부 enqueue 실패 마킹 등). (3) 약한 해시(MD5/SHA-1) 금지 — SHA-256 이상 강제. 자기 검증 v1.7 3항목 추가. | v1.6 — blueprint v2.0 패턴 이식. v1.5 — FQCN 직접 사용 금지. v1.4 — Non-bean @Transactional 금지 등"
+changelog: "v1.8 — 2026-05-21 i18n 사례 추가 (commit a1a425ecb2 CodeRabbit 지적): Locale.ROOT 강제 가드레일. `toLowerCase()`/`toUpperCase()`/내부용 `String.format`에 Locale.ROOT 명시. 터키 locale 등 JVM 기본 Locale 의존 버그 차단. i18n 키 사용 시 위치 기반 placeholder(`{0}`) 강제. | v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지. v1.6 — blueprint v2.0. v1.5 — FQCN 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -341,6 +341,29 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 
 - **(v1.7) 약한 해시 알고리즘 금지** — `MessageDigest.getInstance("MD5"|"SHA-1"|"SHA1")` 금지. CSRF/세션ID/토큰 같은 보안 용도면 **SHA-256 이상** 강제. 2026-05-21 commit f1d959badf 사례(CookieUtils CSRF MD5→SHA-256 KISA High 지적).
 
+- **(v1.8) Locale.ROOT 강제** — 다음 호출에 `Locale.ROOT` 인자 명시 의무. 터키 locale 등 JVM 기본 Locale 의존으로 인한 국제화 버그 차단.
+  ```java
+  // ❌ 위험 (2026-05-15 commit a1a425ecb2 CodeRabbit 지적)
+  String key = "TITLE".toLowerCase();
+  String msg = String.format("user-%s", id);  // 내부 키용
+
+  // ✅ 올바름
+  String key = "TITLE".toLowerCase(Locale.ROOT);
+  String msg = String.format(Locale.ROOT, "user-%s", id);
+  ```
+  **적용 범위**:
+  - `String#toLowerCase()` / `toUpperCase()` 단독 호출 (예외: 사용자 화면 표시용으로 사용자 locale을 의도적으로 적용하는 경우만 — 의도 주석 필수)
+  - `String#format` 결과가 내부 키·로그·API 응답 본문이면 `Locale.ROOT` 명시. 사용자 표시용이면 `Locale.getDefault()` 또는 사용자 locale.
+
+- **(v1.8) i18n 키 사용 시 위치 기반 placeholder** — `messages.getMessage(...)` 호출 시 `{0}`, `{1}` 위치 기반만 사용. 명명 기반(`{name}`)은 일부 라이브러리만 지원해 호환성 깨질 위험.
+  ```java
+  // ✅ 올바름
+  messages.getMessage("myplan.guide.meal.v2.description", new Object[]{kcal}, locale);
+  // properties — en: Breakfast/lunch/dinner for a daily target of {0} kcal
+  ```
+
+- **(v1.8) i18n 키 추가 시 4파일 동기화** — `message-shared*.properties` 신규 키 추가는 항상 4파일(default/ko/en/ja) 동시. 단일 파일만 추가 금지. 추가 후 tolgee 스킬로 콘솔 push 권장.
+
 ### 소프트 가드레일
 
 - Fake 우선, Mockito는 외부 API 등 Fake가 복잡한 경우만
@@ -384,6 +407,9 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 22. [ ] **(v1.7) TransactionTemplate 전파**: 새로 생성한 `TransactionTemplate`에 `setPropagationBehavior(...)` 명시했는가? 외부 enqueue 실패 마킹/감사 로그 등 독립 커밋 필요 케이스면 `REQUIRES_NEW`?
 23. [ ] **(v1.7) 보안 알고리즘**: 해시 알고리즘 사용 시 MD5/SHA-1 없는가? SHA-256 이상?
 24. [ ] **(v1.7) enum/표준라이브러리 FQCN**: `.stateInfo(com.x.y.State.NORMAL)` 같은 enum 인라인 / `java.lang.reflect.*` 표준라이브러리 인라인 모두 import + 단순 클래스명으로 변환?
+25. [ ] **(v1.8) Locale.ROOT 명시**: `toLowerCase()`/`toUpperCase()`/내부용 `String.format` 호출에 Locale.ROOT 인자 명시했는가? 사용자 화면용이면 의도 주석?
+26. [ ] **(v1.8) i18n 4파일 동기화**: `message-shared*.properties` 신규 키가 default+ko+en+ja 4파일 모두에 추가되었는가? `grep -l "^{키}=" message-shared*.properties` 결과 4건?
+27. [ ] **(v1.8) i18n placeholder 위치 기반**: `messages.getMessage(...)` 인자가 위치 기반(`{0}`,`{1}`)인가? 명명 기반(`{name}`) 0건?
 
 ---
 

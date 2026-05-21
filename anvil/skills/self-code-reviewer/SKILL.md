@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.7"
+version: "1.8"
 last-modified: "2026-05-21"
-changelog: "v1.7: 2026-05-21 pasta 배포 사례 반영 — (1) FQCN 검출 확장: Bean 이름 매직 스트링 반복 + enum 인라인(`com.x.y.Z.ENUM`) + 표준 라이브러리(`java.lang.*`) 패턴 추가. (2) KISA 시큐어코딩 검사 섹션 신설 — 빈 catch / 약한 해시(MD5/SHA-1) / 평문 비번 yml / public static (non-final) 검출. (3) Bean 이름 상수 위치 가드: 다중 모듈 공유 시 shared 모듈 권고. | v1.6: blueprint v2.0 패턴 이식 — 자기 검증 v2.0 확장. v1.5 — FQCN 직접 사용 검출 항목 추가. v1.4 — Architecture Boundary 검사 강화"
+changelog: "v1.8: 2026-05-21 i18n 영역 사례 추가 반영 (commit a1a425ecb2 CodeRabbit 지적) — Locale.ROOT 누락 검출 룰 추가. `toLowerCase()`/`toUpperCase()`/`String.format(...)` 단독 호출 검출 → Locale.ROOT 명시 권장 (터키 locale 등 JVM 기본 Locale 의존 버그 차단). | v1.7: FQCN 확장 + Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6: blueprint v2.0. v1.5: FQCN 검출. v1.4: Architecture Boundary"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -173,6 +173,32 @@ git diff dev...HEAD -- {path}
 
 **검출 시 등급**: 권장 개선 (Low/Medium) 또는 필수 수정 (High/KEV/Critical). 일괄 PR 권장.
 
+#### (v1.8) i18n / Locale 함정 검사
+
+2026-05-15 commit a1a425ecb2 (CodeRabbit 지적) 반영. 변경 파일에서 다음 패턴 검출:
+
+| 패턴 | 정규식 | 권장 수정 | 등급 |
+|------|--------|----------|------|
+| `toLowerCase()` 단독 | `\.toLowerCase\s*\(\s*\)` | `.toLowerCase(Locale.ROOT)` 명시 | 필수 |
+| `toUpperCase()` 단독 | `\.toUpperCase\s*\(\s*\)` | `.toUpperCase(Locale.ROOT)` 명시 | 필수 |
+| `String.format` 로케일 누락 (내부 키·로그·API용) | `String\.format\s*\(\s*"` (첫 인자가 Locale 아님) | `String.format(Locale.ROOT, ...)` — 사용자 화면용이면 예외 | 권장 |
+| ja 카피에서 `\\n` split | ja 파일 또는 ja Locale 처리 코드에서 `split\s*\(\s*"\\\\n"`  | ja는 줄바꿈 미사용 정책 — split 대상 부적절 | 권장 |
+
+**False positive 회피**: 
+- 사용자 화면 출력용 `String.format` (예: i18n 메시지 본문 변환)은 Locale 명시 필요 없음. 단, **내부 키 생성·로그·API 응답 본문**이면 `Locale.ROOT` 강제.
+- 판단 어려우면 "검토 권장" 등급으로 보고하고 사용자 결정 받기.
+
+**보고 형식**:
+
+```markdown
+### i18n / Locale 함정 검사
+
+| 위치 | 패턴 | 위험 | 권장 수정 |
+|------|------|------|----------|
+| MyPlanMealMenu.java:47 | `.toLowerCase()` 단독 | 터키 locale에서 점 없는 i 변환 | `.toLowerCase(Locale.ROOT)` |
+| RoutineKey.java:23 | `String.format("user-%s", id).toLowerCase()` | 내부 키 — locale 의존 위험 | Locale.ROOT 명시 |
+```
+
 #### admin 모듈 검사 (admin/** 변경 시에만)
 
 변경 파일이 admin 모듈이면 01~09 규칙 대신 13~16 규칙을 우선 적용:
@@ -249,6 +275,8 @@ git diff dev...HEAD -- {path}
 12. [ ] **(v1.7) Bean 이름 매직 스트링 검사**: `@Bean`/`@Qualifier`/`@MockBean(name=...)` 등의 빈 이름 문자열이 변경 파일 군집에서 3회 이상 등장하면 상수화 권장 보고했는가? 모듈 공유 시 shared 위치 검토?
 13. [ ] **(v1.7) enum/표준라이브러리 FQCN**: `com.x.y.Z.ENUM_CONST`, `java.lang.reflect.*` 같은 인라인 FQCN을 검사했는가? (#9 FQCN 검사의 확장 패턴)
 14. [ ] **(v1.7) KISA 시큐어코딩 검사**: 변경 파일에 빈 catch / MD5·SHA-1 / 평문 비번 yml / public static (non-final) 패턴이 있는지 검사했는가? 검출 시 별도 섹션으로 보고?
+15. [ ] **(v1.8) i18n / Locale.ROOT 검사**: `.toLowerCase()` / `.toUpperCase()` 단독 호출, 내부용 `String.format` Locale 누락이 있는지 검사했는가? ja 카피 `\\n` split 등 ja 정책 위반?
+16. [ ] **(v1.8) i18n 4파일 동기화 검사**: `message-shared*.properties` 변경 시 4파일(default/ko/en/ja)에 동일 키가 모두 존재하는가? 누락 시 보고?
 
 ---
 

@@ -1,8 +1,9 @@
 ---
 name: tolgee
 description: "Tolgee i18n 콘솔과 properties 파일을 동기화한다. 'tolgee push', 'tolgee pull', 'tolgee diff', '톨지 푸시', '톨지 풀', '톨지 동기화', '톨지 키 등록', '톨지 정합성 검증', 'i18n 콘솔 업로드', 'i18n 키 누락 확인' 요청 시 사용한다. dev-global Tolgee 셀프호스팅(pasta-global, project id 2) 기준으로 push/pull/diff 워크플로를 표준화한다. 토큰은 프로젝트 .env에서 읽고, push는 안전을 위해 항상 키 prefix·키 목록 명시 + KEEP 모드를 기본으로 한다."
-version: "0.1"
-last-modified: "2026-05-19"
+version: "0.2"
+last-modified: "2026-05-21"
+changelog: "v0.2: 2026-05-21 pasta 배포 사례 반영 (commit 869c972f90 v2 i18n 키 6종×4파일 + a1a425ecb2 CodeRabbit Locale.ROOT·en 카피 리뷰). Phase 1.1 신규: 4파일 동시 키 추가 강제 + 누락 검출 / Phase 1.2 신규: en 카피 품질 가드(단순 직역 차단) / Phase 4 신규: Java 코드 측 Locale.ROOT 사용 안내 (i18n 책임자로서 자바 코드 가이드 포함) | v0.1: 실전(pasta-japan-server)에서 forge로 역수입"
 ---
 
 # tolgee — i18n 콘솔 동기화 스킬
@@ -37,6 +38,71 @@ node --version && npm --version
 | `TOLGEE_API_KEY` | `tgpat_xxx` 또는 `tgpak_xxx` | PAT(개인) 또는 Project API Key. push/pull 권한 필요. **절대 커밋 금지**. |
 
 없으면 사용자에게 "콘솔 → User menu → API keys / Personal access tokens에서 발급 후 .env에 추가" 안내. 작성 후 `.env`는 이미 `.gitignore`에 포함되어 있어 추적되지 않음(확인 권장).
+
+## Phase 1.1. (v0.2) 신규 키 추가 시 4파일 동시 갱신 — 하드 가드레일
+
+**원칙**: 새 i18n 키 추가는 항상 4파일(`default + ko + en + ja`) 동시 작업. 단일 파일에만 추가하는 사고를 차단.
+
+### 동작 순서
+
+1. 사용자가 신규 키 추가를 요청하면 (`myplan.guide.meal.v2.title` 같은 키) → 먼저 4파일 모두에서 키 존재 여부 grep
+2. 키 추가는 Edit 도구로 4파일 모두에 동시에 (한 응답에 4 Edit 호출). 단일 파일만 추가하지 않음.
+3. 4파일 모두에 동일 키가 있는지 사후 검증 (`grep -l "{키}" message-shared*.properties` 결과 4건 확인)
+
+### 누락 검출 (push 직전 자동 실행)
+
+```bash
+# push 직전 모든 신규 키에 대해 자동 실행되는 검사
+for key in $NEW_KEYS; do
+  hits=$(grep -l "^$key=" shared/src/main/resources/messages/message-shared*.properties | wc -l)
+  if [ "$hits" -ne 4 ]; then
+    echo "[FAIL] '$key' 4파일 중 $hits 곳에만 존재 — 누락 파일 점검 필요"
+    exit 1
+  fi
+done
+```
+
+### 출처
+
+2026-05-15 commit 869c972f90 (마이플랜 v2 i18n 연동): 키 6종 × 4파일 = 24개 항목 동시 추가가 정상 패턴. tolgee push 전 검증 단계로 박제.
+
+---
+
+## Phase 1.2. (v0.2) en 카피 품질 가드 — CodeRabbit 사전 차단
+
+**원칙**: 단순 직역 금지. en 카피는 영어 화자가 자연스럽게 읽을 수 있는 어순·관사·placeholder 위치여야 함.
+
+### 자체 점검 룰
+
+en 카피를 새로 작성하거나 변경할 때 다음 체크:
+
+| 검사 | 룰 |
+|------|----|
+| placeholder 위치 | `{0}` 같은 placeholder가 한국어 어순 그대로(목적어+동사) 배치되지 않았는가 → 영어 어순(주어+동사+목적어)으로 재배치 |
+| 관사 | `Today's recommended meals` 처럼 명사 앞 관사·소유격 적절한가 (관사 누락 = 어색함) |
+| 단위 표현 | `for {0} kcal daily target` 같은 직역 → `for a daily target of {0} kcal` 형태로 자연어 |
+| 본문 길이 | 한글 원문이 단문이라도 영어가 어색하면 1~2단어 더 추가 OK (TTS·UI overflow는 별도 검증) |
+
+### 사용자에게 보여줄 형식
+
+push 직전 en 카피만 별도로 사용자에게 표 형태로 제시:
+
+```markdown
+### en 카피 사전 검수 (v0.2 신규)
+
+| 키 | en 카피 | 검수 의견 |
+|---|---|---|
+| myplan.guide.meal.v2.description | Breakfast/lunch/dinner for a daily target of {0} kcal. | OK — placeholder 자연어 위치 |
+| myplan.guide.meal.v2.group.dinner.title | Recommended for dinner | OK — 짧지만 명료 |
+```
+
+검수 의견 컬럼에 사용자가 직접 추가 수정 요청 가능. 콘솔 push 후 CodeRabbit 지적당하기 전에 차단.
+
+### 출처
+
+2026-05-15 commit a1a425ecb2 (CodeRabbit 리뷰 반영 — `for {0} kcal daily target` → `for a daily target of {0} kcal`).
+
+---
 
 ## Phase 1. push 워크플로 — 키 명시 + KEEP 모드
 
@@ -125,6 +191,58 @@ node --version && npm --version
 ```bash
 ./.claude/skills/tolgee/scripts/diff.sh --prefix myplan.guide.meal.v2
 ```
+
+## Phase 4. (v0.2) Java 코드 i18n 함정 안내 — i18n 책임자로서 자바 코드 가이드
+
+tolgee 스킬은 properties 동기화 책임자이지만, **Java 코드 측 Locale 사용 함정**도 사용자에게 안내한다 (책임 영역). i18n 키를 사용하는 코드에서 자주 발생하는 4대 함정:
+
+### 1. `Locale.ROOT` 누락 — 터키 locale 버그
+
+```java
+// ❌ 위험 — 터키 locale에서 "TITLE".toLowerCase() = "tıtle" (점 없는 i)
+String key = "TITLE".toLowerCase();
+
+// ✅ 올바름
+String key = "TITLE".toLowerCase(Locale.ROOT);
+```
+
+CodeRabbit/PR 리뷰가 반드시 지적하는 패턴. 모든 `toLowerCase()` / `toUpperCase()` 호출에 `Locale.ROOT` 명시 강제 권고.
+
+### 2. `String.format` 로케일 의존
+
+```java
+// ❌ 위험 — 독일 locale에서 "1,5" (쉼표 소수점) 출력
+String msg = String.format("Daily target: %.1f kcal", 1.5);
+
+// ✅ 올바름
+String msg = String.format(Locale.ROOT, "Daily target: %.1f kcal", 1.5);
+```
+
+숫자·날짜 포맷팅 시 출력이 사용자 화면용이 아닌 **내부 키·로그·API 응답**이면 `Locale.ROOT`.
+
+### 3. MessageFormat placeholder 정렬
+
+i18n 카피의 placeholder는 언어마다 순서가 다를 수 있음 → 코드에서는 **위치 기반** (`{0}`, `{1}`) 사용. 명명 기반(`{name}`)은 일부 라이브러리만 지원.
+
+```java
+// ✅ 올바름 — 위치 기반
+messages.getMessage("myplan.guide.meal.v2.description",
+    new Object[]{kcal}, locale);
+
+// properties:
+// ko: 하루 목표 {0} kcal에 맞춘 아침/점심/저녁
+// en: Breakfast/lunch/dinner for a daily target of {0} kcal
+```
+
+### 4. ja 카피 줄바꿈 정책
+
+ja는 정책상 줄바꿈 미사용. ko/en만 `\n` 유지. Java 코드에서 ja 카피를 split할 때 `\n` 가정 금지.
+
+### 안내 시점
+
+i18n 키를 사용하는 신규 코드 작업 요청 시 (예: `messages.getMessage(...)` 호출 추가) → 위 4건을 사전에 알린다. 작성 후에는 self-code-reviewer v1.8의 `Locale.ROOT` 검출 룰이 잡는다.
+
+---
 
 ## 운영 가드레일
 

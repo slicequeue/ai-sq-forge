@@ -8,8 +8,8 @@
 |------|------|------|------|---------|------------|------|
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.2 | PRD 기획 요구사항 문서 작성 (v1.2: Phase 1.5 현황 파악 + 멀티턴·풀패키지 결정 트리 + 확인vs가정 분리) | **회귀 평가 권장** (v1.2 패턴 이식 — `/eval-harness prd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.1 기준) | `skills/prd-designer/` |
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.4 | TDD 기술 설계 문서 작성 (v1.4: Phase 0.5 현황 파악 + 결정 트리 + 자기 검증 v2.0) | **회귀 평가 권장** (v1.4 패턴 이식 — `/eval-harness tdd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.3 기준) | `skills/tdd-designer/` |
-| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.7 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.7: Bean 이름 상수화 + shared 위치 / TransactionTemplate REQUIRES_NEW 가이드 / 약한 해시 금지 / enum·표준라이브러리 FQCN 확장) | **회귀 평가 권장** (v1.7 사례 반영) | 일반 | 95/100 평균 (v1.5 기준: TC-1 99 / TC-2 92 / TC-3 PASS / TC-4 94) | `skills/java-spring-coder/` |
-| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.7 | dev 기준 변경 코드 자체 리뷰 (v1.7: Bean 이름 매직 스트링 검출 + enum/표준라이브러리 FQCN + KISA 시큐어코딩 검사 섹션 신설) | **회귀 평가 권장** (v1.7 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
+| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.8 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.8: Locale.ROOT 강제 + i18n 4파일 동기화 + 위치 기반 placeholder. v1.7: Bean 상수화 + REQUIRES_NEW + 약한 해시 금지) | **회귀 평가 권장** (v1.8 사례 반영) | 일반 | 95/100 평균 (v1.5 기준) | `skills/java-spring-coder/` |
+| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.8 | dev 기준 변경 코드 자체 리뷰 (v1.8: Locale.ROOT 누락 검출 + i18n 4파일 동기화 검사. v1.7: Bean 매직 스트링 + enum FQCN + KISA 시큐어코딩) | **회귀 평가 권장** (v1.8 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.5 | PR 피드백 수집·수정·push·답글 (v1.5: 자기 검증 v2.0 — PR 컨텍스트 현황 파악 + 봇/사람 분기 근거 기록) | **회귀 평가 권장** (v1.5 패턴 이식) | 일반 | 94.5/100 평균 (v1.4 기준) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.1 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (v1.1: Phase 0.3 admin 모듈 현황 파악 + 멀티턴/풀패키지 결정 트리) | **회귀 평가 권장** (v1.1 패턴 이식) | 일반 | 88/100 (v1.0 기준) | `skills/admin-prd-plan-designer/` |
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.2 | Admin Thymeleaf SSR 화면 구현/수정 (v1.2: 자기 검증 v2.0 — 기존 패턴 사전 스캔 + 영향도 grep 확인) | **회귀 평가 권장** (v1.2 패턴 이식) | 일반 | 95.3/100 (v1.1 기준) | `skills/admin-thymeleaf-ui/` |
@@ -21,7 +21,7 @@
 | [chat-incident-report](skills/chat-incident-report/SKILL.md) | 1.0 | Google Chat 장애/CS 대응 메시지 (고정 6섹션 + CS 복붙 품질) | **실전 배치 가능** | **역수입전용** | 95/100 (3/3 PASS, Baseline +58.7점, TC-3 AUTO FAIL 4건 방어) | `skills/chat-incident-report/` |
 | [sq-today-reviewer](skills/sq-today-reviewer/SKILL.md) | 0.3 | 하루 Claude 작업 총체 리뷰 → 놓친 학습·공부 주제(실무/CS이론 2트랙)·반복 실수·소양·내일 액션 6섹션 성장 리포트 | **테스트 대기** (harness/test-cases 작성됨, `/eval-harness` 미실행) | 일반 | - | `skills/sq-today-reviewer/` |
 | [git-pr](skills/git-pr/SKILL.md) | 0.2 | PR 생성/갱신 — 사람 친화 표현 + 표 위주 + 100~200줄 양식 (commands/git-pr.md에서 승격, forge 일반화) | **실전 배치 가능** (일관성 미검증 — `--repeat 3` 권장) | 일반 | 95.25/100 (TC-1 94 / TC-2 96 / TC-3 93 / TC-4 98) | `skills/git-pr/` |
-| [tolgee](skills/tolgee/SKILL.md) | 0.1 | Tolgee i18n 콘솔과 properties 파일 동기화 (push/pull/diff, KEEP 모드 기본) | **테스트 대기** (2026-05-19 pasta-japan-server에서 forge-upstream 역수입 — 하네스·루브릭 미작성) | 일반 | - | `skills/tolgee/` |
+| [tolgee](skills/tolgee/SKILL.md) | 0.2 | Tolgee i18n 콘솔과 properties 파일 동기화 (v0.2: 4파일 동시 갱신 강제 + en 카피 품질 가드 + Java 코드 Locale 함정 안내) | **테스트 대기** (하네스·루브릭 미작성) | 일반 | - | `skills/tolgee/` |
 
 ## Agents
 

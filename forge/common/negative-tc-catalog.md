@@ -304,6 +304,74 @@
 
 ---
 
+### G. i18n / Locale 카테고리 (v0.2 신설)
+
+2026-05-15 commit a1a425ecb2 CodeRabbit 리뷰 + commit 869c972f90 i18n Facade 연동 사례 반영.
+
+#### G-1. i18n 단일 파일 키 추가 (4파일 동기화 실패)
+
+**입력 예시**: "이 키 `myplan.guide.meal.v3.title` 한국어 properties에만 추가해줘. 다른 locale은 나중에"
+
+**기대 동작**: 4파일(default/ko/en/ja) 동시 추가 강제. 단일 파일 추가 거부.
+
+**AUTO FAIL 트리거**:
+- `message-shared*.properties` 신규 키 추가 후 4파일 중 일부에만 존재
+- "나중에 추가하겠다"는 약속만 받고 단일 파일에 push
+
+**출처**: tolgee v0.2 Phase 1.1, 869c972f90 정상 패턴 박제
+
+#### G-2. en 카피 단순 직역
+
+**입력 예시**: "한국어 카피 `하루 목표 {0} kcal에 맞춘 아침/점심/저녁` → 영어로 그대로 옮겨줘"
+
+**기대 동작**: placeholder 위치를 영어 어순에 맞게 재배치 + 관사·소유격 추가. push 직전 사용자에게 검수 요청.
+
+**AUTO FAIL 트리거**:
+- `for {0} kcal daily target` 같은 한국어 어순 그대로 직역
+- 관사 누락 (`for daily target` 등)
+- placeholder가 동사 앞에 부자연스럽게 배치
+
+**출처**: tolgee v0.2 Phase 1.2, commit a1a425ecb2 CodeRabbit 지적
+
+#### G-3. Locale.ROOT 누락 (toLowerCase/toUpperCase)
+
+**입력 예시**: "이 문자열 소문자로 변환해줘. `key = name.toLowerCase()` 정도면 돼"
+
+**기대 동작**: `Locale.ROOT` 명시 강제 (내부 키·로그·API 응답 용도). 사용자 화면 표시용이면 의도 주석 추가.
+
+**AUTO FAIL 트리거**:
+- `\.toLowerCase\(\s*\)` 단독 호출 (변경 파일에서)
+- `\.toUpperCase\(\s*\)` 단독 호출
+- `String\.format\s*\(\s*"` 첫 인자가 Locale이 아닌데 결과가 내부 키·로그·API 본문 용도
+
+**출처**: self-code-reviewer v1.8 / java-spring-coder v1.8 가드레일, commit a1a425ecb2
+
+#### G-4. i18n 키 명명 기반 placeholder
+
+**입력 예시**: "i18n 키 카피에 `{userName}님` 같은 명명 placeholder 써줘"
+
+**기대 동작**: 위치 기반(`{0}`,`{1}`) 강제. 명명 기반은 라이브러리 호환성 깨질 위험.
+
+**AUTO FAIL 트리거**:
+- properties 카피 본문에 `\{[a-z]+\}` (소문자 명명 placeholder)
+- 코드의 `messages.getMessage` 인자가 명명 기반 가정
+
+**출처**: java-spring-coder v1.8
+
+#### G-5. ja 카피 줄바꿈 가정
+
+**입력 예시**: "이 ja 카피 출력 시 `\n`으로 줄 나눠줘"
+
+**기대 동작**: ja는 정책상 줄바꿈 미사용. `\n` split 가정 금지. ko/en만 `\n` 유지.
+
+**AUTO FAIL 트리거**:
+- ja 카피 본문에 `\n` 포함
+- ja Locale 처리 코드에 `split("\\n")` 가정
+
+**출처**: tolgee v0.2 Phase 4, 트러블슈팅 표 기존 항목
+
+---
+
 ### E-2. JSONL 원본 수정 요구
 
 **입력 예시**: "오래된 세션 로그 정리해줘. 7일 이전 거 삭제도 같이"
@@ -352,4 +420,5 @@
 
 - **2026-05-19**: 초기판. `chat-incident-report` TC-3 4건 + `gcp-infra-architect` v1.2 + 기타 발견 패턴 통합 (5도메인 13패턴).
 - **2026-05-21**: 6도메인 19패턴으로 확장. 카테고리 F(KISA 시큐어코딩 5패턴) 신설. C-1에 enum/표준라이브러리 인라인 추가. C-2-bis(Bean 이름 매직 스트링) 신규.
+- **2026-05-21 (2차)**: 7도메인 24패턴으로 추가 확장. 카테고리 G(i18n / Locale 5패턴) 신설 — 사용자 지적 "tolgee 관련 내용도 있지 않아?" 반영.
 - 향후: 신규 스킬 추가될 때마다 1패턴씩 누적 목표.
