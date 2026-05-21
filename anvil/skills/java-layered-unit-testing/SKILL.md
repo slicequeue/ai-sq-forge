@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
 description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.2"
-last-modified: "2026-05-19"
-changelog: "v1.2 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(계층 추정 vs 확정 분리, 가정 기반 fixture 표기, 기존 테스트 스타일 정렬 근거). | v1.1 — FQCN 직접 사용 금지 절대 금지 항목. PR #527 사례 반영. v1.0 — 실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
+version: "1.3"
+last-modified: "2026-05-21"
+changelog: "v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -159,6 +159,35 @@ class MyRepositoryTest {
 
   검사 대상: `new x.y.Z()`, `x.y.Z.class`, 변수·매개변수·제네릭 타입, 캐치 절. **"테스트라 한 번만 쓰니까 인라인으로"는 금지** — 휴먼 리뷰가 반드시 잡아낸다(휴먼 리뷰어 지적 1회 = 스킬 결함).
 
+  **(v1.3 확장)** 빌더 인자의 enum 상수 접근도 검사 대상:
+  ```java
+  // ❌ 금지 (2026-05-21 commit a6b72daa82 사례)
+  User.builder()
+      .stateInfo(com.kakaohealthcare.moneyball.user.entity.State.NORMAL)
+      ...
+
+  // ✅ 올바름
+  import com.kakaohealthcare.moneyball.user.entity.State;
+  ...
+  User.builder()
+      .stateInfo(State.NORMAL)
+      ...
+  ```
+
+- **(v1.3) @MockBean 빈 이름 매직 스트링 금지** — `@MockBean(name = "...")`, `@Qualifier("...")`에 빈 이름 문자열 인라인 금지. 빈 등록자(`*Configuration`)가 제공한 상수를 import해 사용. 등록자에 상수가 없으면 **본 스킬에서 정의하지 않고** 등록자 측에 상수 추가를 요청 (테스트 코드가 빈 이름의 SSOT 되면 안 됨).
+
+  ```java
+  // ❌ 금지 (2026-05-21 사례 — 8곳 매직 스트링)
+  @MockBean(name = "dexcomAuthorizedClientManager")
+  private OAuth2AuthorizedClientManager mgr;
+
+  // ✅ 올바름 — 등록자가 제공한 상수 import
+  import static com.x.shared.constant.DexcomBeanNameConstants.DEXCOM_AUTHORIZED_CLIENT_MANAGER;
+  ...
+  @MockBean(name = DEXCOM_AUTHORIZED_CLIENT_MANAGER)
+  private OAuth2AuthorizedClientManager mgr;
+  ```
+
 ### 반드시 수행
 1. Phase 0 사전 확인 (계층 식별 + 기존 패턴 확인)
 2. 계층에 맞는 테스트 방식 선택
@@ -186,6 +215,8 @@ class MyRepositoryTest {
 | 12 | R | **(v1.2) 계층 식별 근거 명시** — 대상 클래스의 패키지 경로 / 의존성으로 계층을 확정했는가? 추정 시 "추정" 표기? |
 | 13 | R | **(v1.2) Fixture 가정 표기** — 비즈니스 의미 없는 임의값(예: `"test@test.com"`)이 아니라 실제 도메인에서 유효한 값을 사용했는가? 가정값은 주석으로 표기? |
 | 14 | R | **(v1.2) 기존 테스트 스타일 정렬** — 동일 패키지의 기존 테스트와 `@Nested` 그룹핑·`@DisplayName` 한국어 톤·AssertJ 사용 패턴이 일치하는가? |
+| 15 | B | **(v1.3) @MockBean 빈 이름 상수화** — `@MockBean(name = "...")` / `@Qualifier("...")` 매직 스트링 0건? 등록자 상수 import 사용? |
+| 16 | B | **(v1.3) enum 인라인 FQCN 확장** — 빌더 인자·메서드 호출에 `com.x.y.Z.ENUM_CONST` 형태 인라인 0건? (`.stateInfo(State.NORMAL)`로 정리) |
 
 **표기**: B = 블로커 (미충족 시 FAIL), R = 권장
 

@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.6"
-last-modified: "2026-05-19"
-changelog: "v1.6: blueprint v2.0 패턴 이식 — 자기 검증 v2.0 확장(확인 vs 가정 분리, 변경 범위 추론 근거 명시). 본질이 분석형이라 Phase 1.5 현황 파악은 기존 Step 1(git log/diff)로 충족. | v1.5 — FQCN 직접 사용 검출 항목 추가 (메인+테스트 모두). PR #527 자체 리뷰 누락 사례 반영. v1.4 — Insights 피드백 반영: Architecture Boundary 검사 강화"
+version: "1.7"
+last-modified: "2026-05-21"
+changelog: "v1.7: 2026-05-21 pasta 배포 사례 반영 — (1) FQCN 검출 확장: Bean 이름 매직 스트링 반복 + enum 인라인(`com.x.y.Z.ENUM`) + 표준 라이브러리(`java.lang.*`) 패턴 추가. (2) KISA 시큐어코딩 검사 섹션 신설 — 빈 catch / 약한 해시(MD5/SHA-1) / 평문 비번 yml / public static (non-final) 검출. (3) Bean 이름 상수 위치 가드: 다중 모듈 공유 시 shared 모듈 권고. | v1.6: blueprint v2.0 패턴 이식 — 자기 검증 v2.0 확장. v1.5 — FQCN 직접 사용 검출 항목 추가. v1.4 — Architecture Boundary 검사 강화"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -106,9 +106,72 @@ git diff dev...HEAD -- {path}
   - `new x.y.Z("...")` — 예외/객체 인스턴스 생성을 인라인으로
   - `isInstanceOf(x.y.Z.class)` / `MyClass.class` 형태의 `.class` 리터럴
   - `x.y.Z variable = ...` / 매개변수 / 제네릭 타입 인자 / 캐치 절
-  - **검사 룰 (개념)**: 정규식 `\b[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.[A-Z][A-Za-z0-9_]*\b` 매칭이 import 문이 아닌 코드 본문에 등장하는지
+  - **(v1.7)** `x.y.Z.ENUM_CONST` 형태 — enum 상수 접근 인라인 FQCN. 예: `.stateInfo(com.x.y.State.NORMAL)`. import + 단순 클래스명 사용 권장
+  - **(v1.7)** `java.x.y.Z` 표준 라이브러리 인라인 — 예: `java.lang.reflect.Field`, `java.util.concurrent.TimeUnit`. import 누락 케이스로 검출
+  - **검사 룰 (개념)**: 정규식 `\b[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.[A-Z][A-Za-z0-9_]*(\.[A-Z][A-Z0-9_]*)?\b` 매칭이 import 문이 아닌 코드 본문에 등장하는지 (마지막 그룹은 enum 상수 옵션)
   - **검사 제외**: 어노테이션 인자 문자열, SpEL 표현식, JPQL/SQL 쿼리 문자열, 로그 메시지 본문은 false positive — 무시
   - **검출 시 등급**: 필수 수정 (07-general-project-convention "Explicit Imports" 명시 위반). 테스트 파일도 동일 적용 — "테스트라 한 번만 쓰니까"는 면죄부 아님
+
+- **(v1.7) Bean 이름 매직 스트링 검출**: 동일 빈 이름 문자열 리터럴이 변경 파일 군집에서 3회 이상 등장하면 → "상수화 권장" 보고
+  - 검사 위치: `@Bean(...)`, `@Bean(name=...)`, `@Qualifier("...")`, `@MockBean(name=...)`, `@DependsOn("...")`, `BeanFactory#getBean("...")`, `ApplicationContext#getBean("...")`
+  - **검출 정규식**: 위 위치들의 인자 문자열을 추출 → 동일 값 3회 이상 → 보고
+  - **권장 위치 판단**:
+    - 빈 등록자(A) + 소비자(B)가 **같은 모듈** → 등록자 클래스 내 `public static final String` 상수
+    - **다른 모듈** → `shared/.../constant/{Domain}BeanNameConstants` 신설 권장 (config → config 의존 외관 회피)
+  - **출처**: 2026-05-21 commit a6b72daa82 (dexcomAuthorizedClientManager 8회 반복 PR 리뷰 지적) / 후속 0fc9b52338 (shared 모듈 이동)
+  - **보고 형식**: `Bean 이름 "{값}"이(가) {파일:라인} 등 {N}곳에 매직 스트링으로 반복. {등록자Class}에 public static final 상수 추출 권장. 모듈 공유 시 shared 위치 검토.`
+
+#### (v1.7) KISA 시큐어코딩 검사
+
+2026-05-21 KISA 점검 일괄 머지(PR #7877~#7885) 경험 반영. 변경 파일에서 다음 패턴을 사전 검출하여 외부 점검에 무더기 발견되는 상황을 차단한다.
+
+**Low 등급 — 디버그·오류 처리**
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| 빈 catch (변수명 ignored/ignore/_) | `catch\s*\([^)]+\s+(ignored?|_)\)\s*\{\s*\}` | `log.debug/warn(맥락, e)` 또는 `// 사유 명시` 한국어 주석 |
+| 단독 무사유 주석 | catch 블록 안에 `^\s*//\s*(no-op\|무시\|TODO\|fixme)\s*$` 만 존재 | "왜 무시해도 되는가" 한 줄 설명 추가 |
+| try 전 null 사전 선언 | `\w+\s+\w+\s*=\s*null;\s*try\s*\{` | `Optional<T>`로 변환 또는 try 안에서 즉시 반환 |
+
+**Medium 등급 — 불변성**
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| public static (non-final) | `public\s+static\s+(?!final\b)[A-Za-z<>\[\]]+\s+\w+\s*=` | 불변 가능하면 `final` 추가. mutable 사유 있으면 주석 |
+
+**High 등급 — 보안 알고리즘·시크릿**
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| 약한 해시 알고리즘 | `MessageDigest\.getInstance\(\s*"(MD5\|SHA-1\|SHA1)"\s*\)` 또는 상수 값 | SHA-256 이상. CSRF/세션 ID 같은 보안 용도면 즉시 교체 |
+| 평문 비밀번호 yml | yml 파일에서 `password:\s*[^$\s]` (`${ENV:-fb}` 형태 아님) | 환경변수 fallback 패턴 적용. 단 `application-example.yml` 같은 샘플 파일은 제외 |
+
+**KEV/Critical 등급 — 의존성**
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| build.gradle 의존성 변경 | `build.gradle\\|*.gradle.kts` 변경 시 KISA Critical/KEV 목록 대조 | 즉시 자동 검출은 불가. 변경 보고에 "KISA 목록 대조 권장" 표시 |
+
+**보고 형식 (KISA 검사 결과 섹션)**
+
+검출 시 리뷰 결과에 별도 섹션:
+
+```markdown
+### KISA 시큐어코딩 검사
+
+| 등급 | 위치 | 패턴 | 권장 수정 |
+|------|------|------|----------|
+| Low | api/.../LoggingFilter.java:42 | 빈 catch(ignored) | log.debug + 한국어 사유 |
+| High | api/.../CookieUtils.java:33 | MD5 hashAlgorithm 상수 | SHA-256 |
+| Medium | .../GroupDirectNoticeList.java:12 | public static (non-final) | final 추가 (불변 가능) |
+```
+
+**False positive 회피**
+- 빈 catch 패턴: 메인 코드만 검사 (테스트 코드는 expected exception 패턴이라 false positive 多)
+- 평문 비번 yml: 파일명에 `example`/`sample`/`local-template` 포함 시 skip
+- public static (non-final): 테스트 fixture/mock 클래스(`*Fixture.java`, `Fake*.java`)는 skip
+
+**검출 시 등급**: 권장 개선 (Low/Medium) 또는 필수 수정 (High/KEV/Critical). 일괄 PR 권장.
 
 #### admin 모듈 검사 (admin/** 변경 시에만)
 
@@ -183,6 +246,9 @@ git diff dev...HEAD -- {path}
 9. [ ] **FQCN 검사**: 변경 파일(메인+테스트)의 코드 본문에 `com.x.y.Z` 형태 패키지 경로가 직접 박혀 있는지 명시적으로 확인했는가? mock 예외(`new x.y.Z()`)와 `.class` 리터럴(`isInstanceOf(x.y.Z.class)`) 점검?
 10. [ ] **(v1.6) 확인 vs 가정 분리**: 리뷰 결과의 "수정 방향"이 (a) 규칙 본문에 명시된 것 / (b) 리뷰어 가정·추론 중 어느 것인지 분리 표기했는가? 추론 기반 수정 제안은 "근거: 리뷰어 판단" 명시.
 11. [ ] **(v1.6) 변경 의도 파악 근거**: PR 제목·커밋 메시지·연결된 PRD/TDD 중 어느 것을 변경 의도 파악 근거로 썼는지 보고서 헤더에 명시했는가? (의도 미파악 시 리뷰가 표면적 컨벤션 위반 검사에 그칠 위험)
+12. [ ] **(v1.7) Bean 이름 매직 스트링 검사**: `@Bean`/`@Qualifier`/`@MockBean(name=...)` 등의 빈 이름 문자열이 변경 파일 군집에서 3회 이상 등장하면 상수화 권장 보고했는가? 모듈 공유 시 shared 위치 검토?
+13. [ ] **(v1.7) enum/표준라이브러리 FQCN**: `com.x.y.Z.ENUM_CONST`, `java.lang.reflect.*` 같은 인라인 FQCN을 검사했는가? (#9 FQCN 검사의 확장 패턴)
+14. [ ] **(v1.7) KISA 시큐어코딩 검사**: 변경 파일에 빈 catch / MD5·SHA-1 / 평문 비번 yml / public static (non-final) 패턴이 있는지 검사했는가? 검출 시 별도 섹션으로 보고?
 
 ---
 

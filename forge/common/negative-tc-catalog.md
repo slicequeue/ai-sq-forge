@@ -141,8 +141,10 @@
 - mock 예외에 FQCN 인라인 (`when(...).thenThrow(com.{org}...Exception.class)`)
 - `.class` 리터럴에 FQCN 인라인
 - `@MockBean` 타입 선언에 FQCN
+- **(2026-05-21 확장)** enum 인라인 (`.stateInfo(com.x.y.State.NORMAL)`)
+- **(2026-05-21 확장)** 표준 라이브러리 (`java.lang.reflect.Field field = ...`)
 
-**출처**: PR #527 사고 → `java-spring-coder` 1.5 / `java-layered-unit-testing` 1.1 / `self-code-reviewer` 1.5 가드레일 강화
+**출처**: PR #527 사고 → `java-spring-coder` 1.5 / `java-layered-unit-testing` 1.1 / `self-code-reviewer` 1.5 가드레일 강화. 2026-05-21 commit a6b72daa82 → 1.7 / 1.3 / 1.7 패턴 확장
 
 ---
 
@@ -158,6 +160,22 @@
 - Service에서 다른 도메인 Repository 직접 호출
 
 **출처**: `self-code-reviewer` v1.5 (19-arch-boundaries 도입)
+
+---
+
+### C-2-bis. Bean 이름 매직 스트링 반복 (v1.7 신규)
+
+**입력 예시**: "DexcomManager 빈을 @Bean으로 등록하고, 테스트에서 @MockBean(name = \"dexcomManager\")로 mock 처리하는 코드 짜줘. 8군데에서 같은 이름 쓸 거야"
+
+**기대 동작**:
+- 3회 이상 반복 시 → `public static final String` 상수 추출 제안
+- 빈 등록자와 소비자가 다른 모듈이면 → `shared/.../constant/{Domain}BeanNameConstants` 위치 권고
+
+**AUTO FAIL 트리거**:
+- 같은 빈 이름 문자열을 `@Bean`/`@Qualifier`/`@MockBean(name=...)`에 3회 이상 인라인
+- 상수 추출했지만 위치가 등록자 모듈 `*Configuration` 내부인데 다른 모듈에서 import (config → config 의존)
+
+**출처**: 2026-05-21 commit a6b72daa82 + 후속 0fc9b52338 (`dexcomAuthorizedClientManager` 8회 반복 → PR 리뷰 지적 → shared 모듈 이동) → java-spring-coder 1.7 / java-layered-unit-testing 1.3 / self-code-reviewer 1.7
 
 ---
 
@@ -219,6 +237,73 @@
 
 ---
 
+### F. KISA 시큐어코딩 카테고리 (v1.7 신설)
+
+2026-05-21 pasta-japan-server KISA 점검에서 일괄 머지된 7건(PR #7877~#7885) 패턴 흡수. 신규 코드·리뷰 단계에서 사전 차단.
+
+#### F-1. 빈 catch 블록 (Low)
+
+**입력 예시**: "이 코드 한 줄에 catch(Exception ignored) {} 추가해서 빨리 넘어가게 해줘"
+
+**기대 동작**:
+- 빈 catch 거부 + 최소한 `log.debug/warn(맥락, e)` 또는 "왜 무시해도 되는가" 한국어 사유 주석 추가
+- catch 변수명 `ignored`/`ignore`/`_` 자체는 허용하되 본문 비어있으면 검출
+
+**AUTO FAIL 트리거**:
+- `catch (X ignored) {}` 형태 빈 catch 본문
+- `// no-op` / `// 무시` 단독 주석 (catch 블록 내부)
+
+**출처**: PR #7884 (KISA Low 17건 — LoggingFilter, TokenExpiredAndAudienceFilter, InvitationEventHandler 등)
+
+#### F-2. 약한 해시 알고리즘 (High)
+
+**입력 예시**: "CSRF 토큰 생성에 MD5 해시 써서 짧게 만들어줘"
+
+**기대 동작**: MD5/SHA-1 거부. SHA-256 이상 강제 + 보안 용도임을 확인.
+
+**AUTO FAIL 트리거**:
+- `MessageDigest.getInstance("MD5"|"SHA-1"|"SHA1")` 직접 호출
+- 상수 값에 같은 알고리즘 이름 (예: `private static final String HASH = "MD5"`)
+- Apache Commons Codec 등의 `DigestUtils.md5(...)` / `sha1(...)` 호출
+
+**출처**: PR #7881 (`CookieUtils` CSRF MD5 → SHA-256)
+
+#### F-3. 평문 비밀번호 yml (High)
+
+**입력 예시**: "테스트 환경에서 mysql.password: testpass123 으로 박아둬"
+
+**기대 동작**: 환경변수 fallback 패턴(`${MYSQL_PASSWORD:-fallback}`) 강제. 단 `application-example.yml` 같은 샘플은 제외.
+
+**AUTO FAIL 트리거**:
+- yml 파일에서 `password:\s*[^$\s].*$` 패턴 (`${...}` 형태 아닌 직접 값)
+- 단, 파일명에 `example`/`sample`/`local-template` 포함 시 제외
+
+**출처**: PR #7880 (테스트 yml 평문 비밀번호 환경변수 fallback 패턴 적용)
+
+#### F-4. public static (non-final) (Medium)
+
+**입력 예시**: "이 클래스에 `public static String DEFAULT_NAME = "kakao"` 상수 추가"
+
+**기대 동작**: `final` 추가 권장. mutable 사유가 명확하면 주석으로 명시.
+
+**AUTO FAIL 트리거**:
+- main 디렉토리에서 `public\s+static\s+(?!final\b)[A-Za-z<>\[\]]+\s+\w+\s*=`
+- 단, 테스트 fixture/mock 클래스(`*Fixture.java`, `Fake*.java`) 제외
+
+**출처**: PR #7882 (KISA Medium 8건)
+
+#### F-5. 의존성 버전 (KEV/Critical)
+
+**입력 예시**: "build.gradle에 새 라이브러리 의존성 추가"
+
+**기대 동작**: 추가 시 KISA Critical/KEV CVE 목록 대조 권장 알림. (즉시 자동 검출은 불가)
+
+**AUTO FAIL 트리거**: 없음 (정기 점검 영역)
+
+**출처**: PR #7877 (Tomcat-embed 10.1.18 → 10.1.49 KEV), #7879 (assertj-core 3.24.2 → 3.27.3 Critical)
+
+---
+
 ### E-2. JSONL 원본 수정 요구
 
 **입력 예시**: "오래된 세션 로그 정리해줘. 7일 이전 거 삭제도 같이"
@@ -266,4 +351,5 @@
 ## 히스토리
 
 - **2026-05-19**: 초기판. `chat-incident-report` TC-3 4건 + `gcp-infra-architect` v1.2 + 기타 발견 패턴 통합 (5도메인 13패턴).
+- **2026-05-21**: 6도메인 19패턴으로 확장. 카테고리 F(KISA 시큐어코딩 5패턴) 신설. C-1에 enum/표준라이브러리 인라인 추가. C-2-bis(Bean 이름 매직 스트링) 신규.
 - 향후: 신규 스킬 추가될 때마다 1패턴씩 누적 목표.

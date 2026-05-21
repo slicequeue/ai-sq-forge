@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.6"
-last-modified: "2026-05-19"
-changelog: "v1.6 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(Phase 0 현황 파악 실행 여부, 확인 vs 가정 분리, TDD 미존재 시 가정 표기). Phase 0 #4(기존 코드 패턴 파악)는 이미 현황 파악 본질이라 명문화. | v1.5 — FQCN 직접 사용 금지 하드 가드레일 추가. PR #527 사례. v1.4 — 실전 가드레일 강화: Non-bean @Transactional 금지, OAuth2 Client non-bean 격리, SecurityContext save/restore."
+version: "1.7"
+last-modified: "2026-05-21"
+changelog: "v1.7 — 2026-05-21 pasta 배포 사례 반영: (1) Bean 이름 상수 패턴 — 다중 모듈 공유 시 `shared/.../constant/{Domain}BeanNameConstants` 위치 강제, 단일 모듈은 등록자 클래스 내. (2) TransactionTemplate 전파 명시 의무화 + REQUIRES_NEW 판단 가이드(외부 enqueue 실패 마킹 등). (3) 약한 해시(MD5/SHA-1) 금지 — SHA-256 이상 강제. 자기 검증 v1.7 3항목 추가. | v1.6 — blueprint v2.0 패턴 이식. v1.5 — FQCN 직접 사용 금지. v1.4 — Non-bean @Transactional 금지 등"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -286,6 +286,61 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
   ```
   예외: 어노테이션 인자 문자열, SpEL 표현식, JPQL/SQL 쿼리, 로그 메시지 본문은 검사 대상 아님. **"한 번만 쓰는 거니까 인라인으로"는 절대 금지** — 무조건 import 추가 후 단순 클래스명.
 
+  **(v1.7 추가)** enum 상수 접근 / 표준 라이브러리도 동일 적용:
+  ```java
+  // ❌ 금지 (2026-05-21 commit a6b72daa82 사례)
+  .stateInfo(com.kakaohealthcare.moneyball.user.entity.State.NORMAL)
+  java.lang.reflect.Field field = ...
+
+  // ✅ 올바름
+  import com.kakaohealthcare.moneyball.user.entity.State;
+  import java.lang.reflect.Field;
+  ...
+  .stateInfo(State.NORMAL)
+  Field field = ...
+  ```
+
+- **(v1.7) Bean 이름 매직 스트링 금지** — `@Bean`, `@Qualifier`, `@MockBean(name=...)`, `@DependsOn`, `BeanFactory#getBean` 등에 같은 빈 이름 리터럴이 3회 이상 반복되면 **반드시** 상수화. 오타 시 런타임 NoSuchBeanDefinitionException 위험.
+  - **상수 위치 결정 트리**:
+    - 빈 등록자와 모든 소비자가 **같은 모듈** → 등록자 `*Configuration` 클래스 내 `public static final String`
+    - 등록자(A 모듈) ↔ 소비자(B 모듈)가 **다른 모듈** → `shared/.../constant/{Domain}BeanNameConstants` 신설 (config → config 의존 외관 회피)
+  - **2026-05-21 사례** (commit a6b72daa82 → 후속 0fc9b52338):
+    ```java
+    // ❌ 금지 — 8곳에 매직 스트링 반복
+    @Bean
+    public OAuth2AuthorizedClientManager dexcomAuthorizedClientManager(...) { ... }
+    @Qualifier("dexcomAuthorizedClientManager") OAuth2AuthorizedClientManager mgr
+    @MockBean(name = "dexcomAuthorizedClientManager") OAuth2AuthorizedClientManager mgr
+
+    // ✅ 올바름 — shared 모듈 상수
+    // shared/.../constant/DexcomBeanNameConstants.java
+    public final class DexcomBeanNameConstants {
+        public static final String DEXCOM_AUTHORIZED_CLIENT_MANAGER = "dexcomAuthorizedClientManager";
+        private DexcomBeanNameConstants() {}
+    }
+
+    // api 모듈
+    @Bean(DEXCOM_AUTHORIZED_CLIENT_MANAGER)
+    public OAuth2AuthorizedClientManager dexcomAuthorizedClientManager(...) { ... }
+    ```
+
+- **(v1.7) TransactionTemplate 전파 명시 의무** — `new TransactionTemplate(...)` 생성 시 **즉시** `setPropagationBehavior(...)` 호출. 기본값(REQUIRED) 의도 시에도 주석으로 명시.
+  - **REQUIRES_NEW 권장 케이스**:
+    - 외부 시스템(Cloud Task, SQS 등) 호출 실패 후 **실패 상태 마킹**이 호출 측 트랜잭션 결과와 독립적으로 커밋되어야 할 때
+    - 감사 로그·이력 기록이 호출 측 롤백과 무관하게 남아야 할 때
+    - 알림 발송 큐 enqueue 실패 후 retry 큐 적재
+  - **2026-05-21 사례** (commit 1066af4f54):
+    ```java
+    // ❌ 위험 — 호출 측 롤백 시 FAILED 마킹도 함께 롤백
+    this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
+
+    // ✅ 올바름 — enqueue 실패 마킹은 호출 측과 독립 커밋
+    this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
+    this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    ```
+
+- **(v1.7) 약한 해시 알고리즘 금지** — `MessageDigest.getInstance("MD5"|"SHA-1"|"SHA1")` 금지. CSRF/세션ID/토큰 같은 보안 용도면 **SHA-256 이상** 강제. 2026-05-21 commit f1d959badf 사례(CookieUtils CSRF MD5→SHA-256 KISA High 지적).
+
 ### 소프트 가드레일
 
 - Fake 우선, Mockito는 외부 API 등 Fake가 복잡한 경우만
@@ -325,6 +380,10 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 18. [ ] **(v1.6) Phase 0 현황 파악 실행**: 작업 계획서 탐색·기존 도메인 코드 탐색·JDK/admin 모듈 확인을 실제로 수행했는가? (생략하고 가정으로 구현 진행 금지)
 19. [ ] **(v1.6) 확인 vs 가정 분리**: TDD가 없어 코드만 보고 시그니처를 결정한 경우, 결정 근거(기존 도메인의 어느 패턴을 따랐는지)를 커밋 메시지 또는 PR 본문에 명시했는가?
 20. [ ] **(v1.6) 도메인 외부 컬럼/메서드 가정 금지**: 인접 도메인의 Repository·Entity를 호출하지 않고, 자체 Service에서 데이터 가공했는가? (19-architecture-boundaries 위반 자가 점검)
+21. [ ] **(v1.7) Bean 이름 상수화 + 위치**: `@Bean`/`@Qualifier`/`@MockBean` 빈 이름이 3회 이상 반복되면 상수화했는가? 다중 모듈 공유 시 shared 모듈에 두었는가? (config→config 의존 외관 회피)
+22. [ ] **(v1.7) TransactionTemplate 전파**: 새로 생성한 `TransactionTemplate`에 `setPropagationBehavior(...)` 명시했는가? 외부 enqueue 실패 마킹/감사 로그 등 독립 커밋 필요 케이스면 `REQUIRES_NEW`?
+23. [ ] **(v1.7) 보안 알고리즘**: 해시 알고리즘 사용 시 MD5/SHA-1 없는가? SHA-256 이상?
+24. [ ] **(v1.7) enum/표준라이브러리 FQCN**: `.stateInfo(com.x.y.State.NORMAL)` 같은 enum 인라인 / `java.lang.reflect.*` 표준라이브러리 인라인 모두 import + 단순 클래스명으로 변환?
 
 ---
 
