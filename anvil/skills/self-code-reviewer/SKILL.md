@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.8"
+version: "1.9"
 last-modified: "2026-05-21"
-changelog: "v1.8: 2026-05-21 i18n 영역 사례 추가 반영 (commit a1a425ecb2 CodeRabbit 지적) — Locale.ROOT 누락 검출 룰 추가. `toLowerCase()`/`toUpperCase()`/`String.format(...)` 단독 호출 검출 → Locale.ROOT 명시 권장 (터키 locale 등 JVM 기본 Locale 의존 버그 차단). | v1.7: FQCN 확장 + Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6: blueprint v2.0. v1.5: FQCN 검출. v1.4: Architecture Boundary"
+changelog: "v1.9 — 2026-05-21 이번 주 추가 패턴: (1) catch 블록 부가 주석 검출 — 'ACL 변환 실패 시 빈 리스트로 fallback' 같은 부가 설명 주석은 log 메시지로 흡수, 주석은 제거 (commit f3b85a79d0 KISA 리뷰 반영 사례). (2) @Service 싱글톤 mutable instance field 검출 (KISA Medium 진단). (3) WebClient 외부 호출 timeout 누락 / 재시도 필터 4xx 포함 위험 검출. (4) Soft-delete + UNIQUE 충돌 패턴. | v1.8 — Locale.ROOT 누락 검출. v1.7 — Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6 — blueprint v2.0"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -173,6 +173,64 @@ git diff dev...HEAD -- {path}
 
 **검출 시 등급**: 권장 개선 (Low/Medium) 또는 필수 수정 (High/KEV/Critical). 일괄 PR 권장.
 
+#### (v1.9) catch 블록 부가 주석 검출
+
+2026-05-21 commit f3b85a79d0 (PghdRecordMapAcl 리뷰 반영) 사례. catch 블록의 **부가 설명 주석**은 log 메시지로 흡수하고 주석은 제거 권장.
+
+```java
+// ❌ 검출 — 주석 + log가 동일 정보 중복
+} catch (Exception e) {
+  // ACL 변환 실패 시 빈 리스트로 fallback — 채널 피드 노출이 중단되지 않도록 방어적으로 처리
+  log.error("Failed to get PGHD by recordMapId: {}", pghdRecordMapId, e);
+  return Collections.emptyList();
+}
+
+// ✅ 권장 — log 메시지에 의도 포함, 주석 제거
+} catch (Exception e) {
+  log.error("ACL 변환 실패 — recordMapId {} fallback empty list. {}", pghdRecordMapId, e);
+  return Collections.emptyList();
+}
+```
+
+**검출 룰**: catch 블록 안에 `//` 한국어 주석 + `log.*(...)` 호출이 모두 있고, 주석 내용과 log 메시지가 의미 중복이면 → "주석은 제거, log 메시지로 의도 흡수" 권장.
+
+**예외**: catch에 log가 없는데 주석만 있으면 → v1.7 "단독 무사유 주석" 검출 대상 (제거가 아니라 log 추가).
+
+#### (v1.9) @Service 싱글톤 mutable instance field 검출
+
+2026-05-21 commit 2adbd26c26 (KbsmcEhrClient KISA Medium 진단) 사례. `@Service`/`@Component`/`@Repository` 클래스에 mutable instance field가 있으면 모든 요청 간 공유 → 세션 간 값 혼용 위험.
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| `@Service` + non-final non-static instance field | 클래스에 `@Service\|@Component\|@Repository` 어노테이션 + `private\s+(?!static\s+)(?!final\s+)[A-Za-z<>\[\]]+\s+\w+;` (필드 선언) | `AtomicReference<record>` 또는 메서드 인수 전달 |
+
+**False positive 회피**: 
+- `@Autowired`, `@Value`, `@PersistenceContext` 등으로 주입되는 필드는 Spring이 안전하게 관리 → 제외
+- `final` 필드는 immutable이라 안전 → 제외
+
+**보고 형식**:
+```markdown
+### 싱글톤 동시성 검사 (v1.9)
+
+| 위치 | 필드 | 위험 | 권장 수정 |
+|------|------|------|----------|
+| KbsmcEhrClient.java:30 | `private String token` | 세션 간 token 혼용 | `AtomicReference<TokenSnapshot>` |
+```
+
+#### (v1.9) WebClient 외부 호출 timeout / 재시도 필터 검출
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| WebClient 생성에 timeout 누락 | `WebClient\.builder\(\)\..*?\.build\(\)` 전체에 `responseTimeout\|CONNECT_TIMEOUT_MILLIS` 없음 | connect/read timeout 명시 |
+| Retry 필터에 4xx 포함 위험 | `Retry\.[a-zA-Z]+\(.*?\)\.filter\(` 본문에 `WebClientResponseException`만 있고 5xx 한정자 없음 | 4xx 영구 오류 제외 필터 |
+
+#### (v1.9) Soft-delete + UNIQUE 충돌 검출
+
+마이그레이션 SQL 파일에서:
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| `deleted_at` 컬럼 존재 + 일반 UNIQUE | `(deleted_at|is_deleted)` 컬럼 + `UNIQUE INDEX` (Functional 아님) | MySQL 8.0.13+ Functional Unique Index (`CASE WHEN deleted_at IS NULL THEN col ELSE NULL END`) |
+
 #### (v1.8) i18n / Locale 함정 검사
 
 2026-05-15 commit a1a425ecb2 (CodeRabbit 지적) 반영. 변경 파일에서 다음 패턴 검출:
@@ -277,6 +335,10 @@ git diff dev...HEAD -- {path}
 14. [ ] **(v1.7) KISA 시큐어코딩 검사**: 변경 파일에 빈 catch / MD5·SHA-1 / 평문 비번 yml / public static (non-final) 패턴이 있는지 검사했는가? 검출 시 별도 섹션으로 보고?
 15. [ ] **(v1.8) i18n / Locale.ROOT 검사**: `.toLowerCase()` / `.toUpperCase()` 단독 호출, 내부용 `String.format` Locale 누락이 있는지 검사했는가? ja 카피 `\\n` split 등 ja 정책 위반?
 16. [ ] **(v1.8) i18n 4파일 동기화 검사**: `message-shared*.properties` 변경 시 4파일(default/ko/en/ja)에 동일 키가 모두 존재하는가? 누락 시 보고?
+17. [ ] **(v1.9) catch 부가 주석**: 변경된 catch 블록에 주석+log 의미 중복 검사했는가? 중복이면 "주석 제거, log 메시지로 의도 흡수" 권장?
+18. [ ] **(v1.9) 싱글톤 동시성**: 신규/변경된 `@Service`/`@Component`/`@Repository` 클래스에 mutable instance field(`@Autowired`·`final`·`static` 제외) 검출했는가?
+19. [ ] **(v1.9) WebClient timeout/retry**: 새 WebClient 생성에 connect/read timeout 명시? Retry 필터가 4xx 제외하는가?
+20. [ ] **(v1.9) Soft-delete + UNIQUE**: 변경된 마이그레이션 SQL에 `deleted_at` + 일반 UNIQUE 충돌 검사? Functional Unique Index 권장?
 
 ---
 

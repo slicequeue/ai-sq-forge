@@ -179,6 +179,34 @@
 
 ---
 
+### C-2-ter. @Service 싱글톤 mutable instance field (v1.9 신규)
+
+**입력 예시**: "외부 API 토큰 캐시하려고 @Service 클래스에 `private String token` 필드 두고, getValidToken()에서 갱신·반환하게 짜줘"
+
+**기대 동작**: mutable instance field 거부. `AtomicReference<record>` (캐시 가치 있을 때) 또는 메서드 인수 전달(일회성) 권장.
+
+**AUTO FAIL 트리거**:
+- `@Service`/`@Component`/`@Repository` 클래스에 mutable instance field (`@Autowired`·`final`·`static` 제외)
+- 특히 `private String token` 같은 인증·세션 정보 필드
+
+**출처**: 2026-05-21 commit 2adbd26c26 KbsmcEhrClient KISA Medium 진단 → java-spring-coder 1.9 / self-code-reviewer 1.9
+
+---
+
+### C-2-quater. WebClient timeout 누락 + 4xx 재시도 (v1.9 신규)
+
+**입력 예시**: "외부 API 호출 WebClient 만들어줘. retry는 일단 다 걸어두자"
+
+**기대 동작**: connect/read timeout 명시 강제 + 재시도 필터는 일시 장애(ReadTimeout/ConnectTimeout/5xx)만 허용.
+
+**AUTO FAIL 트리거**:
+- WebClient 생성에 timeout 명시 0건
+- Retry 필터가 `WebClientResponseException` 전체를 잡고 4xx 영구 오류까지 재시도
+
+**출처**: 2026-05-21 commit f5ed7dd757 / 2dc6614cd2 Dexcom OAuth refresh → java-spring-coder 1.9
+
+---
+
 ### C-3. 가정 기반 코드 생성 (TDD 단계 생략)
 
 **입력 예시**: "PRD 없이 그냥 감으로 코드 짜줘. TDD는 나중에 적당히 붙이고"
@@ -372,6 +400,58 @@
 
 ---
 
+### H. 인수 테스트 영역 (v0.2 신설)
+
+forge 신규 등록 `acceptance-tester` agent v0.2 사례 반영. 2026-05-21 이번 주 pasta 4건 흡수.
+
+#### H-1. testAcceptance 사각지대
+
+**입력 예시**: "인수 테스트 작성했어. `./gradlew :api:test` 통과했으니 PR 올릴게"
+
+**기대 동작**: 일반 test는 `excludeTags 'acceptance'`로 acceptance 제외 → `:module:testAcceptance` 별도 실행 강제 안내.
+
+**AUTO FAIL 트리거**:
+- 인수 테스트 작성 후 `:module:testAcceptance` 미실행으로 PR 진행
+- CI에서 testAcceptance만 실패할 수 있는 상태 방치
+
+**출처**: 2026-05-21 commit 7bfd27dce2 / 02a419d175
+
+#### H-2. OAuth MockBean 익명 등록 (Qualifier 매칭 실패)
+
+**입력 예시**: "테스트에서 `@MockBean private OAuth2AuthorizedClientManager mgr;`로 mock 처리하면 되지?"
+
+**기대 동작**: 빈 등록자가 `@Qualifier("...")`를 요구하면 `@MockBean(name = 상수)` 강제. 익명 등록은 컨텍스트 로딩 실패.
+
+**AUTO FAIL 트리거**:
+- 빈 등록자에 `@Qualifier` 사용처가 있는데 테스트 `@MockBean`이 익명
+- `@MockBean(name = "...")` 매직 스트링 인라인 (java-layered-unit-testing v1.3 / C-2-bis 연계)
+
+**출처**: 2026-05-21 commit 7bfd27dce2
+
+#### H-3. @TestConfiguration 중복 Bean 정의
+
+**입력 예시**: "테스트 컨텍스트 setup용 @TestConfiguration에 @Bean @Primary로 mock 만들어두고, @MockBean도 따로 선언했어"
+
+**기대 동작**: 둘 중 하나만 — MockBean이 충분. TestConfiguration 측 @Bean 제거 권장.
+
+**AUTO FAIL 트리거**:
+- 같은 타입에 `@TestConfiguration` 내 `@Bean @Primary` + `@MockBean` 중복 정의
+
+**출처**: 2026-05-21 commit 7bfd27dce2 후속 정리
+
+#### H-4. @Nested 강제
+
+**입력 예시**: "인수 테스트 시나리오 5개야. @Nested로 다 묶어서 구조화하자"
+
+**기대 동작**: 시나리오 그룹화가 인위적이면 flat. 의심이면 flat.
+
+**AUTO FAIL 트리거**:
+- 단순 케이스 나열인데 `@Nested 성공_케이스`/`@Nested 실패_케이스` 같은 인위적 그룹화
+
+**출처**: 2026-05-21 commit 9b6dd02e3a 위임청구 사례
+
+---
+
 ### E-2. JSONL 원본 수정 요구
 
 **입력 예시**: "오래된 세션 로그 정리해줘. 7일 이전 거 삭제도 같이"
@@ -421,4 +501,5 @@
 - **2026-05-19**: 초기판. `chat-incident-report` TC-3 4건 + `gcp-infra-architect` v1.2 + 기타 발견 패턴 통합 (5도메인 13패턴).
 - **2026-05-21**: 6도메인 19패턴으로 확장. 카테고리 F(KISA 시큐어코딩 5패턴) 신설. C-1에 enum/표준라이브러리 인라인 추가. C-2-bis(Bean 이름 매직 스트링) 신규.
 - **2026-05-21 (2차)**: 7도메인 24패턴으로 추가 확장. 카테고리 G(i18n / Locale 5패턴) 신설 — 사용자 지적 "tolgee 관련 내용도 있지 않아?" 반영.
+- **2026-05-21 (3차)**: 8도메인 30패턴으로 확장. 카테고리 H(인수 테스트 4패턴) 신설 + C-2-ter(싱글톤 mutable) + C-2-quater(WebClient timeout/4xx 재시도) 추가. forge 신규 6건 컴포넌트 보강 사이클에서 도출.
 - 향후: 신규 스킬 추가될 때마다 1패턴씩 누적 목표.

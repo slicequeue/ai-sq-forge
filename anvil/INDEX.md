@@ -8,8 +8,8 @@
 |------|------|------|------|---------|------------|------|
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.2 | PRD 기획 요구사항 문서 작성 (v1.2: Phase 1.5 현황 파악 + 멀티턴·풀패키지 결정 트리 + 확인vs가정 분리) | **회귀 평가 권장** (v1.2 패턴 이식 — `/eval-harness prd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.1 기준) | `skills/prd-designer/` |
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.4 | TDD 기술 설계 문서 작성 (v1.4: Phase 0.5 현황 파악 + 결정 트리 + 자기 검증 v2.0) | **회귀 평가 권장** (v1.4 패턴 이식 — `/eval-harness tdd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.3 기준) | `skills/tdd-designer/` |
-| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.8 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.8: Locale.ROOT 강제 + i18n 4파일 동기화 + 위치 기반 placeholder. v1.7: Bean 상수화 + REQUIRES_NEW + 약한 해시 금지) | **회귀 평가 권장** (v1.8 사례 반영) | 일반 | 95/100 평균 (v1.5 기준) | `skills/java-spring-coder/` |
-| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.8 | dev 기준 변경 코드 자체 리뷰 (v1.8: Locale.ROOT 누락 검출 + i18n 4파일 동기화 검사. v1.7: Bean 매직 스트링 + enum FQCN + KISA 시큐어코딩) | **회귀 평가 권장** (v1.8 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
+| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.9 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.9: @Service 싱글톤 mutable field 금지 + AtomicReference<record> / Functional Unique Index + soft-delete / WebClient timeout·재시도 필터) | **회귀 평가 권장** (v1.9 사례 반영) | 일반 | 95/100 평균 (v1.5 기준) | `skills/java-spring-coder/` |
+| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.9 | dev 기준 변경 코드 자체 리뷰 (v1.9: catch 부가 주석 제거 + 싱글톤 동시성 + WebClient timeout/4xx 재시도 + Soft-delete UNIQUE 충돌 검출) | **회귀 평가 권장** (v1.9 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.5 | PR 피드백 수집·수정·push·답글 (v1.5: 자기 검증 v2.0 — PR 컨텍스트 현황 파악 + 봇/사람 분기 근거 기록) | **회귀 평가 권장** (v1.5 패턴 이식) | 일반 | 94.5/100 평균 (v1.4 기준) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.1 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (v1.1: Phase 0.3 admin 모듈 현황 파악 + 멀티턴/풀패키지 결정 트리) | **회귀 평가 권장** (v1.1 패턴 이식) | 일반 | 88/100 (v1.0 기준) | `skills/admin-prd-plan-designer/` |
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.2 | Admin Thymeleaf SSR 화면 구현/수정 (v1.2: 자기 검증 v2.0 — 기존 패턴 사전 스캔 + 영향도 grep 확인) | **회귀 평가 권장** (v1.2 패턴 이식) | 일반 | 95.3/100 (v1.1 기준) | `skills/admin-thymeleaf-ui/` |
@@ -28,11 +28,11 @@
 | 이름 | 버전 | 설명 | 상태 | 배포정책 | 테스트 점수 | 경로 |
 |------|------|------|------|---------|------------|------|
 | [gcp-infra-architect](agents/gcp-infra-architect/gcp-infra-architect.md) | 1.2 | GCP 특화 글로벌 인프라 설계·검토 파트너 (헬스케어 4개국 규제 + Terraform IaC + Phase 1.5 + 멀티턴·풀패키지 결정 트리) | **실전 배치 가능 (완전 검증 + 일관성 PASS)** | 일반 | 94.1/100 (v1.2, TC-2 3회 편차 4점, 방법론 통일 확보) | `agents/gcp-infra-architect/` |
-| [acceptance-tester](agents/acceptance-tester/acceptance-tester.md) | 0.1 | 인수 테스트·통합 테스트 전문 에이전트 (08-test-code-convention 우선, MockMvc + SpringBootTest) | **테스트 대기** (2026-05-19 pasta-japan-server에서 forge-upstream 역수입 — 평가 루브릭·하네스 미작성) | 일반 | - | `agents/acceptance-tester/` |
-| [apidog-mock-api-generator](agents/apidog-mock-api-generator/apidog-mock-api-generator.md) | 0.1 | Apidog OpenAPI 스펙 → Mock Controller + DTO + Swagger 문서 자동 생성 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/apidog-mock-api-generator/` |
-| [bug-analyzer](agents/bug-analyzer/bug-analyzer.md) | 0.1 | 스택트레이스 분석 → docs/bugs/ 버그 분석 문서 생성 (정상 vs 문제 흐름 비교 도표 포함). jira-bug-root-cause와 역할 경계 정리 필요 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/bug-analyzer/` |
-| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.1 | docs/plans/ 작업 계획서 기반 코딩·단위 테스트 구현. java-spring-coder 스킬과 역할 중복 — 통합 검토 필요 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/coding-implementer/` |
-| [prd-plan-designer](agents/prd-plan-designer/prd-plan-designer.md) | 0.1 | PRD + TDD 통합 작성 에이전트. prd-designer / tdd-designer / admin-prd-plan-designer 스킬과 역할 중복 — 통합 검토 필요 | **테스트 대기** (2026-05-19 역수입) | 일반 | - | `agents/prd-plan-designer/` |
+| [acceptance-tester](agents/acceptance-tester/acceptance-tester.md) | 0.2 | 인수 테스트·통합 테스트 (v0.2: testAcceptance 사각지대 인지 + OAuth MockBean 이름 명시 + @TestConfiguration 중복 제거 + @Nested vs flat 정책) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/acceptance-tester/` |
+| [apidog-mock-api-generator](agents/apidog-mock-api-generator/apidog-mock-api-generator.md) | 0.2 | Apidog 스펙 → Mock Controller (v0.2: Phase 1.5 현황 파악 + 응답 DTO 확장 호환성 + Mock 데이터 표식) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/apidog-mock-api-generator/` |
+| [bug-analyzer](agents/bug-analyzer/bug-analyzer.md) | 0.2 | 스택트레이스 분석 (v0.2: 외부 OAuth/HTTP 일시 장애 카탈로그 + jira-bug-root-cause와 역할 경계). 통합 검토 필요 | **테스트 대기** | 일반 | - | `agents/bug-analyzer/` |
+| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.2 | 작업 계획서 기반 구현 (v0.2: java-spring-coder v1.9 가드레일 위임 + 역할 경계 명시). 통합 검토 필요 | **테스트 대기** | 일반 | - | `agents/coding-implementer/` |
+| [prd-plan-designer](agents/prd-plan-designer/prd-plan-designer.md) | 0.2 | PRD + TDD 통합 산출 (v0.2: 3개 PRD 스킬과 경계 명시 + PRD는 prd-designer / TDD는 tdd-designer 위임). 통합 검토 필요 | **테스트 대기** | 일반 | - | `agents/prd-plan-designer/` |
 
 ## Commands
 

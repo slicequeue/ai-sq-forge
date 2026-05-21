@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.8"
+version: "1.9"
 last-modified: "2026-05-21"
-changelog: "v1.8 — 2026-05-21 i18n 사례 추가 (commit a1a425ecb2 CodeRabbit 지적): Locale.ROOT 강제 가드레일. `toLowerCase()`/`toUpperCase()`/내부용 `String.format`에 Locale.ROOT 명시. 터키 locale 등 JVM 기본 Locale 의존 버그 차단. i18n 키 사용 시 위치 기반 placeholder(`{0}`) 강제. | v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지. v1.6 — blueprint v2.0. v1.5 — FQCN 금지"
+changelog: "v1.9 — 2026-05-21 이번 주 추가 패턴 흡수: (1) @Service 싱글톤 mutable instance field 금지 — AtomicReference<record> 또는 메서드 인수 전달로 격리 (commit 2adbd26c26 KbsmcEhrClient token 동시성 KISA Medium). (2) Soft-delete + unique 제약 — MySQL 8.0.13+ Functional Unique Index (CASE WHEN deleted_at IS NULL THEN ...) 패턴 (de480fe266 GLOB-366). (3) WebClient connect/read timeout 명시 + 재시도 조건 (ReadTimeout/ConnectTimeout만 retry, 4xx는 retry 금지) (f5ed7dd757 / 2dc6614cd2). | v1.8 — Locale.ROOT 강제 + i18n 4파일 동기화. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -364,6 +364,70 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 
 - **(v1.8) i18n 키 추가 시 4파일 동기화** — `message-shared*.properties` 신규 키 추가는 항상 4파일(default/ko/en/ja) 동시. 단일 파일만 추가 금지. 추가 후 tolgee 스킬로 콘솔 push 권장.
 
+- **(v1.9) @Service 싱글톤에 mutable instance field 금지** — Spring Bean은 기본적으로 싱글톤. instance field에 가변 상태가 있으면 모든 요청이 공유 → 세션 간 값 혼용 위험 (KISA Medium 진단 사례).
+  ```java
+  // ❌ 위험 (2026-05-21 KbsmcEhrClient KISA 진단 — 세션 간 token 혼용)
+  @Service
+  public class KbsmcEhrClient {
+      private String token;       // ← 싱글톤 공유 mutable
+      private Long tokenExpiry;
+      // ...
+  }
+
+  // ✅ 올바름 — 방식 A: AtomicReference + immutable record
+  @Service
+  public class KbsmcEhrClient {
+      private final AtomicReference<TokenSnapshot> tokenCache = new AtomicReference<>();
+      private record TokenSnapshot(String token, Instant expiry) {}
+  }
+
+  // ✅ 올바름 — 방식 B: 메서드 인수 전달 (지역 변수화)
+  public Response verify(Request req) {
+      String token = getValidToken();      // 지역 변수
+      return verifyWithToken(req, token);  // 인수로 전달
+  }
+  ```
+  **판단 가이드**:
+  - 캐시 가치가 있으면(매번 fetch 비싸면) → `AtomicReference<record>` 방식
+  - 단순 일회성이면 → 메서드 인수 전달
+  - 금지: `private String token;` 같은 raw mutable instance field
+
+- **(v1.9) Soft-delete + unique 제약 — MySQL Functional Unique Index** — `deleted_at` 컬럼으로 soft-delete를 쓰면서 동시에 unique 제약이 필요한 경우, MySQL 8.0.13+ Functional Unique Index 사용.
+  ```sql
+  -- ❌ 위험 — 일반 UNIQUE는 soft-deleted 행과 alive 행이 충돌
+  CREATE UNIQUE INDEX uk_email ON users (email);
+
+  -- ✅ 올바름 (2026-05-21 GLOB-366 commit de480fe266 사례)
+  ALTER TABLE users
+    ADD UNIQUE INDEX uk_email_for_login_active (
+      (CASE WHEN deleted_at IS NULL THEN email ELSE NULL END)
+    );
+  ```
+  **선택 기준**:
+  - alive 행끼리만 unique 보장 필요 → Functional Unique Index
+  - 영구 unique 필요 (재가입 막기) → 별도 history 테이블 또는 soft-delete 시 email 마스킹
+
+- **(v1.9) WebClient 외부 호출 timeout 명시 + 재시도 필터** — 외부 시스템 호출 시 connect/read timeout을 반드시 명시. 재시도는 일시 장애 한정.
+  ```java
+  // ✅ 올바름 (2026-05-21 commit f5ed7dd757 / 2dc6614cd2 Dexcom OAuth 사례)
+  WebClient.builder()
+      .clientConnector(new ReactorClientHttpConnector(
+          HttpClient.create()
+              .responseTimeout(Duration.ofSeconds(10))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000)
+      ))
+      .build();
+
+  // 재시도는 일시 장애만 — 4xx 영구 오류는 제외
+  Retry.fixedDelay(3, Duration.ofSeconds(2))
+      .filter(throwable ->
+          throwable instanceof ReadTimeoutException
+          || throwable instanceof ConnectTimeoutException
+          || (throwable instanceof WebClientResponseException ex
+              && ex.getStatusCode().is5xxServerError())
+      );
+  ```
+
 ### 소프트 가드레일
 
 - Fake 우선, Mockito는 외부 API 등 Fake가 복잡한 경우만
@@ -410,6 +474,9 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 25. [ ] **(v1.8) Locale.ROOT 명시**: `toLowerCase()`/`toUpperCase()`/내부용 `String.format` 호출에 Locale.ROOT 인자 명시했는가? 사용자 화면용이면 의도 주석?
 26. [ ] **(v1.8) i18n 4파일 동기화**: `message-shared*.properties` 신규 키가 default+ko+en+ja 4파일 모두에 추가되었는가? `grep -l "^{키}=" message-shared*.properties` 결과 4건?
 27. [ ] **(v1.8) i18n placeholder 위치 기반**: `messages.getMessage(...)` 인자가 위치 기반(`{0}`,`{1}`)인가? 명명 기반(`{name}`) 0건?
+28. [ ] **(v1.9) 싱글톤 동시성**: 새로 추가한 `@Service`/`@Component`/`@Repository` 클래스에 mutable instance field 0건? 캐시 필요하면 `AtomicReference<record>`, 일회성이면 메서드 인수 전달?
+29. [ ] **(v1.9) Soft-delete unique**: 신규 unique 제약 필요한 컬럼에 `deleted_at` 소프트 삭제가 있으면 Functional Unique Index 사용했는가? (일반 UNIQUE는 soft-deleted 행과 충돌)
+30. [ ] **(v1.9) WebClient timeout/retry**: 새 외부 호출에 connect/read timeout 명시했는가? 재시도 필터가 ReadTimeout/ConnectTimeout/5xx만 잡고 4xx는 제외하는가?
 
 ---
 
