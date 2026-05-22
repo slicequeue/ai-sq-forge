@@ -31,7 +31,7 @@
 | [acceptance-tester](agents/acceptance-tester/acceptance-tester.md) | 0.2 | 인수 테스트·통합 테스트 (v0.2: testAcceptance 사각지대 인지 + OAuth MockBean 이름 명시 + @TestConfiguration 중복 제거 + @Nested vs flat 정책) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/acceptance-tester/` |
 | [apidog-mock-api-generator](agents/apidog-mock-api-generator/apidog-mock-api-generator.md) | 0.2 | Apidog 스펙 → Mock Controller (v0.2: Phase 1.5 현황 파악 + 응답 DTO 확장 호환성 + Mock 데이터 표식) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/apidog-mock-api-generator/` |
 | [bug-analyzer](agents/bug-analyzer/bug-analyzer.md) | 0.2 | 스택트레이스 분석 (v0.2: 외부 OAuth/HTTP 일시 장애 카탈로그 + jira-bug-root-cause와 역할 경계). 통합 검토 필요 | **테스트 대기** | 일반 | - | `agents/bug-analyzer/` |
-| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.2 | 작업 계획서 기반 구현 (v0.2: java-spring-coder v1.9 가드레일 위임 + 역할 경계 명시). 통합 검토 필요 | **테스트 대기** | 일반 | - | `agents/coding-implementer/` |
+| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.3 | **개발 사이클 오케스트레이터** — TDD 받아 브랜치→Phase별 구현·테스트·자체리뷰·커밋→인수 테스트→PR 준비까지 한 호출 자율 진행 (java-spring-coder/java-layered-unit-testing/self-code-reviewer/acceptance-tester + /git-* 커맨드 조합) | **테스트 대기** (본질 차별화 격상 — 평가 루브릭·하네스 미작성) | 일반 | - | `agents/coding-implementer/` |
 | [prd-plan-designer](agents/prd-plan-designer/prd-plan-designer.md) | 0.2 | PRD + TDD 통합 산출 (v0.2: 3개 PRD 스킬과 경계 명시 + PRD는 prd-designer / TDD는 tdd-designer 위임). 통합 검토 필요 | **테스트 대기** | 일반 | - | `agents/prd-plan-designer/` |
 
 ## Commands
