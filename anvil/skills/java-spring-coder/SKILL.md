@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.9"
-last-modified: "2026-05-21"
-changelog: "v1.9 — 2026-05-21 이번 주 추가 패턴 흡수: (1) @Service 싱글톤 mutable instance field 금지 — AtomicReference<record> 또는 메서드 인수 전달로 격리 (commit 2adbd26c26 KbsmcEhrClient token 동시성 KISA Medium). (2) Soft-delete + unique 제약 — MySQL 8.0.13+ Functional Unique Index (CASE WHEN deleted_at IS NULL THEN ...) 패턴 (de480fe266 GLOB-366). (3) WebClient connect/read timeout 명시 + 재시도 조건 (ReadTimeout/ConnectTimeout만 retry, 4xx는 retry 금지) (f5ed7dd757 / 2dc6614cd2). | v1.8 — Locale.ROOT 강제 + i18n 4파일 동기화. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
+version: "1.10"
+last-modified: "2026-07-02"
+changelog: "v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -34,6 +34,9 @@ changelog: "v1.9 — 2026-05-21 이번 주 추가 패턴 흡수: (1) @Service �
 ```
 Web → Application → Domain ← Infrastructure
 ```
+
+> **(v1.10) 신규 패키지는 첫 커밋부터 계층 폴더 강제**
+> 새 도메인·기능 패키지 생성 시 `domain/` · `application/` · `infrastructure/`(및 필요 시 `web/`) 폴더를 **첫 커밋에** 함께 만든다. 계층 없이 만들었다가 후속으로 재편하는 대형 리팩토링 사고 이력이 있다 (2026-07-01 `common/access` 재편). 도메인 로직·계약은 `domain/`, 오케스트레이션은 `application/`, 어댑터·리포지토리 구현은 `infrastructure/`.
 
 ### Rich Domain, Lean Service
 
@@ -74,6 +77,9 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 | Application | Domain | Infrastructure 구체 클래스 |
 | Infrastructure | Domain | Application, Web |
 | Web | Application | Domain 직접, Infrastructure |
+
+> **(v1.10) 공용 모듈에는 `@Entity` 두지 말 것**
+> 여러 애플리케이션 모듈(api, admin, batch 등)이 의존하는 공용 모듈에 `@Entity`를 두면, 소비 모듈의 `@EntityScan` 경계와 충돌해 기동 실패로 이어진다 (2026-07-01 admin 기동 실패 → `ServiceAccessPatternJpaEntity`를 `JdbcClient` 기반 Reader로 교체). 공용 모듈에서는 **JDBC 기반 read-only Repository** 또는 **인터페이스 + 각 애플리케이션 모듈의 구현체** 패턴을 사용한다.
 
 ---
 
@@ -428,6 +434,66 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
       );
   ```
 
+- **(v1.10) 외부 API DTO 시간 필드 방어 파싱** — 외부 API 응답에서 `Instant`/`OffsetDateTime` 등 강타입 시간 필드는 초·밀리초·오프셋 존재 여부가 응답마다 달라질 수 있다. 표준 ISO 파서로 받으면 hotfix 반복 사고 확정.
+  ```java
+  // ❌ 위험 (2026-06-08 #581·#582 Dexcom EGV 하루 두 번 hotfix)
+  public record DexcomEgvRecord(
+      String recordId,
+      Instant systemTime,                          // 초 생략 응답에서 파싱 실패
+      @JsonProperty("displayTime") OffsetDateTime displayTime,  // 오프셋 다양성에서 재실패
+      ...
+  ) {}
+
+  // ✅ 올바름 — 실사용 필드는 견고 파서, 미사용 필드는 String
+  static final DateTimeFormatter FLEXIBLE_OFFSET =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm[:ss][.SSS]X");
+
+  public record DexcomEgvRecord(
+      String recordId,
+      @JsonDeserialize(using = DexcomInstantDeserializer.class) Instant systemTime,
+      @JsonProperty("displayTime") String displayTime,   // 비즈니스 미사용 → String 유지
+      ...
+  ) {}
+  ```
+  **규칙**:
+  - 외부 API 시간 필드 강타입 파싱 시 `DateTimeFormatterBuilder` 또는 optional pattern(`[:ss][.SSS]`) 사용 필수
+  - **비즈니스 로직에서 실제로 사용하지 않는 시간 필드는 강타입 파싱 금지, String으로 유지**
+  - `@JsonDeserialize(using = ...)` 커스텀 deserializer는 **실 사용 필드에만** 부착 (미사용 필드는 파싱 실패 리스크만 남는다)
+  - "완벽 파서" 만들려다 실패한 사례 반복 금지 — 애매하면 String 후퇴가 안전
+
+- **(v1.10) 권한/보안 관련 캐시 3층 폴백 + write-through 전체 재작성** — 이용권한·과금 등 사고 시 무료 개방으로 이어지는 캐시는 **Redis → DB → 하드코딩 기본값** 3층 폴백 필수.
+  ```java
+  // ✅ 올바름 (2026-07-01 GLOB-566 이용권한 패턴 로더)
+  public Set<String> load(ServiceAccessPatternType type) {
+      try {
+          Set<String> fromRedis = redisTemplate.opsForSet().members(redisKey(type));
+          if (!fromRedis.isEmpty()) return fromRedis;
+      } catch (Exception e) { log.warn(...); }         // 예외 삼킴
+      try {
+          Set<String> fromDb = patternDbReader.findActive(type);
+          if (!fromDb.isEmpty()) return fromDb;
+      } catch (Exception e) { log.warn(...); }         // 예외 삼킴
+      return ServiceAccessPatternDefaults.of(type);    // 하드코딩 기본값
+  }
+  ```
+  **규칙**:
+  - 어느 계층도 **예외를 상위로 전파하지 않는다** — 무료 개방 사고 방지가 최우선
+  - CRUD write-through는 **유형별 전체 재작성**(부분 갱신 금지) — 캐시 드리프트 원천 차단
+  - 기동 시 워밍업 + **임계값 검증**(카운트가 예상보다 적으면 경보 이벤트 발행). WarmupRunner가 운영 모드를 인식해 알람 강도 조정
+  - 대상: 접근 제어 패턴, 요금제·플랜 상태, 기능 플래그 등 **틀리면 무료 개방·과금 누락**으로 이어지는 정책성 데이터
+
+- **(v1.10) 예외 로깅 표준** — JsonTemplateLayout 사용 시 스택트레이스가 절단되어 근본 원인을 못 보는 사고 방지.
+  ```yaml
+  # ✅ 올바름 (2026-06-30 #625 사례)
+  # log4j2-*.yml
+  maxStringLength: 32768   # 16KB는 스택 절단 사고 발생, 최소 32KB
+  # CustomLogJsonLayoutV1.json 등에 exceptionRootCause 전용 필드 추가
+  ```
+  **규칙**:
+  - JsonTemplateLayout 사용 시 `exceptionRootCause` 전용 필드 필수 (`${json:exception:rootCauseFirst}` 등)
+  - `maxStringLength`는 **32KB 이상** — 16KB는 스택 절단으로 원인 못 보는 사고 이력
+  - 로그 본문 PII(userId 등) 금지, sensorId·eventId·orderId 같은 안전한 비즈니스 식별자만 (기존 로깅 규칙 재확인)
+
 ### 소프트 가드레일
 
 - Fake 우선, Mockito는 외부 API 등 Fake가 복잡한 경우만
@@ -477,6 +543,11 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 28. [ ] **(v1.9) 싱글톤 동시성**: 새로 추가한 `@Service`/`@Component`/`@Repository` 클래스에 mutable instance field 0건? 캐시 필요하면 `AtomicReference<record>`, 일회성이면 메서드 인수 전달?
 29. [ ] **(v1.9) Soft-delete unique**: 신규 unique 제약 필요한 컬럼에 `deleted_at` 소프트 삭제가 있으면 Functional Unique Index 사용했는가? (일반 UNIQUE는 soft-deleted 행과 충돌)
 30. [ ] **(v1.9) WebClient timeout/retry**: 새 외부 호출에 connect/read timeout 명시했는가? 재시도 필터가 ReadTimeout/ConnectTimeout/5xx만 잡고 4xx는 제외하는가?
+31. [ ] **(v1.10) 외부 API DTO 시간 필드**: 강타입(`Instant`/`OffsetDateTime`) 필드에 `DateTimeFormatterBuilder`나 optional pattern deserializer가 붙어 있는가? 비즈니스 미사용 시간 필드는 `String`으로 남겨 파싱 리스크를 없앴는가?
+32. [ ] **(v1.10) 공용 모듈 JPA 회피**: 다른 애플리케이션 모듈이 의존하는 공용 모듈에 `@Entity`/`@Table` 클래스가 신규 추가되지 않았는가? 공용 read-only 경로는 `JdbcClient`/`NamedParameterJdbcTemplate` 기반인가?
+33. [ ] **(v1.10) 신규 패키지 4-Tier 첫 커밋 강제**: 새 도메인·기능 패키지가 `domain/application/infrastructure` 폴더를 **첫 커밋에** 포함하는가? 계층 없이 만들고 후속 재편으로 미루지 않았는가?
+34. [ ] **(v1.10) 정책성 캐시 3층 폴백**: 이용권한·요금제·기능 플래그 같은 정책성 데이터 캐시가 Redis → DB → 하드코딩 3층 폴백이고 어느 계층도 예외를 상위 전파하지 않는가? CRUD write-through가 유형별 전체 재작성인가? 기동 워밍업 + 임계값 경보를 포함하는가?
+35. [ ] **(v1.10) 예외 로깅**: log4j2 설정에 `exceptionRootCause` 전용 필드 + `maxStringLength ≥ 32768`이 반영되어 있는가? 로그 본문에 userId 등 PII를 넣지 않았는가?
 
 ---
 

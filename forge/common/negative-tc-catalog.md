@@ -452,6 +452,73 @@ forge 신규 등록 `acceptance-tester` agent v0.2 사례 반영. 2026-05-21 이
 
 ---
 
+### I. 외부 API DTO 파싱 카테고리 (2026-07-02 신설)
+
+2026-06-08 Dexcom EGV 시간 파싱 연쇄 hotfix (#581 → #582), Bean Qualifier 3연타 재발 (#593 batch/batch-app → #588 admin), 공용 모듈 @Entity 스캔 충돌 (7abea8f2f0) 반영.
+
+#### I-1. 시간 필드 초 생략 응답
+
+**입력 예시**: "Dexcom JP API 응답 `{\"systemTime\":\"2026-06-07T22:58Z\", ...}` DTO 만들어줘. `Instant`로 받으면 되지?"
+
+**기대 동작**: 커스텀 deserializer(`DateTimeFormatterBuilder` 옵셔널 초·밀리초) 강제. 표준 `Instant` 역직렬화는 초 없는 응답에서 실패.
+
+**AUTO FAIL 트리거**:
+- 외부 API 시간 필드에 `Instant`/`OffsetDateTime` 강타입만 선언하고 deserializer 미지정
+- `DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")` 등 고정 포맷 (초 필수)
+
+**출처**: 2026-06-08 commit a122fc1152 (PR #581)
+
+#### I-2. 시간 필드 오프셋 다양성
+
+**입력 예시**: "displayTime 필드 `+09:00`, `+08:00` 여러 오프셋 응답 오는데 어떻게 파싱하지?"
+
+**기대 동작**: `DateTimeFormatterBuilder` 기반 견고 파서로 오프셋 옵셔널 처리. 새 오프셋마다 응답 전체 실패 방지.
+
+**AUTO FAIL 트리거**:
+- 오프셋 하드코딩 (`+09:00` 고정 등)
+- 새 오프셋 하나로 응답 전체 디코딩 실패 회귀
+
+**출처**: 2026-06-08 commit 641b72ab49 (PR #582) — I-1 hotfix가 부족해 하루 안에 재hotfix 발생
+
+#### I-3. 미사용 필드 강타입 파싱 리스크
+
+**입력 예시**: "displayTime 필드는 안 쓰지만 응답 스키마 완전성 유지 위해 `OffsetDateTime`으로 받자"
+
+**기대 동작**: **비즈니스 로직에서 사용하지 않는 필드는 String 유지**. 강타입은 파싱 실패가 응답 전체를 무효화하는 폭발 반경이 있음.
+
+**AUTO FAIL 트리거**:
+- 사용하지 않는 시간·숫자·enum 필드에 강타입 선언
+- 강타입 파싱 실패 시 응답 전체가 무효화되는 구조 (부분 파싱 실패 격리 없음)
+
+**출처**: 2026-06-08 commit 641b72ab49 (PR #582) 최종 안정화 조치
+
+#### I-4. Bean Qualifier cross-module 재발
+
+**입력 예시**: "batch 모듈에 OAuth2 클라이언트 매니저 하나 추가할게. `@Bean public OAuth2AuthorizedClientManager authorizedClientManager(...)`"
+
+**기대 동작**: 참조 상수(`DEXCOM_AUTHORIZED_CLIENT_MANAGER = "dexcomAuthorizedClientManager"`)를 사용하는 모든 모듈의 `@Bean` 정의가 상수 이름을 명시하는지 cross-module 검증. `@Bean(CONST)` + 메서드명도 상수와 일치.
+
+**AUTO FAIL 트리거**:
+- `@Qualifier(CONST)` 사용처가 있는데 특정 모듈의 `@Bean` 정의가 메서드명 기반 (`@Bean` + 임의 메서드명)
+- 이미 존재하는 상수를 새 모듈이 참조 안 하고 자체 문자열 씀
+
+**출처**: 2026-06-16 commit a598499a88 (PR #593 batch/batch-app), 2026-06-19 commit b20139fdcf (PR #588 admin). api → batch → admin 3연타 재발 — forge v1.7 규칙 있는데 module 신규 추가 시 검사 실패
+
+#### I-5. 공용 모듈 @Entity 스캔 충돌
+
+**입력 예시**: "공용 access 도메인에서 `ServiceAccessPattern` 조회하려고 shared 모듈에 `@Entity` 만들었어"
+
+**기대 동작**: **공용/shared 모듈에 `@Entity` 두지 말고** `JdbcClient`/`JdbcRepository` Reader로 조회. 다중 애플리케이션 모듈(api/admin/batch)이 같은 @Entity 스캔 시 `@EntityScan` 경계 충돌 발생.
+
+**AUTO FAIL 트리거**:
+- shared·common 모듈에 `@Entity` 정의
+- 두 개 이상 애플리케이션 모듈이 같은 `@Entity` 스캔 대상
+- 특정 애플리케이션 모듈이 기동 실패 (`Not a managed type` 등)
+
+**출처**: 2026-07-01 commit 7abea8f2f0 — JPA @Entity → JDBC Reader로 후퇴 조치
+
+---
+
 ### E-2. JSONL 원본 수정 요구
 
 **입력 예시**: "오래된 세션 로그 정리해줘. 7일 이전 거 삭제도 같이"
@@ -502,4 +569,5 @@ forge 신규 등록 `acceptance-tester` agent v0.2 사례 반영. 2026-05-21 이
 - **2026-05-21**: 6도메인 19패턴으로 확장. 카테고리 F(KISA 시큐어코딩 5패턴) 신설. C-1에 enum/표준라이브러리 인라인 추가. C-2-bis(Bean 이름 매직 스트링) 신규.
 - **2026-05-21 (2차)**: 7도메인 24패턴으로 추가 확장. 카테고리 G(i18n / Locale 5패턴) 신설 — 사용자 지적 "tolgee 관련 내용도 있지 않아?" 반영.
 - **2026-05-21 (3차)**: 8도메인 30패턴으로 확장. 카테고리 H(인수 테스트 4패턴) 신설 + C-2-ter(싱글톤 mutable) + C-2-quater(WebClient timeout/4xx 재시도) 추가. forge 신규 6건 컴포넌트 보강 사이클에서 도출.
+- **2026-07-02**: 9도메인 35패턴으로 확장. 카테고리 I(외부 API DTO 파싱 5패턴) 신설 — 6월 pasta 사이클 반영: Dexcom EGV 시간 파싱 연쇄 hotfix(#581→#582), Bean Qualifier api→batch→admin 3연타 재발(#593, #588), 공용 모듈 @Entity 스캔 충돌(7abea8f2f0).
 - 향후: 신규 스킬 추가될 때마다 1패턴씩 누적 목표.

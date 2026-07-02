@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.9"
-last-modified: "2026-05-21"
-changelog: "v1.9 — 2026-05-21 이번 주 추가 패턴: (1) catch 블록 부가 주석 검출 — 'ACL 변환 실패 시 빈 리스트로 fallback' 같은 부가 설명 주석은 log 메시지로 흡수, 주석은 제거 (commit f3b85a79d0 KISA 리뷰 반영 사례). (2) @Service 싱글톤 mutable instance field 검출 (KISA Medium 진단). (3) WebClient 외부 호출 timeout 누락 / 재시도 필터 4xx 포함 위험 검출. (4) Soft-delete + UNIQUE 충돌 패턴. | v1.8 — Locale.ROOT 누락 검출. v1.7 — Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6 — blueprint v2.0"
+version: "1.10"
+last-modified: "2026-07-02"
+changelog: "v1.10 — 2026-07-02 6월 pasta 사고 3건 흡수: (1) Bean Qualifier cross-module 검증 — 3회 재발(5월 api → 6/16 batch·batch-app #593 → 6/19 admin #588) 방지, 다른 모듈이 같은 상수 참조하는데 미준수 케이스 AUTO FAIL 확장. (2) 인터페이스 구현체 모듈별 등록 확인 — #597 UserDiabetesTypeService 누락 기동 실패 방지. (3) 임시 진단 로그 후속 제거 강제 — #616 대시보드 403 진단 로그 부채화 방지. | v1.9 — 2026-05-21 이번 주 추가 패턴: (1) catch 블록 부가 주석 검출 — 'ACL 변환 실패 시 빈 리스트로 fallback' 같은 부가 설명 주석은 log 메시지로 흡수, 주석은 제거 (commit f3b85a79d0 KISA 리뷰 반영 사례). (2) @Service 싱글톤 mutable instance field 검출 (KISA Medium 진단). (3) WebClient 외부 호출 timeout 누락 / 재시도 필터 4xx 포함 위험 검출. (4) Soft-delete + UNIQUE 충돌 패턴. | v1.8 — Locale.ROOT 누락 검출. v1.7 — Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6 — blueprint v2.0"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -231,6 +231,76 @@ git diff dev...HEAD -- {path}
 |------|------|----------|
 | `deleted_at` 컬럼 존재 + 일반 UNIQUE | `(deleted_at|is_deleted)` 컬럼 + `UNIQUE INDEX` (Functional 아님) | MySQL 8.0.13+ Functional Unique Index (`CASE WHEN deleted_at IS NULL THEN col ELSE NULL END`) |
 
+#### (v1.10) Bean Qualifier cross-module 검증 — **3회 재발 방지 우선 룰**
+
+2026-05월 api → 2026-06-16 batch·batch-app (#593) → 2026-06-19 admin (#588). **세 번 반복 재발**. 기존 v1.7 "Bean 이름 매직 스트링" 룰이 있음에도 신규 모듈이 들어올 때마다 `No qualifying bean` 기동 실패가 재현됐다. 룰을 **cross-module 정합성 검증**으로 확장한다.
+
+**증상 패턴**:
+```java
+// cgm 모듈 (요구자)
+@Qualifier(DEXCOM_AUTHORIZED_CLIENT_MANAGER) OAuth2AuthorizedClientManager manager
+
+// batch 모듈 (등록자) — 메서드명 기반 → 상수 미준수
+@Bean
+public OAuth2AuthorizedClientManager authorizedClientManager(...) { ... }  // ❌ 기동 실패
+```
+
+**검사 룰**:
+1. `@Qualifier("리터럴문자열")` 사용 시 → 반드시 상수 참조로 변경 요구 (v1.7 강화 재확인)
+2. `@Qualifier(CONST)` 형태로 사용된 상수는 → 해당 상수를 **참조하는 모든 애플리케이션 모듈**(api/batch/batch-app/admin 등)에 `@Bean(CONST)` 정의가 있는지 grep 검증
+3. 신규 모듈에 OAuth2/WebClient/AuthorizedClientManager 등 shared Bean 관련 Configuration 추가 시 → 기존 Qualifier 상수와 매칭 확인. 메서드명 기반 등록만 있으면 → 사고 재발 경고
+
+**검출 절차 (concrete)**:
+```bash
+# 1. 변경 파일에서 새 @Bean/@Qualifier 위치 추출
+# 2. 상수 이름 확인 (예: DEXCOM_AUTHORIZED_CLIENT_MANAGER)
+# 3. 전체 모듈 grep — 이 상수를 @Qualifier로 참조하는 모듈 목록 수집
+grep -rn "DEXCOM_AUTHORIZED_CLIENT_MANAGER" --include="*.java"
+# 4. 참조 모듈 각각에 대해 @Bean(CONST) 정의 존재 여부 확인
+# 5. 하나라도 없으면 → 필수 수정 보고
+```
+
+**AUTO FAIL 확장** (기존 v1.7 "Bean 매직 스트링" AUTO FAIL의 sub-case):
+- **AUTO FAIL 조건**: 다른 모듈이 `@Qualifier(CONST)`로 참조하는 상수인데, 이 모듈의 `@Bean`이 메서드명 기반(상수 미명시) → 기동 실패 확정 → 리뷰 통과 불가
+
+**보고 형식**:
+```markdown
+### Bean Qualifier cross-module 검증 (v1.10)
+
+| 위치 | 상수 | 다른 모듈 참조 | 이 모듈 등록 | 등급 |
+|------|------|---------------|-------------|------|
+| batch/BatchOAuth2Configuration.java:63 | DEXCOM_AUTHORIZED_CLIENT_MANAGER | cgm/DexcomWebClientConfiguration.java:31 | @Bean (메서드명 authorizedClientManager) | **AUTO FAIL** — 기동 실패 예상 |
+
+권장: `@Bean(DEXCOM_AUTHORIZED_CLIENT_MANAGER)` 명시 + 메서드명을 상수와 일치시켜 `dexcomAuthorizedClientManager`로 변경.
+```
+
+**False positive 회피**:
+- `@Primary`로 표시된 Bean은 Qualifier 없어도 매칭 → skip
+- 테스트 코드 `@MockBean` 은 별도 v1.3 룰로 처리
+
+#### (v1.10) 인터페이스 구현체 모듈별 등록 확인
+
+2026-06-18 batch (#597) 사례. `UserDiabetesTypeService` 인터페이스만 있고 batch 모듈에 구현체 Bean 없어 `NoSuchBeanDefinitionException` 기동 실패.
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| 인터페이스 주입받는데 모듈 내 구현체 없음 | `@RequiredArgsConstructor` 또는 `@Autowired`로 인터페이스 주입, 해당 모듈 `@ComponentScan` 범위 내 `@Service`/`@Component` 구현체 미존재 | 해당 모듈에 `*ServiceImpl` 등록 or 공용 configuration에 @Bean 노출 |
+
+**검사 절차**: 변경 파일이 새 인터페이스 도입/사용 시 → 인터페이스를 주입받는 모든 애플리케이션 모듈의 스캔 경로에서 `implements {InterfaceName}` 존재 여부 grep. 없으면 필수 수정 보고.
+
+#### (v1.10) 임시 진단 로그 후속 제거 강제
+
+2026-06-23 (#616) 사례. 대시보드 403 원인 진단용 임시 로그를 SecurityConfiguration에 추가한 후 제거 커밋이 없어 기술 부채화.
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| 임시 진단 목적 로그 | log 문구 또는 근처 주석에 "임시\|진단\|temp\|diagnostic\|for debug" 키워드 | TODO 태그 + JIRA/이슈 링크 필수 (`// TODO(GLOB-XXX): 원인 확인 후 제거`) |
+| 커밋 메시지에 "임시" 명시 | 임시 로그 추가 commit은 message에도 "임시\|diagnostic\|진단용" 포함 | 후속 제거 커밋 추적 가능 |
+
+**리뷰 시 이전 이력 확인**: `git log dev..HEAD -S"임시" -- '*.java'`로 임시 로그가 이전 커밋에서 추가됐는지 확인. 있는데 제거 커밋 없으면 "제거 여부 확인" 알림.
+
+**False positive 회피**: `log.trace/debug` 로 남긴 정상 디버깅 로그 중 "임시" 키워드 미포함은 skip.
+
 #### (v1.8) i18n / Locale 함정 검사
 
 2026-05-15 commit a1a425ecb2 (CodeRabbit 지적) 반영. 변경 파일에서 다음 패턴 검출:
@@ -339,6 +409,9 @@ git diff dev...HEAD -- {path}
 18. [ ] **(v1.9) 싱글톤 동시성**: 신규/변경된 `@Service`/`@Component`/`@Repository` 클래스에 mutable instance field(`@Autowired`·`final`·`static` 제외) 검출했는가?
 19. [ ] **(v1.9) WebClient timeout/retry**: 새 WebClient 생성에 connect/read timeout 명시? Retry 필터가 4xx 제외하는가?
 20. [ ] **(v1.9) Soft-delete + UNIQUE**: 변경된 마이그레이션 SQL에 `deleted_at` + 일반 UNIQUE 충돌 검사? Functional Unique Index 권장?
+21. [ ] **(v1.10) Bean Qualifier cross-module**: 변경 파일에 새 `@Bean` 또는 `@Qualifier(CONST)`가 있으면, 해당 상수를 참조하는 모든 모듈의 `@Bean(CONST)` 정의 존재 여부를 grep으로 확인했는가? 하나라도 미준수면 AUTO FAIL 보고?
+22. [ ] **(v1.10) 인터페이스 구현체 모듈 등록**: 새 인터페이스 주입 코드가 있으면, 해당 모듈 스캔 경로에 구현체가 존재하는지 grep했는가? 없으면 필수 수정 보고?
+23. [ ] **(v1.10) 임시 진단 로그**: 변경된 로그 문구 또는 근처 주석에 "임시/진단/temp/diagnostic/for debug" 키워드 있으면 TODO+이슈 링크 강제했는가? 이전 커밋의 임시 로그 잔존 여부도 `git log -S` 로 확인?
 
 ---
 

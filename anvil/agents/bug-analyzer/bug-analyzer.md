@@ -3,9 +3,9 @@ name: bug-analyzer
 description: "운영/개발 환경에서 발생한 에러 로그(스택트레이스)를 분석하여 근본 원인을 파악하고, 정상 흐름 vs 문제 흐름 비교 도표를 포함한 버그 분석 문서를 docs/bugs/에 생성합니다. Use proactively when user pastes a stack trace, error log, or asks to analyze a bug/error."
 model: sonnet
 color: red
-version: "0.2"
-last-modified: "2026-05-21"
-changelog: "v0.2: forge 진입 후 첫 보강 (2026-05-21). (1) jira-bug-root-cause 스킬과 역할 경계 명시 — bug-analyzer는 스택트레이스 트리거형, jira-bug-root-cause는 Jira 카드 트리거형. (2) 외부 OAuth/HTTP 일시 장애 분석 카탈로그 — Dexcom OAuth refresh 케이스(#570 / 2dc6614cd2 / f5ed7dd757)에서 추출. ReadTimeout, ConnectTimeout, OAuth refresh I/O 일시 장애 / 재시도 가능 분기 / 타임아웃 명시 누락 / Connection pool 고갈. | v0.1: pasta-japan-server에서 forge로 역수입"
+version: "0.3"
+last-modified: "2026-07-02"
+changelog: "v0.3: OAuth2 refresh 사각지대 3패턴 카탈로그 추가 (Dexcom #594 사례 / 2026-06-18). WebClient 4xx 룰과 층위 분리 명시 — WebClient 필터는 devices/egvs 4xx/5xx 응답 관점, refresh 사각지대는 (1) refresh 자체 실패(invalid_grant) / (2) 호출 자체 안 함(client_authorization_required) / (3) pre-check 부재로 헛호출. 후처리 룰(사유별 로그·PII 제외·요약 로깅) 병기. | v0.2: forge 진입 후 첫 보강 (2026-05-21). (1) jira-bug-root-cause 스킬과 역할 경계 명시 — bug-analyzer는 스택트레이스 트리거형, jira-bug-root-cause는 Jira 카드 트리거형. (2) 외부 OAuth/HTTP 일시 장애 분석 카탈로그 — Dexcom OAuth refresh 케이스(#570 / 2dc6614cd2 / f5ed7dd757)에서 추출. ReadTimeout, ConnectTimeout, OAuth refresh I/O 일시 장애 / 재시도 가능 분기 / 타임아웃 명시 누락 / Connection pool 고갈. | v0.1: pasta-japan-server에서 forge로 역수입"
 ---
 
 # 버그 분석 에이전트
@@ -45,6 +45,34 @@ changelog: "v0.2: forge 진입 후 첫 보강 (2026-05-21). (1) jira-bug-root-ca
 2. **재시도 조건 적정성**: `Retry.fixedDelay(...).filter(throwable -> ...)`의 필터가 일시 장애만 잡는가, 4xx까지 재시도하는가? (2dc6614cd2)
 3. **싱글톤 상태 동시성**: `@Service` 빈에 mutable instance field가 있으면 동시성 위험 (KISA Medium 2adbd26c26 사례)
 4. **트랜잭션 전파**: 외부 호출 실패 후 상태 마킹이 같은 트랜잭션이면 REQUIRES_NEW 검토 (1066af4f54)
+
+## v0.3 보강 — OAuth2 refresh 사각지대 카탈로그 (2026-07-02)
+
+### 층위 분리: WebClient 4xx 룰과 다르다
+
+`java-spring-coder` v1.9의 WebClient 4xx 재시도 제외 규칙은 **응답이 온 이후** 관점이다. 다음 3패턴은 응답을 볼 수 없거나 응답 자체가 없는 사각지대 — WebClient 필터로는 못 잡는다. Dexcom #594 사례(2026-06-18)에서 3가지 모두 관찰됨.
+
+### 3패턴 (사고 #594 / cgm 도메인 실측)
+
+| # | 패턴 | 증상 | 원인 | 감지 위치 |
+|---|-----|-----|-----|---------|
+| 1 | **refresh 단계 `invalid_grant`** | 저장 실패인데 사용자는 401도 못 받음 | 응답 필터는 `devices/egvs` 응답이 4xx/5xx일 때만 동작. refresh 자체가 실패하면 필터가 개입 못 함 (영구 인증 실패 = 토큰 revoked) | token refresh catch에서 `invalid_grant`·revoked 식별 후 재연결 상태 전환 이벤트 발행 |
+| 2 | **`client_authorization_required` — 호출 자체 안 함** | 응답 로그가 없어 원인 추적 실패 | 클라이언트가 인증 필요를 미리 감지해 외부 API 호출을 skip. 필터가 볼 응답 자체가 존재하지 않음 | 인증 만료 예외 catch에서 명시적 재연결 상태 이벤트 발행 |
+| 3 | **연결 상태 pre-check 부재** | 헛호출 + 재시도 버스트 부하 | 토큰 사망·미연결 사용자에게 매번 조회 시도 후 실패 반복. 외부 API 호출 예산 낭비 | 저장 진입부에서 사용자 연결 상태 `CONNECTED` 확인 후 skip. 응답은 기존과 동일 (예: 404 유지) |
+
+### 후처리 로깅 룰
+
+사각지대에서 발생한 실패는 무로그로 누적되기 쉬움 → 다음 3원칙 적용:
+
+1. **사유별 구분 로깅**: `미등록 sensorId` / `device 미조회` / `미연결` 등 사유별로 나눠서 WARN. "그냥 404 발생"은 금지.
+2. **PII 제외**: `userId`는 로그 본문에서 제외. 안전한 식별자(`sensorId`, 요청 요약)만 남긴다.
+3. **요약 로깅**: 매 호출 페이로드 전체 로깅은 호출자·건수·센서 요약으로 축소. 로그 스팸이 실제 이상 신호를 덮지 않게.
+
+### 분석 시 필수 확인 항목 (v0.3 추가)
+
+5. **refresh 사각지대 3종 세트**: OAuth 관련 스택트레이스가 오면 (1) `invalid_grant` catch 여부 / (2) `client_authorization_required` 예외 처리 / (3) 저장 진입부 pre-check 유무를 세트로 확인.
+6. **PII 로깅**: 실패 로그에 `userId`/개인정보가 본문 포함되어 있는가? WARN 이상 로그의 PII는 즉시 지적.
+7. **로그 스팸으로 인한 신호 감춤**: 매 호출 페이로드 전체 덤프가 있으면 요약 로깅 권장.
 
 ---
 사용자가 에러 로그/스택트레이스를 제공하면 코드베이스를 추적하여 **근본 원인(Root Cause)**을 파악하고, 분석 결과를 문서로 정리합니다.
