@@ -68,7 +68,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | 2026-05-06 (PR #527 FQCN 가드레일 + 봇 톤 분기 5건 일괄 재배포). 2026-05-19 forge-upstream 6건 역수입 (agents 5 + skill tolgee). **2026-07-02 부채 확장**: 6월 사고 사이클 반영으로 forge 5건 강화(java-spring-coder 1.10 / self-code-reviewer 1.10 / bug-analyzer 0.3 / coding-implementer 0.4 / safe-mass-rename 0.1 신설) → pasta 배포 미반영, `/forge-deploy --sync` 대기 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-02 재배포 완료** (7건): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 신규 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0. 백업: `.claude/backup/2026-07-02-forge-sync/`. 이전: 2026-05-06 (PR #527 FQCN 5건), 2026-05-19 (forge-upstream 6건 역수입) |
 | poc-meal-recommender | `/Users/kakao/workplace-kakao/global/pasta-japan/work/poc-meal-recommender` | 2026-05-14 (POC 미니 세트 신규 배포: 스킬 8 + 커맨드 6 + rules 20) |
 
 ### pasta-japan-server 배포 현황
@@ -77,8 +77,8 @@
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
-| java-spring-coder | skill | 1.5 | **1.10** | **재배포 필요** (2026-07-02 사이클: 외부 API DTO 시간 방어 + 공용 모듈 @Entity 회피 + 캐시 3층 폴백 + 신규 패키지 4-Tier 강제 + 예외 로깅 표준. v1.6~1.10 5회 bump 미반영) |
-| self-code-reviewer | skill | 1.5 | **1.10** | **재배포 필요** (2026-07-02 사이클: Qualifier cross-module 3회 재발 방지 + 인터페이스 구현체 모듈 확인 + 임시 진단 로그 후속 제거. v1.6~1.10 5회 bump 미반영) |
+| java-spring-coder | skill | 1.10 | 1.10 | **동기화** (2026-07-02 재배포: v1.6~1.10 5회 bump 통합 이식 — 외부 API DTO 시간 방어 + 공용 모듈 @Entity 회피 + 캐시 3층 폴백 + 신규 패키지 4-Tier + 예외 로깅) |
+| self-code-reviewer | skill | 1.10 | 1.10 | **동기화** (2026-07-02 재배포: Qualifier cross-module 3연타 방지 + 구현체 모듈 확인 + 임시 진단 로그 제거) |
 | pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -98,13 +98,13 @@
 | jira-bug-root-cause | skill | 1.0 | 1.0 | 동기화 |
 | chat-incident-report | skill | 1.0 (실전) | 1.0 (역수입) | 동기화 (2026-04-22 역수입, 마스킹 — forge→pasta 배포 금지) |
 | gcp-infra-architect | agent | 1.2 | 1.2 | 동기화 (2026-04-22 신규 배포) |
-| tolgee | skill | 0.1 | 0.1 | **2026-05-19 forge-upstream 신규 역수입** (실전 전용 → forge 등록, 하네스 미작성) |
+| tolgee | skill | 0.2 | 0.2 | **동기화** (2026-07-02 재배포: 4파일 동시 갱신 + en 카피 품질 가드 + Java 코드 Locale 함정 안내) |
 | acceptance-tester | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** (실전 전용 → forge 등록, 하네스 미작성) |
 | apidog-mock-api-generator | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** |
-| bug-analyzer | agent | 0.1 | **0.3** | **재배포 필요** (2026-07-02 v0.3: OAuth2 refresh 사각지대 카탈로그 3패턴) |
-| coding-implementer | agent | 0.1 | **0.4** | **재배포 필요** (2026-07-02 v0.4: 개발 사이클 오케스트레이터 격상 + Phase 강화) |
-| prd-plan-designer | agent | 0.1 | **1.0** | **재배포 필요** (2026-07-02 v1.0 A안 격상: PRD↔TDD Alignment 자동 검증자로 본질 차별화) |
-| safe-mass-rename | skill | - | **0.1** | **신규 forge 생성** (2026-07-02 Freemium 리네임 사이클 반영) — pasta 배포 대기 |
+| bug-analyzer | agent | 0.3 | 0.3 | **동기화** (2026-07-02 재배포: OAuth2 refresh 사각지대 카탈로그 3패턴 — Dexcom #594 사례) |
+| coding-implementer | agent | 0.4 | 0.4 | **동기화** (2026-07-02 재배포: 개발 사이클 오케스트레이터 격상 + Phase 강화) |
+| prd-plan-designer | agent | 1.0 | 1.0 | **동기화** (2026-07-02 재배포: v1.0 A안 격상 — PRD↔TDD Alignment 자동 검증자로 본질 차별화) |
+| safe-mass-rename | skill | 0.1 | 0.1 | **동기화** (2026-07-02 신규 배포: Freemium 리네임 사이클 반영 신설) |
 
 > **2026-05-19 동기화 부채**: forge 측 11개 스킬이 v1.2 패턴(Phase 1.5 + 결정 트리 + 자기 검증 v2.0)으로 일괄 업그레이드되어 pasta 배포 버전과 불일치 상태. 회귀 평가 통과 후 `/forge-deploy --sync` 권장. 또한 pasta SKILL.md 다수에 frontmatter 메타(version/last-modified/changelog)가 누락되어 있어 재배포 시 자동 복원.
 
