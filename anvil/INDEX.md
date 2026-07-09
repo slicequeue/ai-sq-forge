@@ -68,7 +68,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-02 재배포 완료** (7건): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 신규 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0. 백업: `.claude/backup/2026-07-02-forge-sync/`. **2026-07-09 부채 확장**: 7월 사고 사이클(GLOB-548/549/566/567 + #633 미션 사고) 반영으로 forge 3건 강화(java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4) → 재배포 대기 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-09 재배포 완료** (3건): java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4. 백업: `.claude/backup/2026-07-09-forge-sync/`. 이전: 2026-07-02 7건 재배포(java-spring-coder 1.10 + agents 3 + safe-mass-rename 신규), 2026-05-06/05-19 |
 | poc-meal-recommender | `/Users/kakao/workplace-kakao/global/pasta-japan/work/poc-meal-recommender` | 2026-05-14 (POC 미니 세트 신규 배포: 스킬 8 + 커맨드 6 + rules 20) |
 | moneyball | `/Users/kakao/workplace-kakao/moneyball/server/moneyball` | **2026-07-07 신규 배포** (pasta-japan-server 7건 세트와 동일 구성): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0 (기존 네이티브 서브에이전트 대체, 백업: `.claude/backup/2026-07-07-forge-deploy/`) + `.claude/rules/11-git-workflow-convention.md` 신규. 기존 `skills/batch-schedule-audit/`(forge 비소유)는 유지 |
 
@@ -78,8 +78,8 @@
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
-| java-spring-coder | skill | 1.10 | **1.11** | **재배포 필요** (2026-07-09: Hibernate Session 오염 3연타 방지 + @ConditionalOnBean 회피 + 캐시 pub-sub 확장 + 어노테이션 인터셉터) |
-| self-code-reviewer | skill | 1.10 | **1.11** | **재배포 필요** (2026-07-09: @Profile 문법 AUTO FAIL + 광범위 catch 검출 + Session 오염 검출 + 입력 형식 검증) |
+| java-spring-coder | skill | 1.11 | 1.11 | **동기화** (2026-07-09 재배포: Hibernate Session 오염 3연타 방지 + @ConditionalOnBean 회피 + 캐시 pub-sub 확장 + 어노테이션 인터셉터) |
+| self-code-reviewer | skill | 1.11 | 1.11 | **동기화** (2026-07-09 재배포: @Profile 문법 AUTO FAIL + 광범위 catch 검출 + Session 오염 검출 + 입력 형식 검증) |
 | pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -91,7 +91,7 @@
 | admin-prd-plan-designer | skill | 1.0 | 1.0 | 동기화 |
 | admin-thymeleaf-ui | skill | 1.1 | 1.1 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 섹션) |
 | api-inventory-generator | skill | 1.0 | 1.0 | 동기화 |
-| java-layered-unit-testing | skill | 1.1 | **1.4** | **재배포 필요** (2026-07-09: v1.2 blueprint + v1.3 MockBean 상수화 + v1.4 infra 직접 참조 금지·domain Fake + verify/Spy 선택 기준. 3회 bump 미반영) |
+| java-layered-unit-testing | skill | 1.4 | 1.4 | **동기화** (2026-07-09 재배포: v1.2~1.4 3회 bump 통합 이식 — blueprint + MockBean 상수화 + infra 직접 참조 금지·domain Fake + verify/Spy 선택 기준) |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
