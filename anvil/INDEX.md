@@ -72,7 +72,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-09 재배포 완료** (3건): java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4. **2026-07-09 부채 확장**: 리뷰 스킬 세분화 사이클(v2.0)로 self-code-reviewer 2.0 슬림화 + 3개 관점 스킬(java-secure-coding/performance/architecture-reviewer 0.1) + java-composite-reviewer 에이전트 0.1 + coding-implementer 0.5 신설·갱신 → 6건 재배포 대기 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-09 재배포 완료** (9건, 2사이클): 오전 3건(java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4) + 오후 6건(**self-code-reviewer 2.0 슬림화 재배포** + **신규 3개 관점 스킬**: java-secure-coding·performance·architecture-reviewer 0.1 + **신규 복합 리뷰어 에이전트** java-composite-reviewer 0.1 + coding-implementer 0.5). 백업: `.claude/backup/2026-07-09-forge-sync/` + `.claude/backup/2026-07-09-review-split/` |
 | poc-meal-recommender | `/Users/kakao/workplace-kakao/global/pasta-japan/work/poc-meal-recommender` | 2026-05-14 (POC 미니 세트 신규 배포: 스킬 8 + 커맨드 6 + rules 20) |
 | moneyball | `/Users/kakao/workplace-kakao/moneyball/server/moneyball` | **2026-07-07 신규 배포** (pasta-japan-server 7건 세트와 동일 구성): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0 (기존 네이티브 서브에이전트 대체, 백업: `.claude/backup/2026-07-07-forge-deploy/`) + `.claude/rules/11-git-workflow-convention.md` 신규. 기존 `skills/batch-schedule-audit/`(forge 비소유)는 유지 |
 
@@ -83,11 +83,11 @@
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
 | java-spring-coder | skill | 1.11 | 1.11 | **동기화** (2026-07-09 재배포: Hibernate Session 오염 3연타 방지 + @ConditionalOnBean 회피 + 캐시 pub-sub 확장 + 어노테이션 인터셉터) |
-| self-code-reviewer | skill | 1.11 | **2.0** | **재배포 필요** (2026-07-09 v2.0 슬림화: 관점 룰 3개 스킬로 완전 이관) |
-| java-secure-coding-reviewer | skill | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: KISA + OWASP + PII + 시크릿 + CVE) |
-| java-performance-reviewer | skill | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: N+1 + 캐시 + 트랜잭션 + 리소스) |
-| java-architecture-reviewer | skill | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: 4-Tier + Bean·Qualifier + 모듈 + pasta-rules) |
-| java-composite-reviewer | agent | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: 4개 관점 리뷰 오케스트레이터) |
+| self-code-reviewer | skill | 2.0 | 2.0 | **동기화** (2026-07-09 v2.0 슬림화 재배포: 관점 룰 3개 스킬로 완전 이관) |
+| java-secure-coding-reviewer | skill | 0.1 | 0.1 | **동기화** (2026-07-09 신규 배포: KISA + OWASP + PII + 시크릿 + CVE) |
+| java-performance-reviewer | skill | 0.1 | 0.1 | **동기화** (2026-07-09 신규 배포: N+1 + 캐시 + 트랜잭션 + 리소스) |
+| java-architecture-reviewer | skill | 0.1 | 0.1 | **동기화** (2026-07-09 신규 배포: 4-Tier + Bean·Qualifier + 모듈 + pasta-rules) |
+| java-composite-reviewer | agent | 0.1 | 0.1 | **동기화** (2026-07-09 신규 배포: 4개 관점 리뷰 오케스트레이터) |
 | pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -111,7 +111,7 @@
 | acceptance-tester | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** (실전 전용 → forge 등록, 하네스 미작성) |
 | apidog-mock-api-generator | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** |
 | bug-analyzer | agent | 0.3 | 0.3 | **동기화** (2026-07-02 재배포: OAuth2 refresh 사각지대 카탈로그 3패턴 — Dexcom #594 사례) |
-| coding-implementer | agent | 0.4 | **0.5** | **재배포 필요** (2026-07-09 v0.5: Phase 3-4 위임 대상 java-composite-reviewer 에이전트로 교체) |
+| coding-implementer | agent | 0.5 | 0.5 | **동기화** (2026-07-09 v0.5 재배포: Phase 3-4 위임 대상 java-composite-reviewer 에이전트로 교체) |
 | prd-plan-designer | agent | 1.0 | 1.0 | **동기화** (2026-07-02 재배포: v1.0 A안 격상 — PRD↔TDD Alignment 자동 검증자로 본질 차별화) |
 | safe-mass-rename | skill | 0.1 | 0.1 | **동기화** (2026-07-02 신규 배포: Freemium 리네임 사이클 반영 신설) |
 
