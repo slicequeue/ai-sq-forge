@@ -9,7 +9,10 @@
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.2 | PRD 기획 요구사항 문서 작성 (v1.2: Phase 1.5 현황 파악 + 멀티턴·풀패키지 결정 트리 + 확인vs가정 분리) | **회귀 평가 권장** (v1.2 패턴 이식 — `/eval-harness prd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.1 기준) | `skills/prd-designer/` |
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.4 | TDD 기술 설계 문서 작성 (v1.4: Phase 0.5 현황 파악 + 결정 트리 + 자기 검증 v2.0) | **회귀 평가 권장** (v1.4 패턴 이식 — `/eval-harness tdd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.3 기준) | `skills/tdd-designer/` |
 | [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.11 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.11: Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 + @ConditionalOnBean 회피 + 캐시 pub-sub 무효화·폴링 백스톱·발행 실패 흡수 + 어노테이션+인터셉터 조합 패턴) | **회귀 평가 권장** (v1.11 사례 반영) | 일반 | 95/100 평균 (v1.5 기준) | `skills/java-spring-coder/` |
-| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.11 | dev 기준 변경 코드 자체 리뷰 (v1.11: @Profile 문법 &&→& AUTO FAIL + DataIntegrityViolationException 광범위 catch 검출 + Hibernate Session 오염 재조회 검출 + 입력 형식 검증 누락) | **회귀 평가 권장** (v1.11 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
+| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 2.0 | **공통 룰 + 관점 리뷰 오케스트레이션 안내** (v2.0 슬림화: KISA→secure-coding / WebClient·싱글톤·Soft-delete UNIQUE→performance / FQCN·Bean Qualifier·구현체 모듈→architecture 완전 이관. 잔존: @Profile·광범위 catch·Session 오염·입력 검증·i18n·임시 로그) | **회귀 평가 권장** (v2.0 리팩터) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
+| [java-secure-coding-reviewer](skills/java-secure-coding-reviewer/SKILL.md) | 0.1 | **보안 관점 전용 리뷰** — KISA 시큐어코딩(5등급) + OWASP Top 10 + PII 처리 + 시크릿 노출 + CVE 의존성 취약점. self-code-reviewer 세분화 사이클(2026-07-09) 신설 | **테스트 대기** (하네스 3종 작성 완료, `/eval-harness` 미실행) | 일반 | - | `skills/java-secure-coding-reviewer/` |
+| [java-performance-reviewer](skills/java-performance-reviewer/SKILL.md) | 0.1 | **성능 관점 전용 리뷰** — N+1·JPA·인덱스 + 캐시 계층 + 트랜잭션·비동기·스레드 풀 + 리소스 누수·GC + 로깅 스팸. self-code-reviewer 세분화 사이클(2026-07-09) 신설 | **테스트 대기** (하네스 3종 작성 완료, `/eval-harness` 미실행) | 일반 | - | `skills/java-performance-reviewer/` |
+| [java-architecture-reviewer](skills/java-architecture-reviewer/SKILL.md) | 0.1 | **아키텍처·컨벤션 관점 전용 리뷰** — 4-Tier 경계·import 방향 + Bean 관리·Qualifier·설정 게이팅 + 모듈 관계·의존성 그래프 + 패턴 준수 + pasta-rules 컨벤션 참조. self-code-reviewer 세분화 사이클(2026-07-09) 신설 | **테스트 대기** (하네스 3종 작성 완료, `/eval-harness` 미실행) | 일반 | - | `skills/java-architecture-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.5 | PR 피드백 수집·수정·push·답글 (v1.5: 자기 검증 v2.0 — PR 컨텍스트 현황 파악 + 봇/사람 분기 근거 기록) | **회귀 평가 권장** (v1.5 패턴 이식) | 일반 | 94.5/100 평균 (v1.4 기준) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.1 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (v1.1: Phase 0.3 admin 모듈 현황 파악 + 멀티턴/풀패키지 결정 트리) | **회귀 평가 권장** (v1.1 패턴 이식) | 일반 | 88/100 (v1.0 기준) | `skills/admin-prd-plan-designer/` |
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.2 | Admin Thymeleaf SSR 화면 구현/수정 (v1.2: 자기 검증 v2.0 — 기존 패턴 사전 스캔 + 영향도 grep 확인) | **회귀 평가 권장** (v1.2 패턴 이식) | 일반 | 95.3/100 (v1.1 기준) | `skills/admin-thymeleaf-ui/` |
@@ -32,7 +35,8 @@
 | [acceptance-tester](agents/acceptance-tester/acceptance-tester.md) | 0.2 | 인수 테스트·통합 테스트 (v0.2: testAcceptance 사각지대 인지 + OAuth MockBean 이름 명시 + @TestConfiguration 중복 제거 + @Nested vs flat 정책) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/acceptance-tester/` |
 | [apidog-mock-api-generator](agents/apidog-mock-api-generator/apidog-mock-api-generator.md) | 0.2 | Apidog 스펙 → Mock Controller (v0.2: Phase 1.5 현황 파악 + 응답 DTO 확장 호환성 + Mock 데이터 표식) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/apidog-mock-api-generator/` |
 | [bug-analyzer](agents/bug-analyzer/bug-analyzer.md) | 0.3 | 스택트레이스 분석 (v0.3: OAuth2 refresh 사각지대 카탈로그 3패턴 추가 + WebClient 4xx 룰과 층위 분리 — Dexcom #594 사례) | **테스트 대기** | 일반 | - | `agents/bug-analyzer/` |
-| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.4 | **개발 사이클 오케스트레이터** — TDD 받아 브랜치→Phase별 구현·테스트·자체리뷰·커밋→인수 테스트→PR 준비까지 한 호출 자율 진행 (v0.4: Phase 0 신규 패키지 4-Tier 강제 + Phase 3-4 Qualifier cross-module + Phase 3-6 커밋 세분화 원칙) | **테스트 대기** (본질 차별화 격상 — 평가 루브릭·하네스 미작성) | 일반 | - | `agents/coding-implementer/` |
+| [coding-implementer](agents/coding-implementer/coding-implementer.md) | 0.5 | **개발 사이클 오케스트레이터** — TDD 받아 브랜치→Phase별 구현·테스트·자체리뷰·커밋→인수 테스트→PR 준비까지 한 호출 자율 진행 (v0.5: Phase 3-4 자체 리뷰 위임 대상 self-code-reviewer → **java-composite-reviewer** 에이전트로 교체) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/coding-implementer/` |
+| [java-composite-reviewer](agents/java-composite-reviewer/java-composite-reviewer.md) | 0.1 | **다각적 복합 리뷰 오케스트레이터** — 공통(self v2.0) + 보안·성능·아키텍처 4개 관점 스킬을 조합하여 통합 리포트 산출 (Phase 0~4: 관점 자동 판단 + Task tool 병렬 호출 + AUTO FAIL 우선순위 통합) | **테스트 대기** (평가 루브릭·하네스 미작성) | 일반 | - | `agents/java-composite-reviewer/` |
 | [prd-plan-designer](agents/prd-plan-designer/prd-plan-designer.md) | 1.0 | **PRD ↔ TDD Alignment 자동 검증자** — PRD·TDD 산출물 정합성 검증 + 매핑 표 자동 생성 (v1.0 A안 격상: 3개 PRD 스킬과 층위 분리, 각 스킬은 단일 문서 작성 / 이 에이전트는 상호 검증) | **테스트 대기** (하네스·루브릭 미작성) | 일반 | - | `agents/prd-plan-designer/` |
 
 ## Commands
@@ -68,7 +72,7 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-09 재배포 완료** (3건): java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4. 백업: `.claude/backup/2026-07-09-forge-sync/`. 이전: 2026-07-02 7건 재배포(java-spring-coder 1.10 + agents 3 + safe-mass-rename 신규), 2026-05-06/05-19 |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-09 재배포 완료** (3건): java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4. **2026-07-09 부채 확장**: 리뷰 스킬 세분화 사이클(v2.0)로 self-code-reviewer 2.0 슬림화 + 3개 관점 스킬(java-secure-coding/performance/architecture-reviewer 0.1) + java-composite-reviewer 에이전트 0.1 + coding-implementer 0.5 신설·갱신 → 6건 재배포 대기 |
 | poc-meal-recommender | `/Users/kakao/workplace-kakao/global/pasta-japan/work/poc-meal-recommender` | 2026-05-14 (POC 미니 세트 신규 배포: 스킬 8 + 커맨드 6 + rules 20) |
 | moneyball | `/Users/kakao/workplace-kakao/moneyball/server/moneyball` | **2026-07-07 신규 배포** (pasta-japan-server 7건 세트와 동일 구성): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0 (기존 네이티브 서브에이전트 대체, 백업: `.claude/backup/2026-07-07-forge-deploy/`) + `.claude/rules/11-git-workflow-convention.md` 신규. 기존 `skills/batch-schedule-audit/`(forge 비소유)는 유지 |
 
@@ -79,7 +83,11 @@
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
 | java-spring-coder | skill | 1.11 | 1.11 | **동기화** (2026-07-09 재배포: Hibernate Session 오염 3연타 방지 + @ConditionalOnBean 회피 + 캐시 pub-sub 확장 + 어노테이션 인터셉터) |
-| self-code-reviewer | skill | 1.11 | 1.11 | **동기화** (2026-07-09 재배포: @Profile 문법 AUTO FAIL + 광범위 catch 검출 + Session 오염 검출 + 입력 형식 검증) |
+| self-code-reviewer | skill | 1.11 | **2.0** | **재배포 필요** (2026-07-09 v2.0 슬림화: 관점 룰 3개 스킬로 완전 이관) |
+| java-secure-coding-reviewer | skill | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: KISA + OWASP + PII + 시크릿 + CVE) |
+| java-performance-reviewer | skill | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: N+1 + 캐시 + 트랜잭션 + 리소스) |
+| java-architecture-reviewer | skill | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: 4-Tier + Bean·Qualifier + 모듈 + pasta-rules) |
+| java-composite-reviewer | agent | - | **0.1** | **신규 배포 대기** (2026-07-09 신설: 4개 관점 리뷰 오케스트레이터) |
 | pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -103,7 +111,7 @@
 | acceptance-tester | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** (실전 전용 → forge 등록, 하네스 미작성) |
 | apidog-mock-api-generator | agent | 0.1 | 0.1 | **2026-05-19 신규 역수입** |
 | bug-analyzer | agent | 0.3 | 0.3 | **동기화** (2026-07-02 재배포: OAuth2 refresh 사각지대 카탈로그 3패턴 — Dexcom #594 사례) |
-| coding-implementer | agent | 0.4 | 0.4 | **동기화** (2026-07-02 재배포: 개발 사이클 오케스트레이터 격상 + Phase 강화) |
+| coding-implementer | agent | 0.4 | **0.5** | **재배포 필요** (2026-07-09 v0.5: Phase 3-4 위임 대상 java-composite-reviewer 에이전트로 교체) |
 | prd-plan-designer | agent | 1.0 | 1.0 | **동기화** (2026-07-02 재배포: v1.0 A안 격상 — PRD↔TDD Alignment 자동 검증자로 본질 차별화) |
 | safe-mass-rename | skill | 0.1 | 0.1 | **동기화** (2026-07-02 신규 배포: Freemium 리네임 사이클 반영 신설) |
 
