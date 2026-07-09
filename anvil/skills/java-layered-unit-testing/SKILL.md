@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
 description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.3"
-last-modified: "2026-05-21"
-changelog: "v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
+version: "1.4"
+last-modified: "2026-07-09"
+changelog: "v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -188,6 +188,42 @@ class MyRepositoryTest {
   private OAuth2AuthorizedClientManager mgr;
   ```
 
+- **(v1.4) application·domain 테스트에서 infra 구현체 직접 참조 금지** — `.infrastructure.`/`.persistence.`/`.cache.impl.` 등 infra 패키지 클래스를 도메인 계약(interface) 대신 테스트에서 직접 임포트·인스턴스화하지 말 것. domain 인터페이스의 **테스트용 Fake**를 `src/test/` 하위(`FakeXxxRepository`, `FakeXxxCache` 등)에 배치해 사용. Fake는 인메모리 컬렉션 기반 최소 구현이며, infra의 실제 로직(Redis 명령·JDBC 쿼리 등)을 재현하지 않는다. 이유: 계층 경계 위반 테스트는 infra 리팩터에 취약해 도메인 테스트가 쉽게 깨진다 (2026-07-07 `PricingQueryServiceTest`가 `InMemoryPricingRuleCache` 직접 참조 → `PricingRuleCache` 인터페이스 Fake로 전환된 사례).
+
+  ```java
+  // ❌ 금지 — application 테스트에서 infra 구현체 직접 참조
+  import com.x.pricing.infrastructure.cache.InMemoryPricingRuleCache;
+  ...
+  var cache = new InMemoryPricingRuleCache();
+  var service = new PricingQueryService(cache);
+
+  // ✅ 올바름 — domain 인터페이스의 Fake를 test/ 하위에 배치해 사용
+  // src/test/java/.../pricing/domain/FakePricingRuleCache.java
+  class FakePricingRuleCache implements PricingRuleCache { ... }  // 인메모리 최소 구현
+
+  // 테스트 본문
+  PricingRuleCache cache = new FakePricingRuleCache();
+  var service = new PricingQueryService(cache);
+  ```
+
+- **(v1.4) Mockito verify vs Spy 콜카운트 선택 기준** — `verify()`는 mock의 상호작용 확인용이고, Spy는 실제 로직을 실행시키면서 side-effect(예외 흡수, 재시도, 로깅 등)를 관찰할 때 사용한다. 발행 실패 흡수 로직처럼 실제 실행이 필요한 지점에서 `verify(mock, times(1))`로 검증하면 흡수 경로가 커버되지 않는다 (2026-07-07 `PricingChangePublisherTest`가 verify → Spy 콜카운트로 전환된 사례).
+
+  | 목적 | 선택 | 이유 |
+  |------|------|------|
+  | 협력 객체 호출 여부·순서·인자 검증 | `Mockito.verify(mock, ...)` | 실제 로직 실행 불필요, 상호작용만 확인 |
+  | 발행 실패 흡수·재시도·retry 등 side-effect 관찰 | `spy(realImpl)` + 콜카운트 필드 | 실제 로직이 돌아야 흡수/재시도 경로가 커버됨 |
+  | 부분 오버라이드가 필요한 실제 구현 | `spy` + `doReturn().when()` | mock으로 만들면 실제 로직이 전부 사라짐 |
+
+  ```java
+  // ❌ 부적합 — 발행 실패 흡수 로직인데 mock으로 verify만
+  verify(publisher, times(1)).publish(any());  // 흡수 경로 커버 못함
+
+  // ✅ 적합 — 실제 발행을 spy로 관찰
+  var publisher = spy(new PricingChangePublisher(redisTemplate));
+  service.invalidateAll();
+  assertThat(publisher.getPublishCallCount()).isEqualTo(1);
+  ```
+
 ### 반드시 수행
 1. Phase 0 사전 확인 (계층 식별 + 기존 패턴 확인)
 2. 계층에 맞는 테스트 방식 선택
@@ -217,6 +253,8 @@ class MyRepositoryTest {
 | 14 | R | **(v1.2) 기존 테스트 스타일 정렬** — 동일 패키지의 기존 테스트와 `@Nested` 그룹핑·`@DisplayName` 한국어 톤·AssertJ 사용 패턴이 일치하는가? |
 | 15 | B | **(v1.3) @MockBean 빈 이름 상수화** — `@MockBean(name = "...")` / `@Qualifier("...")` 매직 스트링 0건? 등록자 상수 import 사용? |
 | 16 | B | **(v1.3) enum 인라인 FQCN 확장** — 빌더 인자·메서드 호출에 `com.x.y.Z.ENUM_CONST` 형태 인라인 0건? (`.stateInfo(State.NORMAL)`로 정리) |
+| 17 | B | **(v1.4) infra 직접 참조 금지** — application·domain 계층 테스트에서 `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조 0건? domain 인터페이스 Fake 사용? |
+| 18 | R | **(v1.4) verify vs Spy 선택 근거** — side-effect(예외 흡수·재시도) 관찰이 필요한 지점에서 `verify()`가 아닌 Spy 콜카운트를 사용했는가? 순수 상호작용 검증에는 `verify()`를 유지? |
 
 **표기**: B = 블로커 (미충족 시 FAIL), R = 권장
 

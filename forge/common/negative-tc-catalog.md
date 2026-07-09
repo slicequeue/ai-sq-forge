@@ -519,6 +519,63 @@ forge 신규 등록 `acceptance-tester` agent v0.2 사례 반영. 2026-05-21 이
 
 ---
 
+### J. Hibernate Session / 트랜잭션 오염 카테고리 (2026-07-09 신설)
+
+2026-07-08 미션 뱃지 중복 발급 사고 (#633), 2026-07-07 Spring `@Profile` 표현식 문법 오류 2회 재발 (GLOB-566, GLOB-567) 반영. 한국 moneyball 저장소에서 이미 겪은 사고가 pasta에 재발한 케이스라 forge 룰 흡수 필수.
+
+#### J-1. unique violation catch 후 같은 세션 재조회
+
+**입력 예시**: "뱃지 중복 발급 방어하려고 `DataIntegrityViolationException` 잡은 다음, 같은 `EntityManager`로 기존 뱃지 재조회해서 이미 있으면 skip 하려고"
+
+**기대 동작**: unique violation 발생 시 세션이 오염됨(rollback-only 표시). 같은 세션으로 재조회하면 `AssertionFailure` → 상위 트랜잭션 전체 롤백. **catch 블록에서 예외 정보(SQL 에러코드 등)만 검사하고 세션 사용 중단**해야 함.
+
+**AUTO FAIL 트리거**:
+- catch 블록에서 같은 `EntityManager`/`Repository`/`JpaRepository` 메서드 호출
+- unique violation catch 후 `findBy...` / `existsBy...` 재조회 코드
+
+**출처**: 2026-07-08 commit 92cea95baa (PR #633) — 한국 moneyball 저장소에서 이미 겪은 사고 pasta 재발. 앞서 저장된 미션 달성 기록까지 함께 롤백되는 회귀 발생
+
+#### J-2. DataIntegrityViolationException 광범위 catch 삼킴
+
+**입력 예시**: "뱃지 저장 실패해도 사용자 흐름은 계속 진행돼야 하니까 `catch (DataIntegrityViolationException e) { log.warn(...); return; }` 로 삼킬게"
+
+**기대 동작**: `DataIntegrityViolationException`은 unique 위반뿐 아니라 NOT NULL, FK, CHECK 위반도 포함. 무조건 삼키면 실제 결함 은폐. **SQL 에러코드로 좁혀 판별**해야 함 (MySQL 1062 = ER_DUP_ENTRY).
+
+**AUTO FAIL 트리거**:
+- `catch (DataIntegrityViolationException e) { log; return; }` 패턴 (예외 종류 세분화 없음)
+- `SQLIntegrityConstraintViolationException` 무조건 삼킴
+- 예외 종류별 분기 없이 통째로 흡수
+
+**출처**: 2026-07-08 사고 #633 CodeRabbit 피드백 반영 — SQL 에러코드 1062만으로 중복 발급 판별로 좁힘
+
+#### J-3. 중복 검사가 필요한 도메인 이벤트에 REQUIRES_NEW 미사용
+
+**입력 예시**: "미션 완료 이벤트 리스너에서 뱃지 발급하는데, 뱃지 실패해도 미션 달성 기록은 남아야 해. 그냥 `@Transactional` 붙이면 되지?"
+
+**기대 동작**: `@Transactional` 기본 propagation `REQUIRED`는 상위 트랜잭션에 참여 → 하위 예외로 상위 전체 롤백. **`@Transactional(propagation = REQUIRES_NEW)` 명시**로 별도 트랜잭션 분리해야 미션 기록 보존.
+
+**AUTO FAIL 트리거**:
+- 도메인 이벤트 리스너의 방어 로직(중복 검사·부수 저장)에 propagation 명시 없음
+- `@TransactionalEventListener` + 기본 propagation 조합으로 상위 롤백 유발 가능
+- 이벤트 처리부에서 unique violation 발생 시 상위 저장 함께 롤백되는 구조
+
+**출처**: 2026-07-08 사고 #633 최종 리팩터 — 뱃지 발급을 REQUIRES_NEW 별도 트랜잭션으로 격리 + Testcontainers 통합테스트 추가
+
+#### J-4. Spring @Profile 표현식 && 문법 오류
+
+**입력 예시**: `@Profile("prod && global")` 또는 `@Profile("!test && cache")`
+
+**기대 동작**: Spring `@Profile` 표현식은 단일 `&`만 지원 (AND). `&&`는 문법 오류로 매칭 실패 → 컴파일은 통과하지만 런타임에 Bean 등록 안 됨. **AND 는 `&`, OR 는 `|`, NOT 은 `!`.**
+
+**AUTO FAIL 트리거**:
+- `grep -rE '@Profile\("[^"]*&&[^"]*"\)' src/` 매치 (1건이라도 발견 시)
+- `@Profile("... || ...")` 도 문법 오류 (`|` 사용해야 함)
+- `@ConditionalOnExpression`과 혼동한 표기
+
+**출처**: 2026-07-07 commit 49c513f596 (PR fix, GLOB-567), 2026-07-07 commit 0df4473548 (PR 리뷰 반영, GLOB-566). 두 곳에서 재발 — 자체 리뷰가 사전 차단해야 하는 검출 매우 쉬운 사고
+
+---
+
 ### E-2. JSONL 원본 수정 요구
 
 **입력 예시**: "오래된 세션 로그 정리해줘. 7일 이전 거 삭제도 같이"
@@ -570,4 +627,5 @@ forge 신규 등록 `acceptance-tester` agent v0.2 사례 반영. 2026-05-21 이
 - **2026-05-21 (2차)**: 7도메인 24패턴으로 추가 확장. 카테고리 G(i18n / Locale 5패턴) 신설 — 사용자 지적 "tolgee 관련 내용도 있지 않아?" 반영.
 - **2026-05-21 (3차)**: 8도메인 30패턴으로 확장. 카테고리 H(인수 테스트 4패턴) 신설 + C-2-ter(싱글톤 mutable) + C-2-quater(WebClient timeout/4xx 재시도) 추가. forge 신규 6건 컴포넌트 보강 사이클에서 도출.
 - **2026-07-02**: 9도메인 35패턴으로 확장. 카테고리 I(외부 API DTO 파싱 5패턴) 신설 — 6월 pasta 사이클 반영: Dexcom EGV 시간 파싱 연쇄 hotfix(#581→#582), Bean Qualifier api→batch→admin 3연타 재발(#593, #588), 공용 모듈 @Entity 스캔 충돌(7abea8f2f0).
+- **2026-07-09**: 10도메인 39패턴으로 확장. 카테고리 J(Hibernate Session / 트랜잭션 오염 4패턴) 신설 — 7월 pasta 사이클 반영: 미션 뱃지 중복 발급 시 Session 오염 회귀(#633, moneyball 재발), DataIntegrityViolationException 광범위 삼킴, 도메인 이벤트 REQUIRES_NEW 미사용, Spring @Profile 표현식 && 문법 오류 2회 재발(GLOB-566/567).
 - 향후: 신규 스킬 추가될 때마다 1패턴씩 누적 목표.

@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.10"
-last-modified: "2026-07-02"
-changelog: "v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
+version: "1.11"
+last-modified: "2026-07-09"
+changelog: "v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -80,6 +80,10 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 
 > **(v1.10) 공용 모듈에는 `@Entity` 두지 말 것**
 > 여러 애플리케이션 모듈(api, admin, batch 등)이 의존하는 공용 모듈에 `@Entity`를 두면, 소비 모듈의 `@EntityScan` 경계와 충돌해 기동 실패로 이어진다 (2026-07-01 admin 기동 실패 → `ServiceAccessPatternJpaEntity`를 `JdbcClient` 기반 Reader로 교체). 공용 모듈에서는 **JDBC 기반 read-only Repository** 또는 **인터페이스 + 각 애플리케이션 모듈의 구현체** 패턴을 사용한다.
+
+> **(v1.11) 설정 게이팅은 `@Profile` 선호, `@ConditionalOnBean` 회피**
+> 환경별 Config on/off는 `@Profile("!test")` 등 `@Profile` 기반으로 게이팅한다. `@ConditionalOnBean(RedisTemplate.class)` 같은 Bean 존재 조건은 Bean 로드 순서에 취약해, 순서 지정이 어려운 상황에서 사고 재현 가능 (2026-07-07 `PricingCacheRedisConfig` `@ConditionalOnBean` → `@Profile` 전환 사례).
+> `@ConditionalOnBean`을 써야 하는 경우는 **진짜 다른 Bean의 존재/부재에 의존하는 라이브러리성 auto-configuration**일 때만. 그 외에는 `@Profile`이 안전.
 
 ---
 
@@ -482,6 +486,13 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
   - 기동 시 워밍업 + **임계값 검증**(카운트가 예상보다 적으면 경보 이벤트 발행). WarmupRunner가 운영 모드를 인식해 알람 강도 조정
   - 대상: 접근 제어 패턴, 요금제·플랜 상태, 기능 플래그 등 **틀리면 무료 개방·과금 누락**으로 이어지는 정책성 데이터
 
+  **(v1.11) Redis pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수** — 3층 폴백의 진화형. 어드민 CRUD가 다른 인스턴스의 로컬 캐시까지 즉시 무효화하는 요구에 대응.
+  - **커밋 후 발행**: pub-sub 발행은 트랜잭션 커밋 후 실행 (커밋 전 발행 금지 — 상위 롤백 시 잘못된 무효화 발생). `@TransactionalEventListener(phase = AFTER_COMMIT)` 또는 커밋 확인 후 명시적 호출
+  - **발행 실패 흡수**: Redis 발행 실패 시 로그 후 무시 → 어드민 CRUD API 자체는 성공 유지. 원본 데이터는 이미 커밋되어 있고, 폴링 백스톱이 자가 치유
+  - **폴링 백스톱**: pub-sub이 놓친 리스너를 위해 30초~1분 저빈도 폴링으로 캐시 재작성. pub-sub 실패가 곧 데이터 유실이 되지 않게 하는 안전망
+  - **발행 실패 로그 레벨**: 초회 WARN → 연속 실패 ERROR + 스택트레이스 (v1.10 예외 로깅 표준 적용)
+  - 2026-07-07 GLOB-566 `PricingChangePublisher`/`PricingCacheInvalidationListener` 사례
+
 - **(v1.10) 예외 로깅 표준** — JsonTemplateLayout 사용 시 스택트레이스가 절단되어 근본 원인을 못 보는 사고 방지.
   ```yaml
   # ✅ 올바름 (2026-06-30 #625 사례)
@@ -493,6 +504,66 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
   - JsonTemplateLayout 사용 시 `exceptionRootCause` 전용 필드 필수 (`${json:exception:rootCauseFirst}` 등)
   - `maxStringLength`는 **32KB 이상** — 16KB는 스택 절단으로 원인 못 보는 사고 이력
   - 로그 본문 PII(userId 등) 금지, sensorId·eventId·orderId 같은 안전한 비즈니스 식별자만 (기존 로깅 규칙 재확인)
+
+- **(v1.11-A) unique/제약 위반 catch 후 같은 Hibernate Session 재조회 절대 금지** — `DataIntegrityViolationException` 등 제약 위반 예외가 던져진 순간 Session은 이미 rollback-only 상태다. 같은 Session/EntityManager로 재조회하면 `AssertionFailure`가 튀며, 앞서 저장된 다른 엔티티(예: 미션 달성 기록)까지 상위 트랜잭션과 함께 롤백된다. **예외는 최상단에서만 잡고 세션에서 이탈**하는 게 원칙.
+  ```java
+  // ❌ 금지 (2026-07-08 #633 미션 뱃지 사고, 한국 moneyball 저장소에서 이미 겪은 사고의 재발)
+  try {
+    session.persist(badge);
+  } catch (DataIntegrityViolationException e) {
+    Badge existing = session.find(Badge.class, key);  // ← Session 오염 상태에서 조회 → AssertionFailure
+    return existing;
+  }
+
+  // ✅ 올바름 — 세션 이탈, 필요 시 상위에서 새 트랜잭션으로 재조회
+  try {
+    session.persist(badge);
+  } catch (DataIntegrityViolationException e) {
+    if (isDuplicateKey(e)) {                          // (v1.11-B) SQL 에러코드로 좁혀 판별
+      log.info("Badge already exists, skipping: {}", key);
+      return;                                         // 세션 이탈
+    }
+    throw e;
+  }
+  ```
+
+- **(v1.11-B) `DataIntegrityViolationException` 광범위 catch 금지, SQL 에러코드로 좁혀 판별** — `DataIntegrityViolationException`을 무조건 삼키면 unique 위반뿐 아니라 **NOT NULL / FK 위반 같은 실제 결함도 은폐**된다. 반드시 SQL 에러코드로 좁혀 판별.
+  ```java
+  // ✅ 올바름 — MySQL 중복 키(1062=ER_DUP_ENTRY)만 좁혀 판별
+  static boolean isDuplicateKey(DataIntegrityViolationException e) {
+    Throwable cause = e.getMostSpecificCause();
+    if (cause instanceof SQLIntegrityConstraintViolationException sqlEx) {
+      return sqlEx.getErrorCode() == 1062;   // ER_DUP_ENTRY
+    }
+    return false;
+  }
+  ```
+  다른 DB를 쓰면 해당 DB의 SQLState/에러코드로 판별. 판별 실패면 `throw`로 전파해서 실제 결함이 로그에 남게 한다.
+
+- **(v1.11-C) 방어 조회·중복 검사가 필요한 도메인 이벤트 처리는 `REQUIRES_NEW` 별도 트랜잭션 격리** — 뱃지 발급·감사 로그처럼 상위 트랜잭션 롤백과 무관하게 커밋되어야 하는 처리는 별도 트랜잭션으로 격리한다. 상위 롤백이 이 처리까지 감아버리지 않게. (v1.7 TransactionTemplate 전파 명시 의무의 자연스러운 연장선).
+  - 대상: 뱃지 발급, 미션 달성 이력, 감사 로그, 알림 큐 enqueue 실패 마킹 등
+  - 구현: `@Transactional(propagation = Propagation.REQUIRES_NEW)` 또는 `TransactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW)`
+  - 2026-07-08 #633 사례에서 뱃지 발급을 별도 트랜잭션으로 격리 + Testcontainers 통합테스트 추가로 재발 방지
+
+- **(v1.11) 어노테이션 + 인터셉터 조합 패턴** — 인터셉터는 전체 호출 경로에 걸리지만, `HandlerMethod.getMethodAnnotation(...)`으로 마킹된 API에만 로직 적용.
+  ```java
+  // shared 모듈 — 어노테이션 정의
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.RUNTIME)
+  public @interface ApiGroup { ApiGroupType value(); }
+
+  // api 모듈 — 인터셉터
+  public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+    if (!(handler instanceof HandlerMethod hm)) return true;
+    ApiGroup marker = hm.getMethodAnnotation(ApiGroup.class);
+    if (marker == null) return true;                 // 마킹 안 된 API는 통과
+    return pricingGate.check(marker.value(), req);
+  }
+  ```
+  **규칙**:
+  - 어노테이션은 **shared 모듈**에 정의(모든 모듈에서 부착 가능), 인터셉터·게이트 로직은 **api 모듈**에 배치 (4-Tier 유지)
+  - 어노테이션 파라미터는 **enum** 사용, 문자열 리터럴 금지 — 리네임 시 컴파일러 지원 확보 (safe-mass-rename 스킬과 연계)
+  - 2026-07-07 GLOB-549 `@ApiGroup` 유료화 인터셉터 사례
 
 ### 소프트 가드레일
 
@@ -548,6 +619,12 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 33. [ ] **(v1.10) 신규 패키지 4-Tier 첫 커밋 강제**: 새 도메인·기능 패키지가 `domain/application/infrastructure` 폴더를 **첫 커밋에** 포함하는가? 계층 없이 만들고 후속 재편으로 미루지 않았는가?
 34. [ ] **(v1.10) 정책성 캐시 3층 폴백**: 이용권한·요금제·기능 플래그 같은 정책성 데이터 캐시가 Redis → DB → 하드코딩 3층 폴백이고 어느 계층도 예외를 상위 전파하지 않는가? CRUD write-through가 유형별 전체 재작성인가? 기동 워밍업 + 임계값 경보를 포함하는가?
 35. [ ] **(v1.10) 예외 로깅**: log4j2 설정에 `exceptionRootCause` 전용 필드 + `maxStringLength ≥ 32768`이 반영되어 있는가? 로그 본문에 userId 등 PII를 넣지 않았는가?
+36. [ ] **(v1.11) Hibernate Session 오염 방지**: 신규/수정 코드에 `DataIntegrityViolationException` 등 제약 위반 catch가 있으면, catch 블록 안에서 같은 Session/EntityManager로 재조회하지 않는가? (예외 catch 이후에는 세션 이탈)
+37. [ ] **(v1.11) 예외 좁혀 판별**: `DataIntegrityViolationException`을 조건 없이 삼키지 않고 `SQLIntegrityConstraintViolationException` errorCode(예: MySQL 1062)로 좁혀 판별하는가? 판별 실패는 `throw`로 전파?
+38. [ ] **(v1.11) 방어 조회 트랜잭션 격리**: 뱃지 발급·미션 이력·감사 로그 같은 상위 롤백과 독립 커밋 필요 처리에 `REQUIRES_NEW` 격리가 적용되어 있는가?
+39. [ ] **(v1.11) 설정 게이팅 @Profile 선호**: 신규 `@Configuration`이 환경별 on/off라면 `@Profile`을 썼는가? `@ConditionalOnBean`을 썼다면 진짜 auto-configuration 요건인지 근거 명시?
+40. [ ] **(v1.11) 캐시 pub-sub 무효화 안전성**: pub-sub 발행이 트랜잭션 커밋 후에 실행되고(커밋 전 발행 아님), 발행 실패는 흡수되며, 폴링 백스톱이 붙어 있는가?
+41. [ ] **(v1.11) 어노테이션+인터셉터 배치**: 마킹 어노테이션이 shared 모듈에 있고 인터셉터가 api 모듈에 있는가? 어노테이션 파라미터가 enum(문자열 리터럴 금지)인가?
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 위반/개선점을 보고하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "1.10"
-last-modified: "2026-07-02"
-changelog: "v1.10 — 2026-07-02 6월 pasta 사고 3건 흡수: (1) Bean Qualifier cross-module 검증 — 3회 재발(5월 api → 6/16 batch·batch-app #593 → 6/19 admin #588) 방지, 다른 모듈이 같은 상수 참조하는데 미준수 케이스 AUTO FAIL 확장. (2) 인터페이스 구현체 모듈별 등록 확인 — #597 UserDiabetesTypeService 누락 기동 실패 방지. (3) 임시 진단 로그 후속 제거 강제 — #616 대시보드 403 진단 로그 부채화 방지. | v1.9 — 2026-05-21 이번 주 추가 패턴: (1) catch 블록 부가 주석 검출 — 'ACL 변환 실패 시 빈 리스트로 fallback' 같은 부가 설명 주석은 log 메시지로 흡수, 주석은 제거 (commit f3b85a79d0 KISA 리뷰 반영 사례). (2) @Service 싱글톤 mutable instance field 검출 (KISA Medium 진단). (3) WebClient 외부 호출 timeout 누락 / 재시도 필터 4xx 포함 위험 검출. (4) Soft-delete + UNIQUE 충돌 패턴. | v1.8 — Locale.ROOT 누락 검출. v1.7 — Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6 — blueprint v2.0"
+version: "1.11"
+last-modified: "2026-07-09"
+changelog: "v1.11 — 2026-07-09 7월 pasta 사고 4건 검출 룰: (1) Spring @Profile 문법 &&→& AUTO FAIL — GLOB-566 PricingCacheRedisConfig / GLOB-567 PricingAdminConfiguration 두 곳 동일 오류 재발(#49c513f596, #0df4473548). (2) DataIntegrityViolationException 광범위 catch 검출 — 미션 뱃지 사고(#633) CodeRabbit 피드백 반영, SQL 에러코드 1062(ER_DUP_ENTRY)로 좁혀 판별 강제. (3) Hibernate Session 오염 재조회 검출 — unique violation catch 이후 같은 세션 재조회 AUTO FAIL, 재조회 필요 시 REQUIRES_NEW 명시 요구(java-spring-coder v1.11-A와 짝). (4) 입력 형식 검증 누락 검출 — #623 사번 형식 검증 누락 재발 방지, @Pattern/@Email/@Size 어노테이션 존재 + 4로케일 메시지 정의 확인. | v1.10 — 2026-07-02 6월 pasta 사고 3건 흡수: (1) Bean Qualifier cross-module 검증 — 3회 재발(5월 api → 6/16 batch·batch-app #593 → 6/19 admin #588) 방지, 다른 모듈이 같은 상수 참조하는데 미준수 케이스 AUTO FAIL 확장. (2) 인터페이스 구현체 모듈별 등록 확인 — #597 UserDiabetesTypeService 누락 기동 실패 방지. (3) 임시 진단 로그 후속 제거 강제 — #616 대시보드 403 진단 로그 부채화 방지. | v1.9 — 2026-05-21 이번 주 추가 패턴: (1) catch 블록 부가 주석 검출 — 'ACL 변환 실패 시 빈 리스트로 fallback' 같은 부가 설명 주석은 log 메시지로 흡수, 주석은 제거 (commit f3b85a79d0 KISA 리뷰 반영 사례). (2) @Service 싱글톤 mutable instance field 검출 (KISA Medium 진단). (3) WebClient 외부 호출 timeout 누락 / 재시도 필터 4xx 포함 위험 검출. (4) Soft-delete + UNIQUE 충돌 패턴. | v1.8 — Locale.ROOT 누락 검출. v1.7 — Bean 매직 스트링 + KISA 시큐어코딩 섹션. v1.6 — blueprint v2.0"
 ---
 
 # self-code-reviewer — 자체 코드 리뷰 스킬
@@ -301,6 +301,68 @@ grep -rn "DEXCOM_AUTHORIZED_CLIENT_MANAGER" --include="*.java"
 
 **False positive 회피**: `log.trace/debug` 로 남긴 정상 디버깅 로그 중 "임시" 키워드 미포함은 skip.
 
+#### (v1.11) Spring `@Profile` 문법 오류 `&&` → `&` — **AUTO FAIL**
+
+2026-07-07 GLOB-566 PricingCacheRedisConfig / GLOB-567 PricingAdminConfiguration 두 곳에서 `&&` 사용으로 동일 실수 재발 (#49c513f596, #0df4473548). Spring `@Profile`은 표현식 문법상 **단일 `&`만 지원** — `&&`는 잘못이며 프로파일 매칭 실패로 Bean이 로드되지 않는다. `||`(or)는 지원.
+
+| 패턴 | 검출 | 등급 |
+|------|------|------|
+| `@Profile("... && ...")` | `grep -rn '@Profile.*&&' --include='*.java' src/` 매칭 시 | **AUTO FAIL** |
+
+**허용 예**: `@Profile("dev")`, `@Profile("!prod")`, `@Profile("dev & !test")`, `@Profile("dev | stage")`
+
+**보고 형식**: `{파일:라인} @Profile 표현식에 && 사용. Spring 문법상 단일 &만 지원. dev & !test 형태로 정정 필요.`
+
+#### (v1.11) DataIntegrityViolationException 광범위 catch 검출
+
+2026-07-08 미션 뱃지 사고(#633) CodeRabbit 피드백 반영. `DataIntegrityViolationException`을 무조건 catch로 삼키면 unique 위반이 아닌 NOT NULL/FK 위반 같은 실제 결함도 은폐된다. SQL 에러코드로 좁혀 판별해야 한다.
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| 광범위 catch + 삼킴 | `catch\s*\(\s*(DataIntegrityViolationException\|ConstraintViolationException\|PersistenceException)` catch 블록에서 로깅만 하고 반환 | SQL 에러코드로 좁혀 판별 |
+
+**통과 예**:
+```java
+} catch (DataIntegrityViolationException e) {
+  if (e.getCause() instanceof SQLException sql && sql.getErrorCode() == 1062) {
+    // ER_DUP_ENTRY만 흡수
+    return existing;
+  }
+  throw e;  // 나머지는 재발
+}
+```
+
+**검출 시 등급**: 필수 수정. "구체적 SQL 에러코드(1062=ER_DUP_ENTRY 등)로 좁혀 판별 필요" 보고.
+
+**False positive 회피**: catch 블록에서 이미 `getErrorCode()` / `getSQLState()` / `instanceof SQLException` 형태로 좁혀 판별하면 skip.
+
+#### (v1.11) Hibernate Session 오염 재조회 검출 — **AUTO FAIL 후보**
+
+2026-07-08 미션 뱃지 사고(#633). unique constraint violation catch 이후 **같은 Session/EntityManager로 재조회**하면 `AssertionFailure`가 발생하고 상위 트랜잭션 롤백까지 유발한다. 한국(moneyball) 저장소에서 이미 검증된 사고 패턴이 pasta에 재발.
+
+| 패턴 | 검출 | 등급 |
+|------|------|------|
+| unique violation catch 안 재조회 | `catch\s*\(\s*(DataIntegrityViolationException\|ConstraintViolationException\|PersistenceException)` 블록 안에 `entityManager\.\|session\.\|.*Repository\.\(find\|get\|exists\)` 등 조회 호출 | **AUTO FAIL** — Session 오염 |
+
+**권장 수정**: 예외 처리는 최상단(트랜잭션 경계 밖)에서만. catch 블록 내 재조회 필요 시 **`@Transactional(propagation = REQUIRES_NEW)` 별도 트랜잭션 명시** 요구 (`java-spring-coder` v1.11-A 하드 가드레일 정본 참조).
+
+**보고 형식**: `{파일:라인} unique violation catch 안에서 {메서드} 재조회. Session 오염 회귀(#633 재발 패턴). REQUIRES_NEW 별도 트랜잭션으로 격리하거나 catch를 상위로 이동.`
+
+**False positive 회피**: catch 블록 안에서 조회 없이 `throw`/`return`/로깅만 하면 skip. `@Transactional(propagation = REQUIRES_NEW)`가 재조회 메서드에 명시되어 있으면 skip.
+
+#### (v1.11) 입력 형식 검증 누락 검출
+
+2026-07-08 병원/그룹 관리자 등록 사고(#623). 사번 형식 검증 어노테이션이 컨트롤러 DTO에 누락되어 잘못된 데이터 통과 → 사후 hotfix. Validator 클래스에 검증 추가.
+
+| 패턴 | 검출 | 권장 수정 |
+|------|------|----------|
+| 형식 제약 명확한 필드에 검증 어노테이션 누락 | `@RequestParam`/`@RequestBody` DTO의 필드 중 이름이 `employeeId`/`phoneNumber`/`email`/`businessNumber`/`socialSecurityNumber` 등이면서 `@Pattern`/`@Email`/`@Size` 없음 | 프로젝트 표준 formatting 상수(`EmployeeIdFormat` 등) 참조하는 검증 어노테이션 추가 |
+| 검증 실패 메시지 4로케일 미정의 | `@Pattern(message="{key}")` 등의 message 키가 `message-shared*.properties` 4파일(default/ko/en/ja)에 모두 정의되어 있는지 grep | 누락 로케일 파일 추가 (tolgee 스킬 연계) |
+
+**검사 절차**: 신규 컨트롤러/DTO 파일에서 도메인 특화 식별자 필드명 목록 grep → 검증 어노테이션 존재 여부 확인 → 프로젝트에 `EmployeeIdFormat`/`SocialSecurityNumberFormat` 등 formatting 상수가 있으면 참조하는지 확인.
+
+**False positive 회피**: 내부용 DTO(외부 입력 아님), 배치 처리용 파라미터는 skip. 컨트롤러 진입점 DTO만 대상.
+
 #### (v1.8) i18n / Locale 함정 검사
 
 2026-05-15 commit a1a425ecb2 (CodeRabbit 지적) 반영. 변경 파일에서 다음 패턴 검출:
@@ -412,6 +474,10 @@ grep -rn "DEXCOM_AUTHORIZED_CLIENT_MANAGER" --include="*.java"
 21. [ ] **(v1.10) Bean Qualifier cross-module**: 변경 파일에 새 `@Bean` 또는 `@Qualifier(CONST)`가 있으면, 해당 상수를 참조하는 모든 모듈의 `@Bean(CONST)` 정의 존재 여부를 grep으로 확인했는가? 하나라도 미준수면 AUTO FAIL 보고?
 22. [ ] **(v1.10) 인터페이스 구현체 모듈 등록**: 새 인터페이스 주입 코드가 있으면, 해당 모듈 스캔 경로에 구현체가 존재하는지 grep했는가? 없으면 필수 수정 보고?
 23. [ ] **(v1.10) 임시 진단 로그**: 변경된 로그 문구 또는 근처 주석에 "임시/진단/temp/diagnostic/for debug" 키워드 있으면 TODO+이슈 링크 강제했는가? 이전 커밋의 임시 로그 잔존 여부도 `git log -S` 로 확인?
+24. [ ] **(v1.11) `@Profile` && 문법**: 변경 파일에서 `grep -rn '@Profile.*&&'` 로 매칭 검사했는가? Spring은 단일 `&`만 지원 — 매칭 시 AUTO FAIL?
+25. [ ] **(v1.11) DataIntegrityViolationException 광범위 catch**: `DataIntegrityViolationException`/`ConstraintViolationException`/`PersistenceException` 를 catch해서 로깅만 하고 삼키는 코드가 있는가? SQL 에러코드(1062 등)로 좁혀 판별하는지 확인?
+26. [ ] **(v1.11) Hibernate Session 오염**: unique/제약 위반 catch 블록 안에서 조회 호출(`entityManager.find`, `repository.findBy...`)이 있으면 AUTO FAIL 보고했는가? REQUIRES_NEW 별도 트랜잭션 격리 요구?
+27. [ ] **(v1.11) 입력 형식 검증 누락**: 컨트롤러 DTO에 도메인 특화 식별자(사번·전화번호·이메일·사업자번호 등) 필드가 있으면 `@Pattern`/`@Email`/`@Size` 어노테이션 존재 확인? 검증 실패 메시지가 `message-shared*.properties` 4로케일에 모두 정의되어 있는가?
 
 ---
 

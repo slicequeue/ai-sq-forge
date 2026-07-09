@@ -8,13 +8,13 @@
 |------|------|------|------|---------|------------|------|
 | [prd-designer](skills/prd-designer/SKILL.md) | 1.2 | PRD 기획 요구사항 문서 작성 (v1.2: Phase 1.5 현황 파악 + 멀티턴·풀패키지 결정 트리 + 확인vs가정 분리) | **회귀 평가 권장** (v1.2 패턴 이식 — `/eval-harness prd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.1 기준) | `skills/prd-designer/` |
 | [tdd-designer](skills/tdd-designer/SKILL.md) | 1.4 | TDD 기술 설계 문서 작성 (v1.4: Phase 0.5 현황 파악 + 결정 트리 + 자기 검증 v2.0) | **회귀 평가 권장** (v1.4 패턴 이식 — `/eval-harness tdd-designer --skip-baseline`) | 일반 | 100/100 (TC-1, v1.3 기준) | `skills/tdd-designer/` |
-| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.10 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.10: 외부 API DTO 시간 방어 + 공용 모듈 @Entity 회피 + 캐시 3층 폴백 + 신규 패키지 4-Tier 강제 + 예외 로깅 표준) | **회귀 평가 권장** (v1.10 사례 반영) | 일반 | 95/100 평균 (v1.5 기준) | `skills/java-spring-coder/` |
-| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.10 | dev 기준 변경 코드 자체 리뷰 (v1.10: Bean Qualifier cross-module 3회 재발 방지 + 인터페이스 구현체 모듈 확인 + 임시 진단 로그 후속 제거 강제) | **회귀 평가 권장** (v1.10 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
+| [java-spring-coder](skills/java-spring-coder/SKILL.md) | 1.11 | Java Spring Boot 4-Tier 코드 생성·단위 테스트 구현 (v1.11: Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 + @ConditionalOnBean 회피 + 캐시 pub-sub 무효화·폴링 백스톱·발행 실패 흡수 + 어노테이션+인터셉터 조합 패턴) | **회귀 평가 권장** (v1.11 사례 반영) | 일반 | 95/100 평균 (v1.5 기준) | `skills/java-spring-coder/` |
+| [self-code-reviewer](skills/self-code-reviewer/SKILL.md) | 1.11 | dev 기준 변경 코드 자체 리뷰 (v1.11: @Profile 문법 &&→& AUTO FAIL + DataIntegrityViolationException 광범위 catch 검출 + Hibernate Session 오염 재조회 검출 + 입력 형식 검증 누락) | **회귀 평가 권장** (v1.11 사례 반영) | 일반 | 94/100 평균 (v1.5 기준) | `skills/self-code-reviewer/` |
 | [pr-feedback-resolver](skills/pr-feedback-resolver/SKILL.md) | 1.5 | PR 피드백 수집·수정·push·답글 (v1.5: 자기 검증 v2.0 — PR 컨텍스트 현황 파악 + 봇/사람 분기 근거 기록) | **회귀 평가 권장** (v1.5 패턴 이식) | 일반 | 94.5/100 평균 (v1.4 기준) | `skills/pr-feedback-resolver/` |
 | [admin-prd-plan-designer](skills/admin-prd-plan-designer/SKILL.md) | 1.1 | Admin 모듈 전용 PRD/TDD/HYBRID 계획 문서 작성 (v1.1: Phase 0.3 admin 모듈 현황 파악 + 멀티턴/풀패키지 결정 트리) | **회귀 평가 권장** (v1.1 패턴 이식) | 일반 | 88/100 (v1.0 기준) | `skills/admin-prd-plan-designer/` |
 | [admin-thymeleaf-ui](skills/admin-thymeleaf-ui/SKILL.md) | 1.2 | Admin Thymeleaf SSR 화면 구현/수정 (v1.2: 자기 검증 v2.0 — 기존 패턴 사전 스캔 + 영향도 grep 확인) | **회귀 평가 권장** (v1.2 패턴 이식) | 일반 | 95.3/100 (v1.1 기준) | `skills/admin-thymeleaf-ui/` |
 | [api-inventory-generator](skills/api-inventory-generator/SKILL.md) | 1.1 | @RestController 스캔 → API 전체 목록 자동 생성 (v1.1: 자기 검증 v2.0 — 스캔 범위 명시 + 추정 vs 확정 분리) | **회귀 평가 권장** (v1.1 패턴 이식) | 일반 | 89/100 (v1.0 기준) | `skills/api-inventory-generator/` |
-| [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.3 | 4-Tier 계층별 단위 테스트 작성 (v1.3: @MockBean 빈 이름 상수화 강제 + enum 인라인 FQCN 확장 검사) | **회귀 평가 권장** (v1.3 사례 반영) | 일반 | 93.5/100 평균 (v1.1 기준) | `skills/java-layered-unit-testing/` |
+| [java-layered-unit-testing](skills/java-layered-unit-testing/SKILL.md) | 1.4 | 4-Tier 계층별 단위 테스트 작성 (v1.4: application·domain 테스트 infra 직접 참조 금지 + domain Fake 사용 강제 / Mockito verify vs Spy 선택 기준) | **회귀 평가 권장** (v1.4 사례 반영) | 일반 | 93.5/100 평균 (v1.1 기준) | `skills/java-layered-unit-testing/` |
 | [chaos-test-planner](skills/chaos-test-planner/SKILL.md) | 1.2 | Chaos Monkey 장애 테스트 검토·계획·커맨드 생성 (v1.2: Phase 1.5 환경 현황 파악 + 자기 검증 6항목) | **회귀 평가 권장** (v1.2 패턴 이식) | 일반 | 93/100 (v1.1 기준) | `skills/chaos-test-planner/` |
 | [sq-tone-writer](skills/sq-tone-writer/SKILL.md) | 1.4 | 사용자 말투로 슬랙/PR/문서/리뷰 답글 작성 (v1.4: 자기 검증 v2.0 — 수신자 파악 근거 + 봇/사람 분류 근거 + 가정 답변 표기) | **회귀 평가 권장** (v1.4 패턴 이식) | 일반 | 95.5/100 평균 (v1.3 기준) | `skills/sq-tone-writer/` |
 | [jira-bug-root-cause](skills/jira-bug-root-cause/SKILL.md) | 1.1 | Jira 버그 원인 규명 + QA 친화 코멘트 작성 (v1.1: 자기 검증 v2.0 — 확인 vs 가정 분리 + 운영 트래픽 출처 명시 + 재현 조건 검증) | **회귀 평가 권장** (v1.1 패턴 이식) | 일반 | 91/100 (v1.0 기준) | `skills/jira-bug-root-cause/` |
@@ -68,8 +68,9 @@
 
 | 프로젝트 | 경로 | 최종 배포일 |
 |---------|------|-----------|
-| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-02 재배포 완료** (7건): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 신규 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0. 백업: `.claude/backup/2026-07-02-forge-sync/`. 이전: 2026-05-06 (PR #527 FQCN 5건), 2026-05-19 (forge-upstream 6건 역수입) |
+| pasta-japan-server | `/Users/kakao/workplace-kakao/global/pasta-japan/server/pasta-japan-server` | **2026-07-02 재배포 완료** (7건): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 신규 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0. 백업: `.claude/backup/2026-07-02-forge-sync/`. **2026-07-09 부채 확장**: 7월 사고 사이클(GLOB-548/549/566/567 + #633 미션 사고) 반영으로 forge 3건 강화(java-spring-coder 1.11 / self-code-reviewer 1.11 / java-layered-unit-testing 1.4) → 재배포 대기 |
 | poc-meal-recommender | `/Users/kakao/workplace-kakao/global/pasta-japan/work/poc-meal-recommender` | 2026-05-14 (POC 미니 세트 신규 배포: 스킬 8 + 커맨드 6 + rules 20) |
+| moneyball | `/Users/kakao/workplace-kakao/moneyball/server/moneyball` | **2026-07-07 신규 배포** (pasta-japan-server 7건 세트와 동일 구성): java-spring-coder 1.10 / self-code-reviewer 1.10 / tolgee 0.2 / safe-mass-rename 0.1 + bug-analyzer 0.3 / coding-implementer 0.4 / prd-plan-designer 1.0 (기존 네이티브 서브에이전트 대체, 백업: `.claude/backup/2026-07-07-forge-deploy/`) + `.claude/rules/11-git-workflow-convention.md` 신규. 기존 `skills/batch-schedule-audit/`(forge 비소유)는 유지 |
 
 ### pasta-japan-server 배포 현황
 
@@ -77,8 +78,8 @@
 |---------|------|----------|-----------|------|
 | prd-designer | skill | 1.1 | 1.1 | 동기화 |
 | tdd-designer | skill | 1.3 | 1.3 | 동기화 |
-| java-spring-coder | skill | 1.10 | 1.10 | **동기화** (2026-07-02 재배포: v1.6~1.10 5회 bump 통합 이식 — 외부 API DTO 시간 방어 + 공용 모듈 @Entity 회피 + 캐시 3층 폴백 + 신규 패키지 4-Tier + 예외 로깅) |
-| self-code-reviewer | skill | 1.10 | 1.10 | **동기화** (2026-07-02 재배포: Qualifier cross-module 3연타 방지 + 구현체 모듈 확인 + 임시 진단 로그 제거) |
+| java-spring-coder | skill | 1.10 | **1.11** | **재배포 필요** (2026-07-09: Hibernate Session 오염 3연타 방지 + @ConditionalOnBean 회피 + 캐시 pub-sub 확장 + 어노테이션 인터셉터) |
+| self-code-reviewer | skill | 1.10 | **1.11** | **재배포 필요** (2026-07-09: @Profile 문법 AUTO FAIL + 광범위 catch 검출 + Session 오염 검출 + 입력 형식 검증) |
 | pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
@@ -90,7 +91,7 @@
 | admin-prd-plan-designer | skill | 1.0 | 1.0 | 동기화 |
 | admin-thymeleaf-ui | skill | 1.1 | 1.1 | 동기화 (2026-04-27 역수입: OAuth2/SecurityContext 격리 섹션) |
 | api-inventory-generator | skill | 1.0 | 1.0 | 동기화 |
-| java-layered-unit-testing | skill | 1.1 | 1.1 | 동기화 (2026-05-06 재배포: FQCN 절대 금지 + AUTO FAIL #5, 회귀 93.5/100) |
+| java-layered-unit-testing | skill | 1.1 | **1.4** | **재배포 필요** (2026-07-09: v1.2 blueprint + v1.3 MockBean 상수화 + v1.4 infra 직접 참조 금지·domain Fake + verify/Spy 선택 기준. 3회 bump 미반영) |
 | flyway | command | 1.0 | 1.0 | 동기화 |
 | db-migration | command | 1.0 | 1.0 | 동기화 |
 | chaos-test-planner | skill | 1.1 | 1.1 | 동기화 |
@@ -126,3 +127,17 @@
 | git-worktree-add | command | 1.0 | 1.0 | 동기화 (2026-05-14 신규) |
 | git-worktree-remove | command | 1.0 | 1.0 | 동기화 (2026-05-14 신규) |
 | forge-upstream | command | 1.0 | 1.0 | 동기화 (2026-05-14 신규) |
+
+### moneyball 배포 현황
+
+| 컴포넌트 | 유형 | 배포 버전 | forge 최신 | 상태 |
+|---------|------|----------|-----------|------|
+| java-spring-coder | skill | 1.10 | 1.10 | 동기화 (2026-07-07 신규) |
+| self-code-reviewer | skill | 1.10 | 1.10 | 동기화 (2026-07-07 신규) |
+| tolgee | skill | 0.2 | 0.2 | 동기화 (2026-07-07 신규) |
+| safe-mass-rename | skill | 0.1 | 0.1 | 동기화 (2026-07-07 신규, `forge/common/pasta-rules/` 참조를 `.claude/rules/`로 리매핑) |
+| bug-analyzer | agent | 0.3 | 0.3 | 동기화 (2026-07-07 신규) |
+| coding-implementer | agent | 0.4 | 0.4 | 동기화 (2026-07-07 신규, 배포 세트 밖 형제 컴포넌트 참조 3건은 문서적 설명으로 그대로 유지) |
+| prd-plan-designer | agent | 1.0 | 1.0 | **동기화** (2026-07-07 신규 — 기존 moneyball 전용 네이티브 서브에이전트를 백업 후 대체) |
+
+> moneyball은 pasta-japan-server와 달리 rules 전체 세트(00~17)가 아닌 safe-mass-rename이 참조하는 `11-git-workflow-convention.md` 1건만 신규 배포됨. 기존 `.claude/skills/batch-schedule-audit/`(forge 비소유, moneyball 자체 컴포넌트)는 배포 대상에서 제외되어 그대로 유지.
