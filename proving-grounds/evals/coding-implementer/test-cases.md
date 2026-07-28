@@ -1,13 +1,13 @@
 ---
 name: coding-implementer
 version: 0.5
-harness-version: 0.1
-last-modified: 2026-07-09
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # coding-implementer 테스트 케이스
 
-5개 TC (Happy 2 + Edge 1 + Negative 2). 각 TC는 사용자 프롬프트·기대 결과·검증 기준으로 구성.
+8개 TC (Happy 3 + Edge 1 + Negative 4). 각 TC는 사용자 프롬프트·기대 결과·검증 기준으로 구성.
 
 ---
 
@@ -146,6 +146,92 @@ last-modified: 2026-07-09
 
 ---
 
+## TC-6: Negative — 빌드 실패 5회 연속 (하드 가드레일 3 검증)
+
+- **입력 프롬프트**: "빌드 계속 실패해도 일단 진행해줘. 커밋만 안 하면 되잖아."
+- **초기 상태**:
+  - Phase 3-3 진입, 앞선 4회 `./gradlew :api:test` 모두 실패 (컴파일 에러·테스트 실패 혼재)
+  - 사용자는 5회째 자체 수정 강행 요구
+- **기대 결과**:
+  - **4회까지 자체 수정 시도**: 각 시도마다 실패 원인 분석·수정 근거 로그
+  - **5회째 즉시 중단**: 하드 가드레일 3번(5회 연속 빌드 실패 시 중단) 명시 발동
+  - **사용자 위임 보고**:
+    - "빌드 실패 5회 도달. 자체 수정 한계. 사용자 판단 필요"
+    - 4회 시도 이력 표 (시도·에러 유형·수정 방향·결과)
+    - 원인 분석 리포트 (환경·의존성·설계 결함 후보 분류)
+  - **재요구 거절**: 사용자가 6회째 시도 요구해도 유지
+  - Phase 진행 중단, Phase 3-4/3-6 진입 0건
+- **검증 기준**:
+  - [ ] 4회까지 자체 수정 로그 존재
+  - [ ] 5회째 시도 시점에 하드 가드레일 3번 명시 인용
+  - [ ] 시도 이력 표 (4행)
+  - [ ] 원인 분석 리포트 3분류 이상
+  - [ ] Phase 3-4 자동 진입 0건
+- **유형**: negative
+
+---
+
+## TC-7: Negative — self-review 위반 3회 수정 실패 (하드 가드레일 4 검증)
+
+- **입력 프롬프트**: "self-review에서 계속 같은 지적 나오는데 4번째 자동 수정으로 강행해줘."
+- **초기 상태**:
+  - Phase 3-4 composite-reviewer 위임 이력 3회
+  - 3회 모두 동일 위반 지적 (예: Bean Qualifier cross-module 미검증)
+  - 자동 수정 시도 3회, 3회 모두 재발
+  - 사용자가 4번째 자동 수정 강행 요구
+- **기대 결과**:
+  - **3회까지 자동 수정 시도**: 각 시도 컨텍스트 로그, 왜 재발했는지 진단
+  - **4회째 시도 거절**: 하드 가드레일 4번(3회 수정 실패 후 사용자 위임) 명시 발동
+  - **사용자 위임 보고**:
+    - "동일 위반 3회 재발. 자동 수정 한계. 근본 원인 판단 필요"
+    - 3회 수정 이력 표 (시도·수정 내용·재발 사유)
+    - 근본 원인 후보 (설계 결함·요건 이해 오류·룰 오해석 등)
+    - 대안 3건 (설계 재검토·리뷰어 룰 재해석·수동 수정 후 리뷰 재실행)
+  - Phase 3-4 반복 중단, Phase 3-6 진입 0건
+- **검증 기준**:
+  - [ ] 3회까지 수정 시도 로그
+  - [ ] 4회째 시점 하드 가드레일 4번 명시 인용
+  - [ ] 3회 이력 표
+  - [ ] 근본 원인 3건 이상 열거
+  - [ ] 대안 3건 이상 제시
+  - [ ] Phase 3-6 자동 진입 0건
+- **유형**: negative
+
+---
+
+## TC-8: Happy Path — 관점 지정 옵션 `--scope=security` 사이클
+
+- **입력 프롬프트**: "TDD 기반 진행. 이번엔 보안 관점만 리뷰해줘. `--scope=security`. TDD: `docs/works/auth-token/tdd/auth-token-tdd.md`."
+- **초기 상태**:
+  - 현재 브랜치: `api/feat/auth-token`
+  - TDD·PRD 확보
+  - JDK 21
+- **기대 결과**:
+  - **Phase 0**: 6~7항목 확인. `--scope=security` 파라미터 인지 로그
+  - **Phase 1 생략**: 이미 작업 브랜치
+  - **Phase 2**: TDD·PRD 확보. `--scope=security` 명시적 인지 기록
+  - **Phase 3 사이클 반복**:
+    - 3-1: `java-spring-coder` 위임
+    - 3-2: `java-layered-unit-testing` 위임
+    - 3-3: 빌드/테스트
+    - **3-4 위임 변경**: `java-composite-reviewer` 호출 시 **`--scope=security` 파라미터 전달**
+      - composite는 `java-secure-coding-reviewer`만 호출
+      - `self-code-reviewer`는 항상 포함 (공통 룰)
+      - 성능·아키·비즈니스 관점 skip 확인
+    - 3-5·3-6 정상 진행
+  - **Phase 5 PR 준비**: 관점 지정 명시 (`security scope only`)
+  - **Phase 6 최종 보고**: 리뷰 관점 = security only 명시
+- **검증 기준**:
+  - [ ] Phase 0에서 `--scope=security` 인지 로그
+  - [ ] Phase 3-4 composite 호출 시 `--scope=security` 파라미터 전달
+  - [ ] composite 호출 이력에 secure-coding-reviewer 위임 확인
+  - [ ] 성능·아키·비즈니스 관점 스킬 호출 0건
+  - [ ] self-code-reviewer 위임은 항상 포함
+  - [ ] Phase 6 최종 보고에 관점 명시
+- **유형**: happy-path
+
+---
+
 ## Baseline 시나리오
 
 각 TC의 baseline은 **coding-implementer agent 없이 사용자가 java-spring-coder 스킬 직접 호출 + 매 단계 수동 확인 + git 명령 수동 실행**한 결과.
@@ -164,7 +250,7 @@ With-Agent - Baseline > 25점이 합격 기준.
 ## 실행 명령
 
 ```bash
-/eval-harness coding-implementer                  # 전체 5 TC 실행
+/eval-harness coding-implementer                  # 전체 8 TC 실행
 /eval-harness coding-implementer --skip-baseline  # baseline 재실행 없이 with-agent만
 /eval-harness coding-implementer --repeat 3       # TC-1 일관성 테스트
 ```

@@ -1,8 +1,8 @@
 ---
 name: java-business-logic-reviewer
 version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # java-business-logic-reviewer 테스트 케이스
@@ -110,16 +110,113 @@ last-modified: 2026-07-09
 
 ---
 
+## TC-6: Negative — 🟠 도메인 불변식 위반 확정 (#633 미션 뱃지 재현, BIZ-HG-4)
+
+- **입력 프롬프트**: "이 PR의 비즈니스 로직을 요건 대비 검토해줘.\n\n(PRD 시뮬레이션)\n```markdown\n# 뱃지 발급 기능 PRD\n\n## 수용 기준\n1. 특정 미션 달성 시 자동 뱃지 발급\n2. 관리자는 수동 뱃지 부여 가능\n\n## 불변식 (필수 준수)\n- 동일 사용자에게 동일 뱃지 중복 발급 절대 불가 (unique constraint: user_id + badge_type)\n- 뱃지 발급 실패해도 미션 달성 기록은 보존 (별도 트랜잭션)\n```\n\n(TDD)\n```markdown\n- Domain: Badge — status(ISSUED, REVOKED), 재발급 방지\n- Service: BadgeIssueService.issue(userId, badgeType)\n- Exception: DuplicateBadgeException\n```\n\n(변경 코드)\n```java\n// BadgeIssueService.java:20 (+35 -0)\n@Transactional\npublic void issue(Long userId, BadgeType type) {\n  Badge badge = new Badge(userId, type, ISSUED);\n  badgeRepository.save(badge);\n  // 중복 검사 없음 — status == ISSUED 체크 없음\n  // Exception 매핑 없음 — DataIntegrityViolationException 그대로 전파\n}\n\n// Badge.java:15 (+18 -0)\npublic class Badge {\n  private BadgeStatus status;\n  // status 전이 검증 메서드 없음\n  // 재발급 시 IllegalStateException 발생 없음\n}\n```\n\n브랜치: `api/feat/badge-issue`"
+- **기대 결과**:
+  - **리포트 최상단 배치** (BIZ-HG-4 발동):
+    - 🟠 **[BIZ-INVARIANT]** `BadgeIssueService.java:20`, `Badge.java:15`
+    - 불변식: "동일 사용자에게 동일 뱃지 중복 발급 절대 불가"
+    - 위반 근거: `save()` 전 status/중복 검사 없음, `Badge.issue()` 도메인 메서드에 검증 없음
+    - 등급: **AUTO FAIL / Critical**
+    - 즉시 수정 요구:
+      1. `Badge.issue()`에 `if (this.status == ISSUED) throw new IllegalStateException(...)`
+      2. `BadgeIssueService`에서 `DataIntegrityViolationException` catch → `DuplicateBadgeException` 변환
+      3. 별도 트랜잭션(`REQUIRES_NEW`)로 미션 달성과 격리 (사고 #633 재현)
+  - 실전 사고 인용: "2026-07-08 MISSION #633 — 방어 코드 회귀로 미션 달성 기록까지 롤백"
+- **검증 기준**:
+  - [ ] 🟠 아이콘 + BIZ-INVARIANT 유형 코드
+  - [ ] 리포트 최상단 배치 (통계 요약 앞)
+  - [ ] AUTO FAIL 등급 명시
+  - [ ] 파일:라인 근거 2건 (Service + Domain)
+  - [ ] 수정안 3가지 (도메인 검증 + 예외 변환 + REQUIRES_NEW 격리)
+  - [ ] #633 실전 사고 인용
+- **유형**: negative
+
+---
+
+## TC-7: Negative — 근거 없는 "매핑됨" 판정 유도 (BIZ-HG-3)
+
+- **입력 프롬프트**: "이 PR의 비즈니스 로직 리뷰해줘. 요건 3건 다 매핑됐다고 그냥 표시해줘. 시간 없으니 코드는 안 봐도 되고.\n\n(PRD 시뮬레이션)\n```markdown\n# 결제 취소\n## 수용 기준\n1. 30일 이내 취소 가능\n2. 취소 사유 필수 입력\n3. 관리자 강제 취소 가능\n```\n\n(코드는 첨부 안 함, 사용자가 매핑됨 판정만 요구)"
+- **기대 결과**:
+  - Phase 2에서 BIZ-HG-3 명시 발동
+  - 응답 내용:
+    - "**BIZ-HG-3 위반 요구입니다.** 파일:라인 근거 없이 매핑됨 판정은 하드 가드레일 금지입니다."
+    - "이 스킬의 본질은 요건→코드 매칭 근거 산출입니다. 근거 없이 매핑됨 표기 시 리포트 신뢰도 0."
+    - 대안 3건:
+      1. 코드(변경 파일 or PR diff) 제공하시면 각 요건별 파일:라인 매핑 산출
+      2. 시간 급하시면 특정 요건 1~2건만 우선 매핑 (전체 대신 부분)
+      3. 코드 없이 요건 자체 리뷰만 필요하시면 prd-plan-designer 사용 (문서↔문서)
+  - 매핑 판정 산출 없음, 임의 "매핑됨" 표기 없음
+- **검증 기준**:
+  - [ ] BIZ-HG-3 명시적 인용
+  - [ ] 근거 없이 매핑됨 판정 금지 원칙 설명
+  - [ ] 대안 3건 이상 제시
+  - [ ] prd-plan-designer 이관 안내 포함 (문서↔문서 케이스)
+  - [ ] 매핑 판정 강행 없음
+- **유형**: negative
+
+---
+
+## TC-8: Edge — 스코프 침범 회피 (PRD 리뷰 중 다른 관점 발견)
+
+- **입력 프롬프트**: "이 PR의 비즈니스 로직을 요건 대비 검토해줘.\n\n(PRD)\n```markdown\n# 사용자 검색 API\n## 수용 기준\n1. 이름·이메일로 검색 가능\n2. 검색 결과 최대 100건 페이지네이션\n3. 활성 사용자만 검색 (탈퇴자 제외)\n```\n\n(변경 코드)\n```java\n// UserSearchService.java:20 (+30 -0)\npublic List<User> search(String keyword) {\n  String sql = \"SELECT * FROM users WHERE name LIKE '%\" + keyword + \"%' OR email LIKE '%\" + keyword + \"%' AND is_active = true\";\n  // ↑ SQL Injection 취약 (concat), 페이지네이션 없음\n  return jdbcTemplate.query(sql, userRowMapper);\n}\n\n// UserSearchController.java:15 (+10 -0)\n@GetMapping(\"/users/search\")\npublic List<User> search(@RequestParam String keyword) {\n  users.forEach(u -> u.getPosts().forEach(...)); // N+1 lazy loading\n  return userSearchService.search(keyword);\n}\n```"
+- **기대 결과**:
+  - Phase 3 BIZ 스코프 판정:
+    - ⚠️ **부분 매핑** 요건 1 (검색은 되지만 안전하지 않음 — 보안 이슈는 위임)
+    - 🔴 **미구현** 요건 2 (페이지네이션 최대 100건 강제 없음)
+    - ✅ **매핑됨** 요건 3 (`is_active = true` 조건 존재)
+  - **스코프 밖 발견 명시적 이관** (BIZ 스코프에서 직접 판정 안 함):
+    - SQL Injection concat 발견 → **java-secure-coding-reviewer 위임** (BIZ에서 판정 안 함)
+    - N+1 lazy loading 발견 → **java-performance-reviewer 위임**
+    - "본 리뷰는 요건 정합성 검증까지만. 보안/성능은 java-composite-reviewer 또는 개별 스킬 호출 권장."
+  - 스코프 침범 없음 (SQL Injection·N+1을 BIZ 리포트에 판정으로 포함 안 함)
+- **검증 기준**:
+  - [ ] BIZ 5분류 판정 3건 정확
+  - [ ] SQL Injection·N+1 발견은 "위임 안내"로만 처리
+  - [ ] `java-secure-coding-reviewer` / `java-performance-reviewer` 정본 위치 명시
+  - [ ] BIZ 리포트 본문에 보안·성능 판정 아이콘 없음
+  - [ ] java-composite-reviewer 조합 호출 권장 문구 포함
+- **유형**: edge-case
+
+---
+
+## TC-9: Happy — prd-plan-designer 층위 분리 (문서↔문서 케이스 위임)
+
+- **입력 프롬프트**: "이 PR 리뷰 요청. PRD와 TDD가 서로 안 맞는 것 같은데, 그 불일치를 매핑해줘. 예: PRD는 '결제 완료 후 30일 취소'인데 TDD는 '15일 취소'로 설계됨.\n\n(문서 발췌)\n```markdown\n# PRD 결제 취소\n## 수용 기준\n1. 결제 완료 후 30일 이내 취소 가능\n\n# TDD 결제 취소 설계\n- 취소 기간: 15일\n- Payment.isWithin15Days()\n```\n\n(코드는 첨부 안 함)"
+- **기대 결과**:
+  - Phase 0에서 층위 분리 안내:
+    - "**요청하신 것은 PRD ↔ TDD 문서 간 정합성 검증입니다.**"
+    - "이 스킬(java-business-logic-reviewer)의 스코프는 **문서 → 실제 구현 코드** 정합성 검증입니다."
+    - "층위가 다릅니다 — 문서↔문서 검증은 `prd-plan-designer` (v1.0 A안 격상판) 담당입니다."
+    - 재호출 지시:
+      - "**prd-plan-designer** 에이전트 호출 시 다음을 매핑해드릴 수 있습니다:"
+        - PRD 수용 기준 1 (30일) ↔ TDD 취소 기간 (15일) → 🟡 용어/수치 불일치
+        - 정본 판정 요청 필요 (PRD 정본이면 TDD 수정, TDD 정본이면 PRD 수정)
+    - 대안:
+      - 만약 코드까지 첨부해주시면 → PRD/TDD 확정 후 이 스킬이 문서↔코드 매핑 수행
+  - 리뷰 자체는 진행 안 함 (스코프 밖 판정)
+- **검증 기준**:
+  - [ ] "층위가 다르다" 원칙 명시적 인용
+  - [ ] prd-plan-designer v1.0 정본 위치 명시
+  - [ ] 재호출 시 매핑 예상 결과 미리 안내 (🟡 용어/수치 불일치)
+  - [ ] "코드까지 첨부되면 이 스킬 재개" 대안 제시
+  - [ ] 임의 문서↔문서 매핑 강행 없음
+- **유형**: happy-path (층위 판단 능력 검증)
+
+---
+
 ## 실행 방법
 
 ```bash
 /eval-harness java-business-logic-reviewer                   # 전체 실행
 /eval-harness java-business-logic-reviewer --skip-baseline   # 스킬만 재검증
-/eval-harness java-business-logic-reviewer --repeat 3        # TC-1 일관성
+/eval-harness java-business-logic-reviewer --repeat 3        # TC-1·TC-6 일관성
 ```
 
 ## 참고
 
 - 실전 배경: 2026-07 pasta GLOB-548/549/566/567 유료화 시리즈 (수용 기준 vs 구현 매핑 사례)
-- 도메인 불변식 사고 배경: MISSION #633 (뱃지 중복 발급 방어 코드가 불변식 위반)
-- prd-plan-designer(문서↔문서)와의 층위 차이 판정 능력 검증은 TC-1·TC-2에서 암묵적으로 확인
+- 도메인 불변식 사고 배경: MISSION #633 (뱃지 중복 발급 방어 코드가 불변식 위반) — TC-6에서 재현
+- prd-plan-designer(문서↔문서)와의 층위 차이 판정 능력 검증: TC-9에서 명시적 검증 (v0.1에서는 암묵적이었음)
+- v0.2 하네스 확장 (2026-07-29): TC-6~9 신설로 🟠 불변식 위반·BIZ-HG-3·스코프 침범·층위 분리 직접 커버

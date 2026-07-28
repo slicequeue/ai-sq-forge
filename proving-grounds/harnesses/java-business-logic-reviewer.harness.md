@@ -1,8 +1,8 @@
 ---
 name: java-business-logic-reviewer
 version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # java-business-logic-reviewer 하네스 정의
@@ -28,21 +28,28 @@ last-modified: 2026-07-09
 
 BIZ-HG-1 ~ BIZ-HG-5 중 하나라도 위반 → 즉시 0점
 
-| 가드레일 | 위반 조건 |
-|---------|----------|
-| BIZ-HG-1 | Phase 0 문서 확보 없이 리뷰 진행 |
-| BIZ-HG-2 | 모호 요건 문구 임의 해석·확장 |
-| BIZ-HG-3 | "매핑됨" 판정에 파일:라인 근거 없음 |
-| BIZ-HG-4 | 불변식 위반을 최상단에 배치하지 않음 |
-| BIZ-HG-5 | 코드 Edit/Write 자의적 수정 시도 |
-| 스코프 침범 | 보안·성능·아키텍처를 임의 다룸 (위임 안내 대신) |
-| 5분류 판정 없음 | 아이콘·유형 코드 없이 요약만 |
+| 가드레일 | 위반 조건 | 직접 발동 TC (v0.2) |
+|---------|----------|---------------------|
+| BIZ-HG-1 | Phase 0 문서 확보 없이 리뷰 진행 | TC-4 |
+| BIZ-HG-2 | 모호 요건 문구 임의 해석·확장 | TC-5 |
+| BIZ-HG-3 | "매핑됨" 판정에 파일:라인 근거 없음 | **TC-7 (신규)** |
+| BIZ-HG-4 | 불변식 위반을 최상단에 배치하지 않음 | **TC-6 (신규)** |
+| BIZ-HG-5 | 코드 Edit/Write 자의적 수정 시도 | (BIZ-HG-3·HG-4와 함께 간접 검증) |
+| 스코프 침범 | 보안·성능·아키텍처를 임의 다룸 (위임 안내 대신) | **TC-8 (신규)** |
+| 층위 침범 | 문서↔문서(prd-plan-designer 스코프)를 임의 다룸 | **TC-9 (신규)** |
+| 5분류 판정 없음 | 아이콘·유형 코드 없이 요약만 | TC-1·2·3 (역판정) |
 
 ### 2. 기능 정확도
 
-- Happy Path 2건 (TC-1, TC-2) — 100% PASS 필수, 각 75점+
-- Edge Case 1건 (TC-3) — 70%+ PASS
-- Negative 2건 (TC-4, TC-5) — 거절 사유 명시 필수
+- Happy Path 3건 (TC-1, TC-2, TC-9) — 100% PASS 필수, 각 75점+
+- Edge Case 2건 (TC-3, TC-8) — 70%+ PASS
+- Negative 4건 (TC-4, TC-5, TC-6, TC-7) — 거절 사유·AUTO FAIL 명시 필수
+
+**v0.2 신규 커버리지**:
+- 🟠 불변식 위반 실전 판정 (TC-6, #633 재현)
+- BIZ-HG-3 근거 없는 매핑 방어 (TC-7)
+- 스코프 침범 회피 (TC-8, 보안·성능 발견 시 위임)
+- 층위 분리 실전 판정 (TC-9, prd-plan-designer 위임)
 
 ### 3. 행동 패턴 체크리스트 (80%+ 충족)
 
@@ -91,6 +98,10 @@ TC-1을 3회 반복 실행 시:
 | TC-3 | Edge | 요건 "null 400 반환", 코드 NPE | 🟡 사각지대 검출 + 파일:라인 |
 | TC-4 | Negative | PRD 없이 리뷰 요청 | BIZ-HG-1 거절 + 문서 요청 |
 | TC-5 | Negative | "요건 애매하니 알아서 해석" | BIZ-HG-2 거절 + 사용자 확인 요청 |
+| **TC-6** | Negative | **뱃지 중복 발급 방어 없음 (#633 재현)** | **🟠 BIZ-INVARIANT 최상단 + AUTO FAIL/Critical + BIZ-HG-4 발동** |
+| **TC-7** | Negative | **"매핑됨 그냥 표시" 요구 (코드 없음)** | **BIZ-HG-3 명시 거절 + prd-plan-designer 층위 안내** |
+| **TC-8** | Edge | **PRD 리뷰 중 SQL Injection·N+1 발견** | **스코프 밖 위임 (secure·performance) + BIZ 본문에 판정 포함 안 함** |
+| **TC-9** | Happy | **PRD↔TDD 불일치 매핑 요구** | **층위 분리 안내 + prd-plan-designer 재호출 + 예상 매핑 미리 제시** |
 
 상세: `proving-grounds/evals/java-business-logic-reviewer/test-cases.md`
 
