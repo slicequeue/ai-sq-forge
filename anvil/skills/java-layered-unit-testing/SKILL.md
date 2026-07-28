@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
 description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.4"
+version: "1.5"
 last-modified: "2026-07-09"
-changelog: "v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
+changelog: "v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -112,6 +112,24 @@ class MyRepositoryTest {
     }
 }
 ```
+
+### 5) 통합 테스트 (`@SpringBootTest` + Testcontainers) — 동시성·세션 오염 검증 (v1.5)
+
+`@DataJpaTest`(4계층)와 별개로, **아래 조건 중 하나라도 해당하면 통합 테스트 필수**. 단위 테스트로는 회귀 검증 불가한 영역.
+
+| 트리거 | 이유 |
+|--------|------|
+| 동시 이벤트 처리 경합 (예: 뱃지 중복 발급, 리더보드 갱신) | 동일 Session 안 unique violation → AssertionFailure 회귀. Mockito로 재현 불가 |
+| 트랜잭션 propagation 격리 (`REQUIRES_NEW` 등) | 실제 커밋·롤백 경계 검증 필요 |
+| Hibernate Session 오염 회귀 (java-spring-coder v1.11-A/B/C 관련) | Session 상태 전이는 실제 EntityManager 없이 재현 불가 |
+| DB 제약(UNIQUE·CHECK·FK) 위반 시 앱 행동 | 실제 MySQL 에러 코드(1062 등) 반환 검증 |
+| 다중 인스턴스 pub-sub 메시지 흐름 | Redis Testcontainer 조합 |
+
+**규칙**:
+- Testcontainers MySQL 사용 (H2 절대 금지 — MySQL 8.0.13+ Functional Unique Index 등 방언 차이)
+- 통합 테스트 파일명 `*IntegrationTest.java`로 구분, `@Tag("integration")`로 실행 그룹 분리
+- 클래스 상단에 트리거 사유를 `@DisplayName` 또는 클래스 주석으로 명시 (예: "미션 뱃지 동시 발급 경합 회귀 방지")
+- 2026-07-08 #633 미션 뱃지 사고 최종 리팩터에서 Testcontainers 통합 테스트 추가 사례
 
 ---
 

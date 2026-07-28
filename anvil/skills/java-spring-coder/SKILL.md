@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.11"
+version: "1.13"
 last-modified: "2026-07-09"
-changelog: "v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
+changelog: "v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -493,6 +493,22 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
   - **발행 실패 로그 레벨**: 초회 WARN → 연속 실패 ERROR + 스택트레이스 (v1.10 예외 로깅 표준 적용)
   - 2026-07-07 GLOB-566 `PricingChangePublisher`/`PricingCacheInvalidationListener` 사례
 
+- **(v1.13) 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 재전송 배치** — 결제 전환·마케팅·통계 등 외부 시스템(Airbridge 등)에 S2S로 이벤트를 전송할 때, **트랜잭션 커밋 안에서 외부 API 호출 금지**. 실패 시 이벤트 유실 or 이중 저장 발생.
+  ```
+  ✅ 아웃박스 패턴
+  1. 도메인 트랜잭션에서 이벤트를 outbox 테이블에 INSERT (도메인 데이터와 함께 원자적)
+  2. 커밋 후 스케줄러/배치가 outbox에서 PENDING 이벤트 폴링 → 외부 전송 → SENT/FAILED 상태 업데이트
+  3. FAILED 이벤트는 별도 재전송 배치(예: 5분·15분·1시간 backoff)가 재시도
+  4. 성공/재시도 소진 이벤트는 정리 배치가 주기적으로 삭제·아카이빙
+  ```
+  **규칙**:
+  - 트랜잭션 안 외부 API 호출 금지 (커넥션 점유·부분 실패 위험). outbox 테이블 저장만.
+  - outbox 스키마: `id`, `event_type`, `payload`, `status`(`PENDING`/`SENT`/`FAILED`), `retry_count`, `next_retry_at`, `created_at`, `sent_at`
+  - 재전송 배치는 `retry_count` 상한 + backoff 필수 (무한 재시도 금지)
+  - 정리 배치는 SENT 이벤트를 N일 후 삭제·아카이빙 (테이블 폭증 방지)
+  - 외부 API 응답이 4xx면 재시도 대상 아님(로직 오류) → FAILED로 확정. 5xx·타임아웃만 재시도
+  - 2026-06-23 #589 Airbridge S2S 파이프라인 + 2026-06-29 #627 자동 재전송·정리 배치 사례
+
 - **(v1.10) 예외 로깅 표준** — JsonTemplateLayout 사용 시 스택트레이스가 절단되어 근본 원인을 못 보는 사고 방지.
   ```yaml
   # ✅ 올바름 (2026-06-30 #625 사례)
@@ -624,6 +640,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 38. [ ] **(v1.11) 방어 조회 트랜잭션 격리**: 뱃지 발급·미션 이력·감사 로그 같은 상위 롤백과 독립 커밋 필요 처리에 `REQUIRES_NEW` 격리가 적용되어 있는가?
 39. [ ] **(v1.11) 설정 게이팅 @Profile 선호**: 신규 `@Configuration`이 환경별 on/off라면 `@Profile`을 썼는가? `@ConditionalOnBean`을 썼다면 진짜 auto-configuration 요건인지 근거 명시?
 40. [ ] **(v1.11) 캐시 pub-sub 무효화 안전성**: pub-sub 발행이 트랜잭션 커밋 후에 실행되고(커밋 전 발행 아님), 발행 실패는 흡수되며, 폴링 백스톱이 붙어 있는가?
+41. [ ] **(v1.13) 외부 이벤트 아웃박스**: 외부 시스템(Airbridge 등) S2S 전송이 있으면 트랜잭션 안에서 직접 호출하지 않고 outbox 테이블에 저장 후 배치가 재전송하는 구조인가? 재시도는 backoff + 상한 있는가? 4xx는 FAILED 확정?
 41. [ ] **(v1.11) 어노테이션+인터셉터 배치**: 마킹 어노테이션이 shared 모듈에 있고 인터셉터가 api 모듈에 있는가? 어노테이션 파라미터가 enum(문자열 리터럴 금지)인가?
 
 ---

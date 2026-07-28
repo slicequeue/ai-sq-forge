@@ -116,7 +116,7 @@
 
 ### 기본 테스트 (baseline vs with-skill)
 
-1. **테스트 케이스 준비**: `proving-grounds/evals/coding-implementer/test-cases.md`
+1. **테스트 케이스 준비**: `proving-grounds/evals/java-spring-coder/test-cases.md`
 2. **Baseline 실행**: 스킬 없이 동일 프롬프트로 구현 요청
 3. **With-Skill 실행**: 스킬 적용하여 동일 프롬프트로 구현 요청
 4. **채점**: 양쪽 결과를 루브릭으로 채점, 비교
@@ -131,5 +131,5 @@
 
 ### A/S 활용
 
-- 실전 사용 후 문제 발견 시 `maintenance/feedback/coding-implementer/`에 기록
+- 실전 사용 후 문제 발견 시 `maintenance/feedback/java-spring-coder/`에 기록
 - `forge/protocols/maintenance.md` 프로토콜로 분석 및 개선

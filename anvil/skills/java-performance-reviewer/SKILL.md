@@ -1,9 +1,11 @@
 ---
 name: java-performance-reviewer
 description: "백엔드 Java Spring Boot 성능 리뷰 전용 스킬 — N+1·JPA·캐시 계층·트랜잭션 propagation·비동기·리소스 누수·GC. 성능 관점 요청 시 자동 트리거, java-composite-reviewer 에이전트 안에서도 조합 가능. Use proactively when the user asks for performance review, slow query analysis, cache/tx design check."
-version: "0.1"
+version: "0.2"
 last-modified: "2026-07-09"
-changelog: "v0.1 — 2026-07-09 self-code-reviewer v1.11에서 성능 관점 분리·신설. self의 WebClient timeout/4xx 재시도, Soft-delete UNIQUE, 싱글톤 mutable 룰 이관 + N+1·인덱스·캐시 계층·트랜잭션·리소스·로깅 스팸 확장. 하네스 미작성"
+changelog: |
+  v0.2 — 2026-07-09 pasta 6월 사고 흡수 — HikariCP right-size + graceful shutdown 섹션 신설 (`PERF-OPS` 신규 유형). #590·#592(GLOB-521) 반영.
+  v0.1 — 2026-07-09 self-code-reviewer v1.11에서 성능 관점 분리·신설. self의 WebClient timeout/4xx 재시도, Soft-delete UNIQUE, 싱글톤 mutable 룰 이관 + N+1·인덱스·캐시 계층·트랜잭션·리소스·로깅 스팸 확장. 하네스 미작성
 harness-status: pending
 ---
 
@@ -27,6 +29,7 @@ harness-status: pending
 - **JPA/DB**: N+1·페치 전략(@OneToMany EAGER 금지)·인덱스·EXPLAIN·JPQL 페이지네이션
 - **캐시 계층**: 3층 폴백·write-through·pub-sub 무효화·워밍업·폴링 백스톱 (java-spring-coder v1.11과 짝)
 - **트랜잭션·비동기**: propagation(REQUIRES_NEW·격리)·@Async 범위·HikariCP 크기·WebClient timeout·스레드 풀
+- **운영 안정성**: HikariCP right-size·graceful shutdown·startup probe·resource cleanup lifecycle (v0.2 신설)
 - **리소스**: try-with-resources·Connection/File/Stream 누수·불필요 객체·메모리 누수
 - **로깅 스팸**: 매 호출 페이로드 전체 로깅 검출 → 요약 권장 (bug-analyzer v0.3 참고)
 - **동시성**: `@Service` 싱글톤 mutable instance field (세션 간 값 혼용)
@@ -207,7 +210,28 @@ public void issueBadge(...) { ... }
 | INFO 레벨 남발 | 진입·종료 매 호출 INFO | 통계는 DEBUG, 예외 상황만 INFO |
 | 문자열 concat in log | `log.info("id=" + id)` | `{}` placeholder |
 
-### 6. Soft-delete + UNIQUE 충돌 (self v1.9 이관)
+### 6. 운영 안정성 (`PERF-OPS`, v0.2 신설)
+
+pasta #590·#592 (GLOB-521, 2026-06-23) 흡수. HikariCP right-size + graceful shutdown lifecycle 검사.
+
+#### 검사 항목
+
+| 항목 | 검출 | 권장 |
+|------|------|------|
+| HikariCP `maximum-pool-size` 기본값(10) 유지 | 부하 예상 대비 미조정 | 공식 참고: `((core_count * 2) + effective_spindle_count)` 또는 DB 커넥션 예산 기반 산정. 프로덕션은 트래픽 측정 후 조정 |
+| HikariCP `minimum-idle` 미명시 | 기본이 max와 동일 → idle 커넥션 다수 유지 | 워밍 이후 유휴 커넥션 관리 목적이면 `minimum-idle` 별도 명시 |
+| `connection-timeout`·`idle-timeout`·`max-lifetime` 조정 | 기본값 그대로 | DB 서버 wait_timeout보다 짧게 설정 (max-lifetime < wait_timeout) |
+| `spring.lifecycle.timeout-per-shutdown-phase` 미설정 | graceful shutdown 없음 | 배포·롤링 업데이트 시 in-flight 요청 완료 위해 명시 (예: `30s`) |
+| `server.shutdown: graceful` 미설정 | 즉시 kill로 요청 유실 | `graceful` 명시 |
+| Kubernetes startup probe·readiness 지연 | 콜드스타트 무거운 앱에 짧은 probe → probe 실패 배포 | `initialDelaySeconds`·`failureThreshold`·`periodSeconds` 완화 (admin #588 사례: cpu-boost + 5초 간격 48회 재시도) |
+| `@PreDestroy`·`SmartLifecycle` 미사용 | 외부 리소스 (Redis 리스너·스케줄러) shutdown hook 없음 | 명시적 close 로직 등록 |
+
+#### 참고
+
+- HikariCP 크기: DB 서버 max_connections 대비 앱 인스턴스 수 × pool size 여유 산정 필수
+- graceful shutdown lifecycle: Spring Boot 2.3+ 기본 지원, `graceful` 값 명시로 활성
+
+### 7. Soft-delete + UNIQUE 충돌 (self v1.9 이관)
 
 | 패턴 | 검출 | 권장 |
 |------|------|------|
@@ -262,6 +286,8 @@ self-code-reviewer와 동일 형식 유지. `유형`·`등급`만 성능 특화.
 - **Low**: 잠재적 낭비 (예: 반복문 안 String concat, 불필요 컬렉션 복사)
 - **Info**: 참고 (예: EXPLAIN 확인 권장)
 
+**신규 유형 `PERF-OPS`** (v0.2): HikariCP 크기·graceful shutdown·startup probe·resource cleanup lifecycle. 대부분 **권장 사항 성격**이라 AUTO FAIL 아님, Medium/High 등급.
+
 ---
 
 ## 가드레일
@@ -295,6 +321,7 @@ self-code-reviewer와 동일 형식 유지. `유형`·`등급`만 성능 특화.
 8. [ ] **리소스 관리**: 새 Connection/Stream 관련 코드에 try-with-resources 강제했는가?
 9. [ ] **로깅 스팸**: 신규 로그에 대용량 페이로드 인자 있으면 요약 권장? 반복문 안 로그 level 낮춤?
 10. [ ] **관점 침범 회피**: 검출 항목이 성능 관점이 맞는가? 아키텍처·보안·컨벤션이면 해당 스킬로 라우팅 안내만 하고 이 스킬 리포트에서 제외?
+11. [ ] **운영 안정성** (v0.2): 새 애플리케이션 모듈이나 인프라 설정 변경 시 HikariCP right-size·graceful shutdown·startup probe·resource cleanup 4항목을 확인했는가?
 
 ---
 
