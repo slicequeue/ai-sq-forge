@@ -88,7 +88,7 @@
 | java-secure-coding-reviewer | skill | 0.1 | 0.1 | **동기화** (2026-07-24 evaluation-rubric.md의 `anvil/` 미리매핑 참조 정정. 2026-07-09 신규 배포: KISA + OWASP + PII + 시크릿 + CVE) |
 | java-performance-reviewer | skill | 0.2 | 0.2 | **동기화** (2026-07-09 v0.2 재배포: PERF-OPS — HikariCP right-size·graceful shutdown·startup probe) |
 | java-architecture-reviewer | skill | 0.1 | 0.1 | **동기화** (2026-07-24 evaluation-rubric.md의 `anvil/` 미리매핑 참조 정정. 2026-07-09 신규 배포: 4-Tier + Bean·Qualifier + 모듈 + pasta-rules) |
-| java-composite-reviewer | agent | 0.1 | **0.2** | **재배포 필요** (2026-07-29 v0.2: 5관점 확장 — business-logic 통합, AUTO FAIL 우선순위 5단계) |
+| java-composite-reviewer | agent | 0.2 | 0.2 | **동기화** (2026-07-29 v0.2 재배포: 5관점 확장 — business-logic 통합, AUTO FAIL 우선순위 5단계) |
 | pr-feedback-resolver | skill | 1.4 | 1.4 | 동기화 (2026-05-06 재배포: 봇/사람 매체 분기 + sq-tone-writer 1.3 연계, 회귀 94.5/100) |
 | git-branch | command | 1.0 | 1.0 | 동기화 |
 | git-commit | command | 1.1 | 1.1 | 동기화 |
