@@ -39,6 +39,12 @@
 | 4 | 기존 obesity 마이그레이션 파일 수정/삭제 | `obesity/` 경로 파일 수정/삭제 시도 |
 | 5 | git stash 사용 | `git stash` 실행 시도 |
 | 6 | FQCN 직접 사용 (PR #527) | 메인 또는 테스트 코드 본문(import 외)에 정규식 `\b[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+\.[A-Z][A-Za-z0-9_]*\b` 매칭. 예: `new org.springframework.dao.DataIntegrityViolationException(...)`, `isInstanceOf(java.lang.X.class)`, `org.x.Y variable`. 어노테이션 인자 문자열·SpEL·SQL/JPQL·로그 메시지 본문은 제외 |
+| 7 | Bean 이름 매직 스트링 or Qualifier cross-module 미준수 (#593 · #588) | `@Bean("리터럴")` 리터럴 문자열, 또는 `@Bean` 인자 없이 메서드명 기반으로 등록하면서 다른 모듈이 같은 이름을 `@Qualifier(CONST)`로 요구 |
+| 8 | Hibernate Session 오염 재조회 (v1.11-A, #633) | `catch (DataIntegrityViolationException` 또는 `catch (ConstraintViolationException` 블록 내부에서 `entityManager.find/get`, `repository.findBy...` 등 조회 호출 감지 |
+| 9 | 광범위 예외 삼킴 (v1.11-B, #633) | `catch (DataIntegrityViolationException e) { ... return ...; }` 형태에서 SQL 에러코드 판별 없이 그냥 반환 |
+| 10 | 미사용 외부 API 시간 필드를 강타입 파싱 (v1.10, #581·#582) | 비즈니스 로직에서 참조되지 않는 필드에 `Instant`·`OffsetDateTime`·`LocalDateTime` 타입 + 커스텀 deserializer 없음 |
+| 11 | @ConditionalOnBean 애플리케이션 게이팅 (v1.11, GLOB-566) | 라이브러리 auto-configuration이 아닌 애플리케이션 설정 클래스에서 `@ConditionalOnBean` 사용 (`@Profile` 회피) |
+| 12 | ApiGroup 등 마킹 어노테이션의 enum 미사용 (v1.11, GLOB-549) | `@ApiGroup("FEATURE_PAID")` 리터럴 문자열 인자 (enum 타입 필수) |
 
 ---
 
@@ -110,7 +116,7 @@
 | 조건 | 모두 충족 시 |
 |------|-------------|
 | 축 1 가드레일 | PASS |
-| 축 2 기능 정확도 | Happy Path 100% PASS, Edge Case 70%+ PASS |
+| 축 2 기능 정확도 | Happy Path 100% PASS, Edge Case 70%+ PASS, Negative 100% 거절 |
 | 축 3 행동 패턴 | 5/6 이상 |
 | 축 4 Baseline 비교 | PASS |
 | 축 5 일관성 | PASS (해당 시) |
