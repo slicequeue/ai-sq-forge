@@ -1,8 +1,8 @@
 ---
 name: java-performance-reviewer
-version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+version: 0.2
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # java-performance-reviewer 테스트 케이스
@@ -123,3 +123,88 @@ last-modified: 2026-07-09
   - [ ] G-4 함께 지적 (동일 파일에 있으므로)
   - [ ] 대안 2개 제시 (즉시 수정 vs 명세 문서·승인)
 - **유형**: negative
+
+---
+
+## TC-6: Happy Path — HikariCP 기본값 + graceful shutdown 미설정 (PERF-OPS)
+
+- **입력 프롬프트**: "성능 관점 리뷰해줘.\n\n(시뮬레이션 상황)\n- 현재 브랜치: `api/feat/glob-730-new-service-config`\n- 변경 파일: `api/src/main/resources/application-prd.yml` (신규 5줄)\n- 배경: pasta 사고 #592 (GLOB-521, 2026-06-23) — HikariCP right-size 미설정 + graceful shutdown 미적용으로 배포 시 요청 유실\n- 핵심 diff:\n```yaml\nspring:\n  datasource:\n    url: jdbc:mysql://prd-db.internal:3306/pasta\n    username: pasta_api\n    password: ${DB_PASSWORD}\n    # 커넥션 풀 설정 없음 — Spring Boot 기본값 (max=10) 사용\n\n  # server.shutdown 설정 없음 — 기본 immediate\n\n# spring.lifecycle.timeout-per-shutdown-phase 없음\n```\n- Cloud Run 배포, 인스턴스 수 6개, DB `max_connections=100`"
+- **기대 결과**:
+  - `PERF-OPS` High 등급 검출 (하드 가드레일 아님이라 AUTO FAIL 아님)
+  - 3건 지적:
+    1. HikariCP `maximum-pool-size` 미설정 → Spring Boot 기본값 10. 6개 인스턴스 × 10 = 60 커넥션. DB `max_connections=100` 대비 여유 있지만 부하 시 부족 가능
+    2. `server.shutdown: graceful` 미설정 → SIGTERM 시 처리 중 요청 강제 종료 (요청 유실)
+    3. `spring.lifecycle.timeout-per-shutdown-phase` 미설정 → 기본 30초, Cloud Run terminationGracePeriodSeconds와 정합 확인 필요
+  - 권장 수정:
+    - `spring.datasource.hikari.maximum-pool-size: 15`, `minimum-idle: 5`, `connection-timeout: 3000`, `max-lifetime: 1800000` (30분)
+    - `server.shutdown: graceful`
+    - `spring.lifecycle.timeout-per-shutdown-phase: 20s`
+  - 실전 사고 인용: pasta GLOB-521 (2026-06-23) — 배포 롤링 시 요청 유실 관측
+  - 관점 침범 없음
+- **검증 기준**:
+  - [ ] `PERF-OPS` 유형 정확
+  - [ ] 3건 모두 검출 (HikariCP·graceful shutdown·lifecycle timeout)
+  - [ ] 각 설정 권장값 명시 (숫자·단위)
+  - [ ] Cloud Run terminationGracePeriodSeconds 정합 언급
+  - [ ] 실전 사고 인용 (GLOB-521)
+  - [ ] AUTO FAIL 아님 (하드 가드레일 밖) 명시
+  - [ ] 관점 침범 없음 (아키·보안 지적 X)
+- **유형**: happy-path
+
+---
+
+## TC-7: Happy Path — Kubernetes startup probe 짧음 (PERF-OPS, 콜드스타트 위험)
+
+- **입력 프롬프트**: "성능 관점 리뷰해줘.\n\n(시뮬레이션 상황)\n- 현재 브랜치: `admin/feat/glob-740-deployment-config`\n- 변경 파일: `k8s/admin/deployment.yaml`\n- 배경: pasta 사고 #588 (2026-06-19 admin 배포) — 콜드스타트 무거운 앱이 짧은 startup probe로 부팅 실패 관측\n- 핵심 diff:\n```yaml\napiVersion: apps/v1\nkind: Deployment\nspec:\n  template:\n    spec:\n      containers:\n      - name: admin\n        image: pasta-admin:v1.13.0\n        resources:\n          requests:\n            memory: \"512Mi\"\n            cpu: \"250m\"\n        startupProbe:\n          httpGet:\n            path: /actuator/health\n            port: 8080\n          initialDelaySeconds: 10\n          periodSeconds: 5\n          failureThreshold: 3\n          # 총 대기: 10 + (5×3) = 25초\n```\n- Spring Boot admin 앱 (Thymeleaf + Firebase + Identity Platform 무거운 초기화)"
+- **기대 결과**:
+  - `PERF-OPS` High 등급 검출
+  - 지적:
+    1. startup probe 총 대기 25초 → admin 콜드스타트 30~90초 걸림 (Firebase·IdP 초기화)
+    2. `failureThreshold=3` 너무 낮음 → 실패 즉시 재시작 루프
+    3. `resources.limits` 없음 → OOM 위험 (연관)
+  - 권장 수정:
+    - `initialDelaySeconds: 30`
+    - `periodSeconds: 5`, `failureThreshold: 24` (총 2분 대기)
+    - `resources.limits`: `memory: 1Gi`, `cpu: 500m` 명시
+    - livenessProbe와 별도 유지 (startup은 부팅용, liveness는 살아있음 검증)
+  - 실전 사고 인용: pasta admin #588 (2026-06-19) — Cloud Run startup timeout 재발
+- **검증 기준**:
+  - [ ] `PERF-OPS` 유형 정확
+  - [ ] startup probe 총 대기 시간 계산 명시 (10 + 5×3 = 25초)
+  - [ ] 콜드스타트 무거운 앱 특성 (Firebase·IdP) 언급
+  - [ ] `failureThreshold` 상향 권장 (>=20)
+  - [ ] `resources.limits` 미설정 함께 지적
+  - [ ] 실전 사고 인용 (#588 or 유사)
+  - [ ] livenessProbe와 startupProbe 역할 분리 안내
+- **유형**: happy-path
+
+---
+
+## TC-8: Edge Case — HikariCP 크기 판정 애매 (정적 분석 한계)
+
+- **입력 프롬프트**: "성능 관점 리뷰해줘. HikariCP 풀 크기가 적정한지 판정해줘.\n\n(시뮬레이션 상황)\n- 변경 파일: `api/src/main/resources/application-prd.yml` (수정)\n- 핵심 diff:\n```yaml\nspring:\n  datasource:\n    hikari:\n      maximum-pool-size: 20\n      minimum-idle: 10\n      connection-timeout: 3000\n      max-lifetime: 1800000\n```\n- 배포 컨텍스트:\n  - Cloud Run 인스턴스: 최소 3개, 최대 30개 (auto-scaling)\n  - DB: MySQL 8.0.13, `max_connections=200`\n  - 다른 앱도 같은 DB 사용 (admin: max 5개, batch: max 10개)\n- 이 설정이 안전한가?"
+- **기대 결과**:
+  - **판정 유보 or "검증 권장"** 등급 (정적 분석으로 확답 어려움)
+  - 계산 근거 명시:
+    - api 최대 커넥션: 30 인스턴스 × 20 = **600** ← 이미 DB max_connections 초과
+    - admin: 5 × 20 = 100
+    - batch: 10 × 20 = 200
+    - **합계 최악의 경우 900 vs DB 200 → 커넥션 고갈 위험 확정**
+  - 정적 분석 한계 명시:
+    - 실제 최대 인스턴스 수·auto-scaling 트리거·트래픽 패턴은 런타임 데이터 필요
+    - `maximum-pool-size`만으로 판단 불가, 인스턴스 수 × pool size가 DB max_connections보다 작아야 함
+  - 대안 옵션:
+    - **옵션 A** (안전): `maximum-pool-size: 6` (30 × 6 = 180 < 200)
+    - **옵션 B** (재정의): DB `max_connections` 상향 협의 (DBA 요청)
+    - **옵션 C** (분리): 앱별 DB 계정 분리 + 각 계정 max_user_connections 설정
+  - 사용자 판단 요청: 실제 인스턴스 확장 상한·트래픽 패턴 확인 후 재검토
+  - AUTO FAIL 아님 (하드 가드레일 밖)
+- **검증 기준**:
+  - [ ] 판정 유보 or 검증 권장 등급 (확정 판정 안 함)
+  - [ ] 인스턴스 수 × pool size × 앱 수 계산 명시
+  - [ ] DB max_connections 대비 부족 확인
+  - [ ] 정적 분석 한계 명시 (auto-scaling 실측 필요)
+  - [ ] 대안 3가지 이상 제시
+  - [ ] 사용자 판단 근거(런타임 데이터) 요청
+  - [ ] AUTO FAIL 아님 명시
+- **유형**: edge-case

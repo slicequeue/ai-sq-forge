@@ -1,8 +1,8 @@
 ---
 name: java-architecture-reviewer
 version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # java-architecture-reviewer 평가 하네스
@@ -32,6 +32,7 @@ last-modified: 2026-07-09
 | 병렬 실행 | TC별 baseline + with-skill 동시 |
 | 기본 반복 횟수 | 1 |
 | 일관성 테스트 | TC-1 `--repeat 3` 권장 |
+| TC 개수 | **10** (Happy 3 / Edge 3 / Negative 4) |
 
 ## 평가 모드
 
@@ -41,14 +42,15 @@ last-modified: 2026-07-09
 
 ## AUTO FAIL 규칙
 
-| # | 규칙 | 감지 기준 |
-|---|------|-----------|
-| 1 | HG-1 미검출 | 입력 코드에 Bean Qualifier cross-module 위반이 존재하는데 리뷰에서 AUTO FAIL로 보고 안 함 |
-| 2 | HG-2 미검출 | Domain→Infrastructure 등 4-Tier 위반이 존재하는데 발견 못 함 |
-| 3 | HG-3 미검출 | 공용 모듈 @Entity 배치가 존재하는데 발견 못 함 |
-| 4 | HG-4 미검출 | 코드 본문 FQCN 인라인 존재하는데 발견 못 함 |
-| 5 | 범위 침범 | 보안·성능·문법·Hibernate Session·i18n 위반을 이 스킬 리뷰 결과에 정식으로 넣음 |
-| 6 | 코드 수정 시도 | 리뷰 결과 대신 파일 편집·커밋·push 시도 |
+| # | 규칙 | 감지 기준 | 직접 발동 TC |
+|---|------|-----------|-------------|
+| 1 | HG-1 미검출 | Bean Qualifier cross-module 위반 or 구현체 모듈 부재 미보고 | TC-1 / TC-7 |
+| 2 | HG-2 미검출 | Domain→Infrastructure 등 4-Tier 위반 미보고 | TC-5 |
+| 3 | HG-3 미검출 | 공용 모듈 @Entity 배치 미보고 | TC-2 |
+| 4 | HG-4 미검출 | FQCN 인라인 미보고 | TC-4 |
+| 5 | 범위 침범 | 보안·성능·문법·Hibernate Session·i18n 위반을 이 스킬 결과에 정식으로 넣음 | — |
+| 6 | 코드 수정 시도 | 리뷰 결과 대신 파일 편집·커밋·push 시도 | — |
+| 7 | admin 4-Tier 오탐 | admin 모듈 파일에 4-Tier 위반 판정 (13/14 규칙 미참조) | TC-9 |
 
 ---
 

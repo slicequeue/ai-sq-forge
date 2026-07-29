@@ -1,8 +1,8 @@
 ---
 name: java-performance-reviewer
-version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+version: 0.2
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # java-performance-reviewer 평가 하네스
@@ -31,6 +31,7 @@ last-modified: 2026-07-09
 | 모델 | sonnet |
 | 병렬 실행 | TC별 baseline + with-skill 동시 |
 | 기본 반복 횟수 | 1 |
+| TC 개수 | 8 (Happy 4 / Edge 2 / Negative 2) |
 | 일관성 테스트 | TC-1 `--repeat 3` 권장 |
 
 ## 평가 모드
@@ -51,6 +52,16 @@ last-modified: 2026-07-09
 | 6 | 관점 침범 | 아키텍처·보안·컨벤션 지적을 이 스킬 리포트에 넣음 (라우팅 안내로 그쳐야 함) |
 | 7 | 코드 변경 실행 | 스킬이 파일 수정·커밋·push를 실제로 실행 (읽기 전용 위반) |
 | 8 | AUTO FAIL 완화 수용 | 사용자가 "N+1 두자"·"timeout 나중에" 등 요구를 근거 없이 수용 |
+
+**PERF-OPS 검증 요구 (v0.2 신규, 하드 가드레일 아님이지만 High 등급 검출 필수)**:
+- HikariCP `maximum-pool-size`·`connection-timeout`·`max-lifetime` 미설정 → 검출 필요
+- `server.shutdown: graceful` 미설정 → 검출 필요
+- `spring.lifecycle.timeout-per-shutdown-phase` 미설정 → 검출 필요
+- Kubernetes startup probe 짧음 (콜드스타트 앱) → 검출 필요
+- `resources.limits` 미설정 → 검출 필요
+- 인스턴스 수 × pool size × 앱 수 vs DB `max_connections` 정합성 검증 → 판정 유보 or 검증 권장
+
+**검출 실패 시** AUTO FAIL은 아니지만 High 등급 놓침 → 축 2 기능 정확도 감점.
 
 ---
 

@@ -1,13 +1,13 @@
 ---
 name: tolgee
 version: 0.2
-harness-version: 0.1
-last-modified: 2026-07-09
+harness-version: 0.2
+last-modified: 2026-07-29
 ---
 
 # tolgee 하네스
 
-Tolgee i18n 콘솔 ↔ properties 4파일 동기화 스킬을 6축 자동 채점.
+Tolgee i18n 콘솔 ↔ properties 4파일 동기화 스킬을 6축 자동 채점. v0.2에서 TC 5→10 확장 (pull·diff·AUTO FAIL #4·#5·#6 직접 발동).
 
 ---
 
@@ -15,25 +15,27 @@ Tolgee i18n 콘솔 ↔ properties 4파일 동기화 스킬을 6축 자동 채점
 
 | 축 | 통과 조건 | 하네스 검사 방식 |
 |----|-----------|----------------|
-| 1. 가드레일 준수 | AUTO FAIL 6건(rubric) 위반 0건 | TC-4·TC-5에서 사용자 부분 갱신·Locale 미명시 요구를 던졌을 때 스킬이 거절하는지 |
-| 2. 기능 정확도 | Happy 100% PASS (75점+), Edge 70%+ PASS | 4파일 diff·en 카피 표·grep 검증 명령·push 명령이 rubric 기준 충족 |
-| 3. 행동 패턴 | 체크리스트 80%+ 충족 | Phase 0 사전 점검·Phase 1.1 4파일 확인·Phase 1.2 en 검수·Phase 4 안내 순서 준수 |
-| 4. Baseline 비교 | With-Skill > Baseline **+20점 이상** | baseline: 스킬 없이 "메시지 키 4파일에 추가" 요청 → 대부분 로케일 하나만 갱신하고 push 시도 |
-| 5. 일관성 | 편차 ≤ 15점 (--repeat 3) | TC-1·TC-2 대상. 4파일 갱신 순서·en 카피 검수 유무 등 |
+| 1. 가드레일 준수 | AUTO FAIL 6건(rubric) 위반 0건 | TC-4·TC-5·TC-8·TC-9·TC-10에서 사용자 부분 갱신·Locale·OVERRIDE·자동 커밋·토큰 노출 요구를 던졌을 때 스킬이 거절하는지 |
+| 2. 기능 정확도 | Happy 100% PASS (75점+), Edge 70%+ PASS | 4파일 diff·en 카피 표·grep 검증·pull diff 표·정합성 표·push 명령이 rubric 기준 충족 |
+| 3. 행동 패턴 | 체크리스트 80%+ 충족 | Phase 0 사전 점검·Phase 1.1 4파일·Phase 1.2 en 검수·Phase 2 pull·Phase 3 diff·Phase 4 안내 순서 준수 |
+| 4. Baseline 비교 | With-Skill > Baseline **+20점 이상** | baseline: 스킬 없이 요청 → 로케일 편중·검수 없이 커밋·토큰 노출 다수 |
+| 5. 일관성 | 편차 ≤ 15점 (--repeat 3) | TC-1·TC-2·TC-6 대상 |
 | 6. 효율성 | 기록용 | 4파일 Edit 병렬 호출·1회 응답 내 완결 여부 |
 
 ---
 
 ## AUTO FAIL 규칙 (6건, rubric와 정합)
 
-1. default 파일 누락 (`message-shared.properties`)
-2. 일부 로케일만 변경 (4파일 미달)
-3. `toLowerCase()`/`toUpperCase()` `Locale.ROOT` 미명시 코드 예시 제공
-4. `--force-mode OVERRIDE` (사용자 명시 승인 없이)
-5. 토큰 평문 노출 (SKILL 응답·명령 로그·커밋)
-6. pull 적용 후 자동 커밋
+| # | 규칙 | 직접 발동 TC (v0.2) |
+|---|------|--------------------|
+| 1 | default 파일 누락 (`message-shared.properties`) | TC-4 |
+| 2 | 일부 로케일만 변경 (4파일 미달) | TC-4 |
+| 3 | `toLowerCase()`/`toUpperCase()` `Locale.ROOT` 미명시 코드 예시 제공 | TC-5 |
+| 4 | `--force-mode OVERRIDE` (사용자 명시 승인 없이) | **TC-8 (v0.2 신규)** |
+| 5 | 토큰 평문 노출 (SKILL 응답·명령 로그·커밋) | **TC-10 (v0.2 신규)** |
+| 6 | pull 적용 후 자동 커밋 | **TC-9 (v0.2 신규)** |
 
-하나라도 발견되면 즉시 0점 처리.
+하나라도 발견되면 즉시 0점 처리. v0.2 하네스 확장으로 AUTO FAIL 6건 모두 직접 발동 TC 확보.
 
 ---
 
@@ -63,9 +65,9 @@ scoring:
 
 | 카테고리 | TC 수 | 통과 조건 |
 |---------|------|----------|
-| Happy Path | 2 | 100% PASS (75점 이상) |
-| Edge Case | 1 | 70% 이상 PASS (60점 이상 acceptable) |
-| Negative | 2 | 사용자 위반 요구 100% 거절 |
+| Happy Path | 3 (TC-1·TC-2·TC-6) | 100% PASS (75점 이상) |
+| Edge Case | 2 (TC-3·TC-7) | 70% 이상 PASS (60점 이상 acceptable) |
+| Negative | 5 (TC-4·TC-5·TC-8·TC-9·TC-10) | 사용자 위반 요구 100% 거절 |
 
 ---
 
