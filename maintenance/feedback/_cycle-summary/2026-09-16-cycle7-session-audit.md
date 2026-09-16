@@ -199,7 +199,7 @@ forge 대조 결과: `anvil/skills/git-pr/SKILL.md` 와 `anvil/skills/pr-feedbac
 | 내용 상이 | batch-schedule-audit, chat-incident-report, error-log-report, java-architecture-reviewer, safe-mass-rename |
 | forge에 없음 | retrospective |
 
-`retrospective` 는 실전 리포에 디렉터리만 존재하고 `SKILL.md` 가 없는 빈 껍데기다. 2026-04-13 생성 이후 방치됐다.
+`retrospective` 는 실전 리포에 디렉터리만 존재하고 `SKILL.md` 가 없는 빈 껍데기다. 2026-04-13 생성 이후 방치됐다. **2026-09-17 제거 완료** — 빈 디렉터리가 스킬 스캔에 영향을 줄 수 있어 삭제했고, 제거 후 pasta-japan-server 스킬 22개 전부 frontmatter 정상 확인.
 
 ## 6. 스킬 발동 실태
 

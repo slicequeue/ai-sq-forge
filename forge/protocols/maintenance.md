@@ -87,6 +87,16 @@ git branch -r | grep -oE "<패턴>" | sort | uniq -c
 
 2026-09-16 사이클 7 에서 `refac:` 를 forge 오기로 판정했다가 실측(`refac:` 1,264 vs `refactor:` 267)으로 뒤집힌 사례가 있다. 문서 두 개(`pasta-rules/11`, 실전 `rules/11`)가 모두 관행과 어긋나 있었기 때문에 문서 대조로는 알 수 없었다.
 
+### 심링크 무결성 검사
+
+forge 저장소는 `.claude/rules/` 와 `.claude/commands` 를 심볼릭 링크로 원본에 연결한다. 원본 파일을 개명·이동하면 링크가 **조용히** 깨진다. 오류가 표시되지 않고 규칙이 로드되지 않은 채로 작업이 진행된다.
+
+```bash
+find .claude -type l ! -exec test -e {} \; -print   # 깨진 링크 출력. 0건이어야 정상
+```
+
+2026-09-17 점검에서 13개가 전부 깨져 있었고, 원본이 `.mdc` → `.md` 로 개명된 시점부터 5개월간 프로젝트 규칙이 로드되지 않은 상태였다. 상세는 `maintenance/feedback/_infra/2026-09-17-broken-rules-symlinks.md`.
+
 ### 사이클 단절 신호
 
 `maintenance/feedback/` 에 **1개월 이상 기록이 없으면** 사이클이 끊긴 것이다. 즉시 이 점검을 실행한다.
