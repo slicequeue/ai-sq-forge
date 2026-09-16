@@ -1,9 +1,9 @@
 ---
 name: java-business-logic-reviewer
 description: "백엔드 Java Spring Boot 비즈니스 로직·요건 준수 리뷰 전용 스킬 — PRD 수용 기준·TDD 설계 vs 실제 구현 코드 정합성 검증. 도메인 불변식·엣지 케이스 사각지대 검출. 요건 리뷰 요청 시 자동 트리거, java-composite-reviewer 안에서 5번째 관점으로 조합. Use proactively when reviewing PRD acceptance criteria, TDD alignment to code, domain invariants, or missing edge-case handling."
-version: "0.1"
-last-modified: "2026-07-09"
-changelog: "v0.1 — 2026-07-09 리뷰 스킬 세분화 4번째 관점으로 신설. 사용자 초기 제안(2026-07-09 오후)에서 유예됐던 비즈니스 로직 관점 채택. prd-plan-designer(문서↔문서 정합)와 층위 분리 — 이 스킬은 문서↔코드 정합. 5분류 판정(매핑됨·부분 매핑·미구현·사각지대·불변식 위반)."
+version: "0.2"
+last-modified: "2026-09-16"
+changelog: "v0.2 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 검사 5항목 추가 — 장애 시 동작(RR-1)·결정성(RR-2)·enum 순서(RR-3)·벌크 연산(RR-4)·응답 단위(RR-6) | v0.1 — 2026-07-09 리뷰 스킬 세분화 4번째 관점으로 신설. 사용자 초기 제안(2026-07-09 오후)에서 유예됐던 비즈니스 로직 관점 채택. prd-plan-designer(문서↔문서 정합)와 층위 분리 — 이 스킬은 문서↔코드 정합. 5분류 판정(매핑됨·부분 매핑·미구현·사각지대·불변식 위반)."
 harness-status: pending
 ---
 
@@ -69,6 +69,22 @@ harness-status: pending
 | BIZ-HG-3 | 근거 없는 "매핑됨" 판정 | 매핑됨 표기에 파일:라인 근거가 없음 (prd-plan-designer 원칙 계승) | **AUTO FAIL** |
 | BIZ-HG-4 | 불변식 위반 최우선 보고 누락 | 도메인 불변식 위반 발견 시 리포트 최상단 배치 필수 (숨기면 실사고 유발) | **AUTO FAIL** |
 | BIZ-HG-5 | 코드 자의적 수정 시도 | 이 스킬은 읽기 전용. Edit/Write 도구로 코드 변경 시도 | **AUTO FAIL** |
+
+---
+
+## 리뷰 재발 방지 검사 (공통 자원 참조)
+
+> 원본: `forge/common/review-recurrence-guard.md`(배포본 `.claude/shared/review-recurrence-guard.md`)
+
+도메인 불변식 검증과 함께 아래를 검사한다. 실제 리뷰에서 반복 지적된 유형이다.
+
+| 검사 | 기준 |
+|------|------|
+| 장애 시 동작 (RR-1) | 막는 로직에서 규칙 0건·예외·워밍업 실패 시 열리는지 닫히는지가 코드·주석에 명시됐는가. 판정 실패를 로그·지표 없이 통과시키지 않는가. 동일 로직의 fail 정책이 경로마다 대칭인가 |
+| 결정성 (RR-2) | 순서가 의미를 갖는 정렬에 동점 2차 기준이 있는가. `groupingBy` HashMap 순회·`ORDER BY` 없는 `get(0)` 에 의존하지 않는가. `limit` 이 `sorted` 뒤라면 구성원 변동을 본문에 반영했는가 |
+| enum 순서 결합 (RR-3) | `values()` 순서·`ordinal()` 에 값이 대응돼 있지 않은가 |
+| 벌크 연산 (RR-4) | 벌크 update/delete 직후 같은 트랜잭션에서 같은 엔티티를 재조회하지 않는가 |
+| 응답 단위·용어 (RR-6) | 한 응답 안에서 단위와 Swagger 용어가 통일됐는가. 설명이 실제 채워지는 값과 일치하는가 |
 
 ---
 

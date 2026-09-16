@@ -1,9 +1,9 @@
 ---
 name: admin-thymeleaf-ui
 description: "moneyball `admin` 모듈에서 Thymeleaf + Thymeleaf Layout Dialect + AdminLTE(Bootstrap)로 관리자 화면을 만들거나 고칠 때 사용한다. `layout:decorate`, `layout/fragments`, `static/js`·`static/css` 배치, `@Controller`+`Model`, CSRF 메타·fetch 헤더, 사이드바·모달 프래그먼트, 관리자 이력·권한 패턴을 저장소 관례에 맞춘다. '어드민 페이지', 'Thymeleaf', '관리자 UI', 'AdminLTE', '사이드바 메뉴', '템플릿', 'static/js', 'layout:decorate', '모달', '관리자 화면 추가' 등이 나오면 반드시 이 스킬을 읽는다."
-version: "1.2"
-last-modified: "2026-05-19"
-changelog: "v1.2 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(기존 admin 패턴 정합 명시, 가정 vs 확인 분리, sidebar/templates 위치 사전 확인). | v1.1 — 실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규, 자기검증 19~22번 추가, 트러블슈팅 표 항목 추가"
+version: "1.3"
+last-modified: "2026-09-16"
+changelog: "v1.3 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드·범위 규율 가드 참조 섹션 신설 (템플릿 통째 덮기 금지, 완료 보고 전 실물 확인, 같은 요구 2회 재설명 시 개념 합의 우선) | v1.2 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 추가(기존 admin 패턴 정합 명시, 가정 vs 확인 분리, sidebar/templates 위치 사전 확인). | v1.1 — 실전 역수입: 'OAuth2/SecurityContext 격리' 섹션 신규, 자기검증 19~22번 추가, 트러블슈팅 표 항목 추가"
 ---
 
 # admin-thymeleaf-ui — Moneyball Admin UI (Thymeleaf)
@@ -125,6 +125,23 @@ changelog: "v1.2 — blueprint v2.0 패턴 이식: 자기 검증 v2.0 3항목 �
 | `references/guardrails-and-security.md` | 전역 변경 가드레일, PII/보안 주의점 |
 
 ---
+
+## 파괴적 쓰기 가드 (공통 자원 참조)
+
+> 원본: `forge/common/destructive-write-guard.md` (배포본: `.claude/shared/destructive-write-guard.md`)
+
+- **기존 템플릿·정적 자원을 덮어쓰기 전 먼저 읽는다** — `cat >` · Write 통째 덮기 금지 (DW-3)
+- **덮어쓰기 전 `git status --short <경로>` 로 미커밋 변경 확인** (DW-1)
+- **2개 이상 파일 일괄 수정 전 복구 지점 확보** (DW-4)
+- **완료 보고 전 실제 화면·파일을 조회해 반영을 확인한다** (DW-7)
+
+## 작업 범위 규율 가드 (공통 자원 참조)
+
+> 원본: `forge/common/scope-discipline-guard.md`(배포본 `.claude/shared/scope-discipline-guard.md`)
+
+- **범위 밖 문제 발견 시 보고까지만** (SC-1)
+- **승인 없이 새 화면·엔드포인트·의존성 도입 금지** (SC-3)
+- **같은 요구를 2회 이상 재설명받으면 구현 재시도 대신 개념·구조 정의부터 합의** (SC-6)
 
 ## 자기 검증 체크리스트
 

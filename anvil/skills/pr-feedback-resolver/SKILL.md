@@ -1,9 +1,9 @@
 ---
 name: pr-feedback-resolver
 description: "PR 리뷰 코멘트(CodeRabbit 포함)를 수집하여 수정 계획을 세우고 코드를 수정하는 스킬. PR 피드백 반영, CodeRabbit 대응, 리뷰 수정, PR 코멘트 처리 요청 시 사용. Use proactively when the user asks to handle PR feedback, CodeRabbit comments, or review modifications."
-version: "1.5"
-last-modified: "2026-05-19"
-changelog: "v1.5 — blueprint v2.0 패턴 이식: Phase 0.5 PR 컨텍스트 현황 파악 명시(머지 정책·CI 상태·중복 코멘트), 자기 검증 v2.0 3항목 추가(확인 vs 가정 분리, 답글 근거 명시) | v1.4 — 실전 역수입: CodeRabbit 봇 vs 사람 리뷰어 호출 파라미터 분리. 사람 리뷰어 답글 패턴 A-1/A-2/A-3 3분류. v1.3 — 답글 작성 시 sq-tone-writer 경유 의무화 + /replies → POST /comments 패턴 정정"
+version: "1.6"
+last-modified: "2026-09-16"
+changelog: "v1.6 — 2026-09-16 사이클 7 감사 반영: 저장소 PR 템플릿 확인 하드 가드레일 + 파괴적 쓰기 가드 참조 추가 (PR #726 양식 위반 사고). | v1.5 — blueprint v2.0 패턴 이식: Phase 0.5 PR 컨텍스트 현황 파악 명시(머지 정책·CI 상태·중복 코멘트), 자기 검증 v2.0 3항목 추가(확인 vs 가정 분리, 답글 근거 명시) | v1.4 — 실전 역수입: CodeRabbit 봇 vs 사람 리뷰어 호출 파라미터 분리. 사람 리뷰어 답글 패턴 A-1/A-2/A-3 3분류. v1.3 — 답글 작성 시 sq-tone-writer 경유 의무화 + /replies → POST /comments 패턴 정정"
 ---
 
 # pr-feedback-resolver — PR 피드백 수정 스킬
@@ -185,6 +185,8 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 
 ### 하드 가드레일 (절대 위반 불가)
 
+- **PR 본문을 새로 쓰거나 고칠 때는 저장소 템플릿을 먼저 확인한다** — `ls .github/PULL_REQUEST_TEMPLATE.md`. 존재하면 섹션명을 이모지·기호까지 문자 그대로 사용하고 임의 축약·재작명하지 않는다. 상세는 `git-pr` 스킬 Phase 2-0. 2026-08-31 PR #726 에서 이 스킬이 발동한 상태로 양식을 위반해 전면 재작성한 사고가 있다
+- **파괴적 쓰기 가드 준수** — `forge/common/destructive-write-guard.md`(배포본 `.claude/shared/destructive-write-guard.md`). 리뷰 반영으로 기존 파일을 고칠 때 통째 덮기 금지(DW-3), 덮기 전 미커밋 변경 확인(DW-1)
 - **push 전 답글 금지** — 반드시 코드 수정 → 커밋 → push → 답글 순서. push 없이 답글만 달면 CodeRabbit이 변경사항을 확인할 수 없음
 - **커밋은 `/git-commit` 스킬 사용 필수** — 임의 형식 `git commit` 금지
 - **기존 obesity 마이그레이션 파일 수정/삭제 금지**

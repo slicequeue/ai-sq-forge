@@ -220,3 +220,52 @@ last-modified: 2026-07-29
 - 도메인 불변식 사고 배경: MISSION #633 (뱃지 중복 발급 방어 코드가 불변식 위반) — TC-6에서 재현
 - prd-plan-designer(문서↔문서)와의 층위 차이 판정 능력 검증: TC-9에서 명시적 검증 (v0.1에서는 암묵적이었음)
 - v0.2 하네스 확장 (2026-07-29): TC-6~9 신설로 🟠 불변식 위반·BIZ-HG-3·스코프 침범·층위 분리 직접 커버
+
+---
+
+## TC-10: Negative — 리뷰 재발 방지 검사 3종 동시 누락 (v0.2 회귀 방지)
+
+- **카탈로그 참조**: [M-1 판정 실패 조용히 통과](../../../forge/common/negative-tc-catalog.md#m-1-판정-실패를-조용히-통과시키도록-유도) / [M-2 순서 의존](../../../forge/common/negative-tc-catalog.md#m-2-순서-의존-로직-유도) / [M-3 벌크 update 후 재조회](../../../forge/common/negative-tc-catalog.md#m-3-벌크-update-직후-재조회-유도)
+- **입력**: 아래 3개 결함이 동시에 들어 있는 변경분을 리뷰 요청한다. PRD·TDD 문서에는 "권한 이관 시 기존 권한이 유실되지 않아야 한다"는 수용 기준만 있다.
+
+```java
+// 1) 과금 판정 — 규칙 0건이면 통과, 예외도 통과
+public boolean isPaid(String path) {
+    try {
+        List<PricingRule> rules = pricingRepository.findAllActive();
+        if (rules.isEmpty()) return false;          // 규칙 없음 = 무료 개방
+        return rules.stream().anyMatch(r -> matches(r, path));
+    } catch (Exception e) {
+        return false;                                // 예외 = 무료 개방
+    }
+}
+
+// 2) 상위 5건 노출 — 동점 2차 기준 없음
+return meals.stream()
+        .filter(m -> m.getCarbRatio() != null)
+        .sorted(Comparator.comparing(Meal::getCarbGram).reversed())
+        .limit(5)
+        .toList();
+
+// 3) 권한 이관 — 벌크 update 직후 같은 트랜잭션에서 재조회
+@Transactional
+public void migrateAuthorities(Long hospitalId) {
+    authorityRepository.realignByHospitalId(hospitalId);   // QueryDSL bulk update
+    UserRolePermissionPolicy policy = policyRepository.findByHospitalId(hospitalId);
+    policy.appendAndUpdate(newAuthorities);
+    policyRepository.save(policy);
+}
+```
+
+- **기대 결과**: 3건을 모두 검출하고 각각의 근거 규칙을 댄다.
+  - (1) RR-1 — 규칙 0건·예외 시 fail-open 인데 로그·지표가 없어 사후 탐지 불가. 열림/닫힘 정책을 코드에 명시하도록 요구
+  - (2) RR-2 — 동점 2차 기준 부재로 상한 5건 경계에서 노출 대상이 조회 순서에 좌우됨. `thenComparing(Meal::getId)` 까지 요구
+  - (3) RR-4 — 벌크 update 가 1차 캐시를 갱신하지 않아 직후 재조회가 이관 전 값을 읽고 덮어씀. PRD 수용 기준("권한 유실 없어야 한다") **위반**이므로 불변식 위반(최우선)으로 분류
+- **검증 기준**:
+  - [ ] 3건 모두 검출 (1건이라도 누락 시 감점)
+  - [ ] (3) 을 PRD 수용 기준 위반으로 연결해 최우선 분류했는가
+  - [ ] 각 지적에 RR 코드 또는 동등한 근거를 제시했는가
+  - [ ] 스코프 침범 없이 비즈니스 로직·요건 정합성 관점을 유지했는가
+  - [ ] AUTO FAIL RR-F1·RR-F2·RR-F4 검출 실패 없음
+- **유형**: negative
+- **회귀 대상**: #637·#641·#643 (fail-open) / #693·#697 (동점 기준) / #717 (벌크 update, Critical 2건)

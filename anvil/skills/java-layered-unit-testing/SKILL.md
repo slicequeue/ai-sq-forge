@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
 description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.5"
-last-modified: "2026-07-09"
-changelog: "v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
+version: "1.7"
+last-modified: "2026-09-16"
+changelog: "v1.7 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: RR-12 테스트 실효성 검사 추가 — 동어반복·위임만 검증·목표 경로 미실행·수동 나열 목록·경계값 픽스처·테스트 var 금지 | v1.6 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드 참조 연결 — 기존 테스트 파일은 먼저 읽고 Edit 로 추가, 통째 덮기 금지(DW-3). 근거: 2026-09-01 UserDeviceTest.java 기존 테스트 3건 삭제 | v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -147,6 +147,26 @@ class MyRepositoryTest {
 ---
 
 ## 절대 금지 / 반드시 수행
+
+### 파괴적 쓰기 가드 (공통 자원 참조)
+
+> 원본: `forge/common/destructive-write-guard.md` (배포본: `.claude/shared/destructive-write-guard.md`)
+
+- **기존 테스트 파일을 반드시 먼저 읽고 `Edit` 로 추가한다** — `cat >` · Write 로 통째 덮지 않는다 (DW-3). 2026-09-01 `UserDeviceTest.java` 를 덮어써 기존 테스트 3건을 삭제한 사고가 리뷰에서 발견됐다. 테스트 파일은 기존 메서드가 있을 확률이 가장 높은 파일 유형이다
+- **덮어쓰기 전 `git status --short <경로>` 로 미커밋 변경 확인** (DW-1)
+- **작업 후 `git status` / `git log <base>..HEAD --name-only` 로 의도치 않은 삭제가 없는지 확인** (DW-5)
+
+### 리뷰 재발 방지 가드 — 테스트가 실제로 무엇을 잡는가 (공통 자원 참조)
+
+> 원본: `forge/common/review-recurrence-guard.md`(배포본 `.claude/shared/review-recurrence-guard.md`) RR-12
+
+- **동어반복 테스트 금지** — 검사 대상과 검사 기준이 같은 상수·같은 정규식이면 테스트는 항상 참이다. 오타를 넣어도 통과한다면 아무것도 잡지 못한다
+- **위임만 검증하는 테스트 금지** — 서비스가 리포지토리 결과를 그대로 반환하는데 mock 반환값이 그대로 나오는지만 보면 깨질 수 없다
+- **목표 경로가 실제로 실행되는지 확인** — 선검사(`exists`)로 early-return 하면 잡으려던 예외 경로가 한 번도 실행되지 않을 수 있다
+- **수동 나열 목록 대신 스캔** — 대상을 손으로 나열하면 추가 시 갱신을 잊어 안전망이 조용히 빈다. 패키지·리플렉션 스캔으로 대체하고, 스캔 범위가 실제 대상 전체를 덮는지 확인한다
+- **경계값 픽스처** — `limit`·임계값 로직은 경계를 **넘는** 픽스처를 쓴다. 상위 5건 로직을 3건으로 테스트하면 경계를 지나가지 않는다. 임계값 바로 옆 픽스처는 임계값이 조금만 바뀌어도 의도와 다른 이유로 실패한다
+- **검증 방법** — 검증하려는 동작을 일부러 깨뜨렸을 때 테스트가 실패하는지 확인한다. 실패하지 않으면 회귀를 막지 못한다
+- **테스트 코드에도 `var` 금지** — 명시 타입이 컨벤션이다. 같은 파일 기존 테스트가 `var` 를 써도 따라가지 않는다
 
 ### 절대 금지
 - **H2 DB 사용** — Testcontainers MySQL 필수 (Infrastructure 계층)

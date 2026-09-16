@@ -1,9 +1,9 @@
 ---
 name: java-architecture-reviewer
 description: "백엔드 Java Spring Boot 아키텍처·컨벤션 리뷰 전용 스킬 — 4-Tier 계층·Bean 관리·모듈 관계·패턴 준수·pasta-rules 컨벤션. 아키텍처 관점 요청 시 자동 트리거, java-composite-reviewer 에이전트 안에서도 조합 가능. Use when the user asks for architecture review, layering audit, Bean/module boundary check, or convention compliance."
-version: "0.1"
-last-modified: "2026-07-09"
-changelog: "v0.1 — 2026-07-09 self-code-reviewer v1.11에서 아키텍처·컨벤션 관점 분리·신설. self의 Bean Qualifier cross-module·구현체 모듈·FQCN·Bean 이름 매직 스트링 룰 이관 + pasta-rules 참조 + 모듈 관계·@Entity 스캔 경계·패턴 준수 확장. java-spring-coder v1.11의 4-Tier·공용 모듈 @Entity 회피·@ConditionalOnBean 회피 하드 가드레일과 짝."
+version: "0.2"
+last-modified: "2026-09-16"
+changelog: "v0.2 — 2026-09-16 사이클 7 감사 역수입: 핵심 규칙 7 방어 로직 적용 범위 검사 신설 (공용 진입점 우선, 실측 근거로 커버리지 축소 금지. PR #552 사례). | v0.1 — 2026-07-09 self-code-reviewer v1.11에서 아키텍처·컨벤션 관점 분리·신설. self의 Bean Qualifier cross-module·구현체 모듈·FQCN·Bean 이름 매직 스트링 룰 이관 + pasta-rules 참조 + 모듈 관계·@Entity 스캔 경계·패턴 준수 확장. java-spring-coder v1.11의 4-Tier·공용 모듈 @Entity 회피·@ConditionalOnBean 회피 하드 가드레일과 짝."
 harness-status: pending
 ---
 
@@ -152,6 +152,21 @@ Domain이 Infrastructure/Web을 import하거나, Application이 Web을 import하
 - `java.lang.reflect.Field` 등 표준 라이브러리 인라인
 
 **검사 제외**: 어노테이션 인자 문자열, SpEL, JPQL/SQL 쿼리, 로그 메시지 본문.
+
+### 7. 방어 로직 적용 범위 검사
+
+동시성·일시장애 방어(재시도, 중복 방지, 락, 예외 흡수)가 **일부 호출 지점에만** 붙어 있는지 검사한다.
+
+| 검사 항목 | 절차 |
+|----------|------|
+| 호출 지점 전수 | 방어 대상 로직을 호출하는 지점을 전부 grep 으로 센다 |
+| 공용 진입점 존재 | 공용 진입점이 있으면 방어는 거기에 있어야 한다. 개별 핸들러에 흩어져 있으면 지적 |
+| 범위 축소 근거 | "운영에서 이 경로에서만 관측됐다"는 실측 근거로 **커버리지를 좁힌 경우 지적**. 실측 건수는 예외 화이트리스트를 좁히는 근거로는 유효하나 적용 범위를 좁히는 근거로는 쓰지 않는다 |
+| 대안 명시 | 공용 진입점이 없으면 없는 이유와 대안(aspect 등)이 코드나 PR 에 기술돼 있는지 |
+
+**근거**: PR #552 에서 `checkMissionAndAwardBadge` 를 호출하는 7개 핸들러 중 1개에만 방어를 붙였고 리뷰어가 "나머지 6개도 같은 위험 아니냐"고 지적했다. 당시 실측 근거로 범위를 좁혔으나 이후 완전히 다른 경로에서 같은 문제가 재현됐다.
+
+**참고 선례**: PR #633(서비스 계층 이동 + 공용 예외 판별 유틸 + 원자적 UPDATE), PR #647(재시도 판정 철학 문서화, 공용 private static 헬퍼, 경계 양쪽 회귀 테스트), PR #653(단건 이벤트 풀 포화 시 `CallerRunsPolicy`).
 
 ---
 

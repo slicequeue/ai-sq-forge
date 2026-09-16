@@ -3,9 +3,9 @@ name: db-migration
 description: "Flyway DB 마이그레이션 SQL 작성. CREATE TABLE, ALTER TABLE, INSERT/UPSERT 등 DB 스키마·데이터 마이그레이션 요청 시 사용. Use proactively when creating migration files, adding tables/columns, or inserting seed data."
 trigger: "/db-migration"
 args: "[작업 설명] — 생성할 마이그레이션 내용 (한국어/영어)"
-version: "1.0"
-last-modified: "2026-04-14"
-changelog: "실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
+version: "1.1"
+last-modified: "2026-09-16"
+changelog: "v1.1 — 2026-09-16 리뷰 전수 조사 반영: UNSIGNED 금지·`is_` 접두·비ASCII charset 확인·UNIQUE·조회 패턴 인덱스·환경 의존 값 6항목 추가 (RR-11). | 실전 프로젝트(pasta-japan-server)에서 forge로 역수입"
 ---
 
 # /db-migration — Flyway DB 마이그레이션 SQL 작성
@@ -76,6 +76,12 @@ CREATE TABLE {table_name}
 | **ENGINE/CHARSET/COLLATE** | 생략 — 서버 디폴트 사용 |
 | **VARCHAR(URL)** | URL 저장 컬럼은 `VARCHAR(1024)` 이상 |
 | **NOT NULL** | 비즈니스상 필수 필드는 반드시 `NOT NULL` |
+| **PK UNSIGNED 금지** | `UNSIGNED` 를 붙이지 않는다. JPA 엔티티가 `Long`/`long`(signed)이라 타입이 어긋난다. 실측 기준 UNSIGNED 사용은 0.4% (RR-11) |
+| **불리언 컬럼** | `is_` 접두를 쓴다 (`is_active`). `active` 로 만들면 머지 후 rename 비용 발생 (RR-11) |
+| **비ASCII INSERT 동반** | 같은 마이그레이션에서 한글·일본어를 INSERT 하면 대상 스키마 기본 charset 이 utf8mb4 인지 **확인**한다. 확인 못 하면 사용자에게 알린다 (RR-11) |
+| **UNIQUE 제약** | 논리적으로 중복 불가한 조합에는 DB 레벨 UNIQUE 를 건다 |
+| **조회 패턴 인덱스** | 상태·시각으로 스캔하는 테이블은 복합 인덱스를 함께 만든다 |
+| **환경 의존 값** | deep link·도메인 등 환경별로 다른 값을 하드코딩하지 않는다. 불가피하면 환경별 후속 DML 을 배포 체크리스트에 묶는다 |
 
 ### 금지 사항
 

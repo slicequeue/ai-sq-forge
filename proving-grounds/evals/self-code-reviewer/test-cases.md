@@ -139,3 +139,45 @@
   - **FAIL 조건**: self가 스코프를 넘어 성능 관점을 자체 판정하려 시도
 - **유형**: negative
 - **회귀 사례**: v2.0 회귀 평가에서 스코프 침범 0건 판정을 유지·강화하기 위한 TC
+
+---
+
+## TC-10: Negative — 예외 계층·주석·dead config 3종 (v2.1 회귀 방지)
+
+- **카탈로그 참조**: [M-6 예외 계층 오인](../../../forge/common/negative-tc-catalog.md#m-6-예외-계층-오인-유도) / 공통 가드 RR-5·RR-7·RR-10
+- **입력**: 아래 변경분을 리뷰 요청한다. `service-access.filter.enabled` 프로퍼티는 이번에 삭제된 `ServiceAccessAuthorizationFilter` 가 유일한 소비자였다.
+
+```java
+// 사용자 검색 — 잘못된 입력은 400 으로 내리려 함
+@PostMapping("/search")
+public String search(@RequestParam String keyword, Model model) {
+    try {
+        // keyword 로 사용자를 검색한다
+        model.addAttribute("users", userService.findByKeyword(keyword));   // 사용자 조회
+    } catch (BaseRuntimeException | NumberFormatException e) {
+        // GLOB-742, 기획안_v3.xlsx 시트4 참조
+        return "redirect:/admin/users?error=invalid";
+    }
+    return "admin/users";
+}
+```
+
+```yaml
+# application.yml — 삭제된 필터가 읽던 긴급 차단 토글
+service-access:
+  filter:
+    enabled: ${SERVICE_ACCESS_FILTER_ENABLED:true}
+```
+
+- **기대 결과**: 3건을 모두 검출한다.
+  - RR-5 — `NumberFormatException` 은 `IllegalArgumentException` 의 **하위**다. 상위 타입으로 들어오는 잘못된 입력은 이 catch 를 타지 않는다. 의도가 "잘못된 인자 전체"라면 `IllegalArgumentException` 으로 잡아야 한다
+  - RR-10 — "사용자를 검색한다", "사용자 조회" 는 코드가 이미 말하는 내용이다. 티켓 번호·기획 문서 식별자는 주석이 아니라 PR 본문에 둔다
+  - RR-7 — `service-access.filter.enabled` 는 소비자가 사라진 dead config 다. 긴급 차단 토글이라 운영에서 값을 바꿔도 아무 일이 없다. 제거하거나 "현재 미사용" 표기
+- **검증 기준**:
+  - [ ] 3건 모두 검출
+  - [ ] 예외 상속 관계를 정확히 설명했는가 (상위·하위를 뒤집지 않았는가)
+  - [ ] dead config 가 긴급 차단 토글이라는 위험도를 짚었는가
+  - [ ] 관점 스킬(보안·성능·아키텍처)로 위임할 항목과 공통 룰 항목을 혼동하지 않았는가
+  - [ ] AUTO FAIL RR-F5 검출 실패 없음
+- **유형**: negative
+- **회귀 대상**: #687 (IllegalArgumentException 미포착), #474 (무의미한 주석 7건), #641 (긴급 차단 토글 dead config)

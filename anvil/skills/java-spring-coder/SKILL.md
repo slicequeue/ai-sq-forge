@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.13"
-last-modified: "2026-07-09"
-changelog: "v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
+version: "1.15"
+last-modified: "2026-09-16"
+changelog: "v1.15 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 가드(RR-1~RR-11) 공통 자원 참조를 하드 가드레일에 연결 — 장애 시 동작·결정성·enum 순서·벌크 연산·예외 계층·응답 단위·dead config·배치 파라미터·대량 조회·주석·마이그레이션 컨벤션 | v1.14 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드(DW-1~DW-7)·범위 규율 가드(SC-1~SC-7) 공통 자원 참조를 하드 가드레일에 연결 + Phase 0-7 타 저장소 이식 시 대상 저장소 컨벤션 우선 + nohup 금지·빌드 산출물 손상 검사. 근거: 미커밋 16파일 영구 소실(08-19), 범위 이탈 4건, PR #689 이식 컨벤션 오류, nohup 빌드 중단 오보고(08-18) | v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -24,6 +24,9 @@ changelog: "v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전�
 6. **admin 모듈 여부 확인**: 작업 대상이 `admin/` 패키지인가?
    - **YES** → 13~16 규칙 추가 로드. 4-Tier 대신 레이어 혼합형, `@Controller`(NOT `@RestController`) 적용
    - **NO** → 기존 01~12 규칙 적용
+7. **타 저장소 코드 이식 여부 확인**: 다른 저장소(예: 한국 moneyball → 일본 pasta-japan-server)의 코드·PR 을 옮겨오는 작업인가?
+   - **YES** → 원본 저장소의 네이밍·구조 컨벤션을 그대로 가져오지 않는다. **이식 대상 저장소에 같은 성격의 설정이 이미 어떻게 들어가 있는지 실제 예시를 먼저 찾아** 그 방식에 맞춘다. 환경변수 접두사, 환경별 프로파일 파일 구성, 패키지 구조가 저장소마다 다르다. 이런 불일치는 컴파일도 테스트도 잡아주지 않는다
+   - 근거: 2026-08-14 PR #689 shutdown 타임아웃 이식 시 한국의 `PASTA_SHUTDOWN_TIMEOUT` 을 그대로 썼으나 일본 저장소는 환경변수에 `PASTA_` 접두를 쓰지 않는다
 
 ---
 
@@ -272,6 +275,44 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 
 ### 하드 가드레일 (절대 위반 불가)
 
+### 파괴적 쓰기 가드 (공통 자원 참조)
+
+> 원본: `forge/common/destructive-write-guard.md` (배포본: `.claude/shared/destructive-write-guard.md`)
+> 파일을 쓰기 전 반드시 해당 문서의 DW-1 ~ DW-7 을 적용한다.
+
+- **기존 파일 덮어쓰기 전 `git status --short <경로>` 로 미커밋 변경 확인** — 변경이 있으면 중단하고 사용자에게 알린다 (DW-1). 2026-08-19 미커밋 16개 파일 영구 소실 사고의 직접 원인
+- **"원본 상태다 / 이미 커밋됐다 / 없는 파일이다" 전제는 명령으로 확인하기 전까지 사실이 아니다** (DW-2)
+- **`cat >` · Write 로 기존 파일 통째 덮기 금지** — 반드시 먼저 읽는다. 테스트 파일은 기존 메서드 유실 위험이 특히 높다 (DW-3)
+- **2개 이상 기존 파일 일괄 재작성 전 복구 지점 확보** (DW-4)
+- **새 컬럼·필드·상수 신설 전 동일 값 전수 검색** (DW-6)
+- **완료 보고 전 결과물 실물 조회 확인** — 확인 못 했으면 "반영 완료"로 단정하지 않는다 (DW-7)
+
+### 작업 범위 규율 가드 (공통 자원 참조)
+
+> 원본: `forge/common/scope-discipline-guard.md`(배포본 `.claude/shared/scope-discipline-guard.md`)
+
+- **범위 밖 문제를 발견하면 보고까지만 하고 멈춘다** — 고치지 않는다 (SC-1)
+- **작업 대상이 아닌 저장소·브랜치에 커밋·푸시·PR 생성 금지** (SC-2)
+- **승인 없이 뷰·인덱스·테이블·모듈·외부 의존성·신규 엔드포인트 도입 금지** — 선택지와 근거를 제시하고 승인 대기 (SC-3)
+- **요청받은 고려사항을 임의 제외 금지** — 빼기 전에 사유 제시 후 승인 (SC-5)
+- **같은 요구를 2회 이상 재설명받으면 구현 재시도 대신 개념 정의부터 합의** (SC-6)
+
+### 리뷰 재발 방지 가드 (공통 자원 참조)
+
+> 원본: `forge/common/review-recurrence-guard.md`(배포본 `.claude/shared/review-recurrence-guard.md`). 실제 PR 리뷰에서 반복 지적된 유형이다. 전항을 적용한다.
+
+- **장애 시 동작 명시** — 접근 제어·과금처럼 막는 로직은 규칙 0건·예외·워밍업 실패 시 열릴지 닫힐지를 정하고 기록한다. 판정 실패를 로그·지표 없이 통과시키지 않는다 (RR-1)
+- **결정성** — 순서가 의미를 갖는 정렬에 동점 2차 기준을 `id` 까지 붙인다. `groupingBy` HashMap 순회·`ORDER BY` 없는 `get(0)` 에 의존하지 않는다. `limit` 이 `sorted` 뒤면 정렬 키 변경 시 구성원이 바뀐다 (RR-2)
+- **enum 순서 결합 금지** — `values()` 순서·`ordinal()` 에 값·처방을 대응시키지 않는다. 컴파일 오류 없이 조용히 오매핑된다 (RR-3)
+- **벌크 연산 후 재조회 금지** — QueryDSL·JPQL 벌크 update/delete 는 1차 캐시를 갱신하지 않는다. 같은 트랜잭션에서 재조회하면 변경 전 값을 읽고 덮어쓴다 (RR-4)
+- **예외 계층 확인** — `catch` 에 나열하기 전에 상속 관계를 확인한다. `NumberFormatException` 은 `IllegalArgumentException` 의 하위다. 원인이 다른 예외(토큰 불량 vs 키 서버 장애)는 타입을 갈라 처리한다 (RR-5)
+- **응답 단위·용어 일관성** — 한 응답 안에서 단위(MINUTE/HOUR)와 Swagger 용어를 통일한다. 인접 필드를 먼저 읽고 맞춘다 (RR-6)
+- **dead config 금지** — 설정 소비자를 지우면 프로퍼티도 정리한다. 긴급 차단 토글이 dead 로 남으면 장애 대응이 실패한다 (RR-7)
+- **배치 잡 파라미터** — `--name=value` 는 옵션 인자로 분류돼 잡 파라미터로 전달되지 않는다. 실행 명령을 문서에 적기 전에 확인한다 (RR-8)
+- **대량 조회 방어** — 상한 없는 전체 로드 금지, `IN` 절 분할, 값싼 필터 먼저, per-user 순차 조회는 bulk 로 전환 (RR-9)
+- **주석은 왜만** — 코드가 이미 말하는 내용을 반복하지 않는다. 티켓 번호·기획 문서 식별자는 PR 본문에 둔다 (RR-10)
+- **마이그레이션 컨벤션** — `UNSIGNED`·charset·`is_` 접두·제약 이름·UNIQUE·`@Column` 길이. 기존 마이그레이션을 먼저 읽고 맞춘다 (RR-11)
+
 - **Testcontainers(MySQL) 필수** — H2 전환 금지
 - **사용자 명시적 요청 없이 커밋 금지** — 변경 사항 보고만
 - **기존 obesity 마이그레이션 파일 수정/삭제 금지** — `myplan/` 하위만 수정
@@ -279,6 +320,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - **Application에서 Infrastructure 구체 클래스 직접 import 금지**
 - **Domain에 JPA/Spring 어노테이션 금지** — 순수 도메인 유지
 - **테스트 5회 이상 연속 실패 시 즉시 중단, 보고**
+- **긴 gradle 작업에 `nohup ... &` 사용 금지** — 하네스가 추적하는 백그라운드 실행(`run_in_background`)을 쓴다. `nohup` 으로 띄운 빌드는 래퍼 종료와 함께 중간에 죽는데 런처의 exit 0 만 보고 "완료"로 오보고된다. 죽은 빌드가 jar 을 잘린 상태로 남겨 후속 태스크가 `java.util.zip.ZipException: invalid LOC header` 로 무더기 실패한다 (2026-08-18 실사례). 빌드 산출물 손상이 의심되면 `find . -path "*/build/libs/*.jar" | xargs -n1 unzip -t` 로 검사한다. `--tests` 필터 실행 후 전체 재실행은 `UP-TO-DATE` 로 건너뛰므로 `cleanTest` 를 먼저 붙인다
 - **Non-bean 클래스에 `@Transactional` 금지** — Spring AOP 프록시 기반이므로 Spring Bean(`@Component`/`@Service`/`@Repository` 등)에서만 동작. Non-bean이면 어노테이션 제거 + Javadoc에 "프록시 미적용으로 트랜잭션 없음" 명시. 필요하면 내부에서 `SimpleJpaRepository` 단일 연산(자체 트랜잭션 보장)만 사용하거나 Bean으로 승격
 - **OAuth2 Client 커스터마이징 클래스를 `@Component`/`@Service`로 무분별하게 등록 금지** — Spring이 모든 OAuth2 Provider 플로우(Google OIDC 포함)에 자동 편입시켜 타 Provider 로그인이 깨진다. Provider 전용이면 non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 내부 주입 방식 사용
 - **admin 세션 중 `SecurityContextHolder.setAuthentication(...)` 호출 금지** — 외부 OAuth2 토큰이 admin 인증을 덮어 이후 요청 403 유발. 호출이 불가피하면 controller에서 save/finally-restore 패턴 필수

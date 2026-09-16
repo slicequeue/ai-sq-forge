@@ -1,9 +1,10 @@
 ---
 name: java-performance-reviewer
 description: "백엔드 Java Spring Boot 성능 리뷰 전용 스킬 — N+1·JPA·캐시 계층·트랜잭션 propagation·비동기·리소스 누수·GC. 성능 관점 요청 시 자동 트리거, java-composite-reviewer 에이전트 안에서도 조합 가능. Use proactively when the user asks for performance review, slow query analysis, cache/tx design check."
-version: "0.2"
-last-modified: "2026-07-09"
+version: "0.3"
+last-modified: "2026-09-16"
 changelog: |
+  v0.3 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: PERF-BULK 대량 조회 방어 룰 신설(RR-9) — 전체 로드·IN 절 상한·필터 순서·per-user 순차 조회. 근거 #746·#643.
   v0.2 — 2026-07-09 pasta 6월 사고 흡수 — HikariCP right-size + graceful shutdown 섹션 신설 (`PERF-OPS` 신규 유형). #590·#592(GLOB-521) 반영.
   v0.1 — 2026-07-09 self-code-reviewer v1.11에서 성능 관점 분리·신설. self의 WebClient timeout/4xx 재시도, Soft-delete UNIQUE, 싱글톤 mutable 룰 이관 + N+1·인덱스·캐시 계층·트랜잭션·리소스·로깅 스팸 확장. 하네스 미작성
 harness-status: pending
@@ -102,6 +103,20 @@ harness-status: pending
 ---
 
 ## 검사 룰 상세
+
+### 0. 대량 조회 방어 (`PERF-BULK`, 공통 자원 RR-9)
+
+> 원본: `forge/common/review-recurrence-guard.md`(배포본 `.claude/shared/review-recurrence-guard.md`)
+
+| 검사 | 기준 |
+|------|------|
+| 전체 로드 | 전체 사용자·전체 행을 `List` 로 한 번에 담지 않는가. 규모가 수만 이상이면 `RowCallbackHandler`·페이징·스트리밍 |
+| `IN` 절 상한 | 파라미터 개수 상한이 있는가. 넘으면 배치 분할 |
+| 필터 순서 | 값싼 필터를 먼저 적용해 잔여 집합을 줄인 뒤 비싼 조회를 하는가 |
+| per-user 순차 조회 | 리스트 bulk(`IN`) 조회로 전환 가능한가 |
+
+출처: #746, #643
+
 
 ### 1. N+1·인덱스·JPA 페치 (`PERF-JPA`)
 

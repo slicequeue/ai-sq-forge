@@ -1,9 +1,9 @@
 ---
 name: tolgee
 description: "Tolgee i18n 콘솔과 properties 파일을 동기화한다. 'tolgee push', 'tolgee pull', 'tolgee diff', '톨지 푸시', '톨지 풀', '톨지 동기화', '톨지 키 등록', '톨지 정합성 검증', 'i18n 콘솔 업로드', 'i18n 키 누락 확인' 요청 시 사용한다. dev-global Tolgee 셀프호스팅(pasta-global, project id 2) 기준으로 push/pull/diff 워크플로를 표준화한다. 토큰은 프로젝트 .env에서 읽고, push는 안전을 위해 항상 키 prefix·키 목록 명시 + KEEP 모드를 기본으로 한다."
-version: "0.2"
-last-modified: "2026-05-21"
-changelog: "v0.2: 2026-05-21 pasta 배포 사례 반영 (commit 869c972f90 v2 i18n 키 6종×4파일 + a1a425ecb2 CodeRabbit Locale.ROOT·en 카피 리뷰). Phase 1.1 신규: 4파일 동시 키 추가 강제 + 누락 검출 / Phase 1.2 신규: en 카피 품질 가드(단순 직역 차단) / Phase 4 신규: Java 코드 측 Locale.ROOT 사용 안내 (i18n 책임자로서 자바 코드 가이드 포함) | v0.1: 실전(pasta-japan-server)에서 forge로 역수입"
+version: "0.3"
+last-modified: "2026-09-16"
+changelog: "v0.3 — 2026-09-16 사이클 7 감사 반영: 운영 가드레일에 파괴적 쓰기 가드 참조 추가 — properties 4파일 동시 갱신은 다중 파일 일괄 작업이므로 DW-1·DW-3·DW-4 적용 | v0.2: 2026-05-21 pasta 배포 사례 반영 (commit 869c972f90 v2 i18n 키 6종×4파일 + a1a425ecb2 CodeRabbit Locale.ROOT·en 카피 리뷰). Phase 1.1 신규: 4파일 동시 키 추가 강제 + 누락 검출 / Phase 1.2 신규: en 카피 품질 가드(단순 직역 차단) / Phase 4 신규: Java 코드 측 Locale.ROOT 사용 안내 (i18n 책임자로서 자바 코드 가이드 포함) | v0.1: 실전(pasta-japan-server)에서 forge로 역수입"
 ---
 
 # tolgee — i18n 콘솔 동기화 스킬
@@ -246,6 +246,7 @@ i18n 키를 사용하는 신규 코드 작업 요청 시 (예: `messages.getMess
 
 ## 운영 가드레일
 
+- **파괴적 쓰기 가드 준수** — 원본 `forge/common/destructive-write-guard.md` (배포본: `.claude/shared/destructive-write-guard.md`). properties 4파일 동시 갱신은 다중 파일 일괄 작업이므로 DW-1(미커밋 변경 확인)·DW-3(통째 덮기 금지, 먼저 읽기)·DW-4(복구 지점) 가 적용된다
 1. **토큰 보호**: `.env`는 `.gitignore` 추적 제외. SKILL.md/스크립트/커밋 메시지/로그 어디에도 토큰 평문 노출 금지. 스크립트 내부에서도 `${TOLGEE_API_KEY:0:8}…` 같은 마스킹된 형태로만 로그.
 2. **콘솔이 우선인 영역 존중**: `mobile_iOS` 태그가 붙은 키(예: `myplan.guide.meal.v2.recommend_label`)는 모바일 팀 자산. 서버 스킬에서 임의로 push/pull 금지. 다룰 때는 사용자에게 알리고 확인 받기.
 3. **자동 커밋 금지**: pull 적용 후 자동 커밋하지 않는다. 사용자가 검수 후 `/git-commit-workflow`로 진행.

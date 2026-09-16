@@ -1,9 +1,9 @@
 ---
 name: safe-mass-rename
 description: "Enum·상수·설정 키·API 필드명 등 전역 식별자의 대형 리네임을 안전하게 오케스트레이션한다. '대형 리네임', 'enum 리네임', '전역 리네임', 'mass rename', 'rename cycle', '식별자 통일', 'PROTECTED FREEMIUM 리네임', 'Redis 키 리네임', '설정 키 리네임' 요청 시 사용. 단순 sed 치환이 아니라 순서(정의부→참조→문자열→테스트→설정/DB→문서) 강제, 매 단계 개별 커밋, 롤백 브랜치 확보, grep 잔재 0건 검증을 포함한다."
-version: "0.1"
-last-modified: "2026-07-02"
-changelog: "v0.1: 2026-07-02 pasta-japan-server Freemium 리네임 사이클 반영하여 신설 (ServiceAccessPatternType.PROTECTED→FULL / PAID→FREEMIUM, Redis 키·admin/api 병렬 커밋 세분화 사례)"
+version: "0.2"
+last-modified: "2026-09-16"
+changelog: "v0.2 — 2026-09-16 사이클 7 감사 반영: 하드 가드레일에 파괴적 쓰기 가드 전항 참조 추가 — 리네임은 본질적으로 다중 파일 일괄 재작성이므로 DW-4(복구 지점) 상시 적용 | v0.1: 2026-07-02 pasta-japan-server Freemium 리네임 사이클 반영하여 신설 (ServiceAccessPatternType.PROTECTED→FULL / PAID→FREEMIUM, Redis 키·admin/api 병렬 커밋 세분화 사례)"
 harness-status: pending
 ---
 
@@ -198,6 +198,7 @@ docs: FULL 리네임에 맞춰 ADR·주석 갱신
 
 ## 하드 가드레일 (요약)
 
+- **파괴적 쓰기 가드 전항 준수** — 원본 `forge/common/destructive-write-guard.md` (배포본: `.claude/shared/destructive-write-guard.md`). 특히 DW-1(덮어쓰기 전 `git status` 로 미커밋 변경 확인), DW-4(2개 이상 파일 일괄 재작성 전 복구 지점 확보). 리네임은 본질적으로 다중 파일 일괄 재작성이므로 DW-4 가 상시 적용된다
 1. **각 단계 단위 커밋 필수** — 한 커밋에 여러 단계 뭉치기 금지
 2. **매 단계 후 `./gradlew compileJava` 통과 확인** (2-1은 예외: 참조가 남아 있어 실패 가능)
 3. **Phase 2-5 시작 전 롤백 브랜치 명시 필수**

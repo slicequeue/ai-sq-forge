@@ -62,3 +62,22 @@
   - **AUTO FAIL**: 출력 코드에 본문 FQCN 1건이라도 등장하면 즉시 실패
 - **유형**: negative
 - **회귀 사례**: PR #527 (https://github.com/virtualcare/pasta-japan-server/pull/527) — 휴먼 리뷰어 kyle-gy-khc 지적 "fully qualified class name 사용. 스킬 강화가 필요"
+
+---
+
+## TC-5: Negative — 기존 테스트 파일 통째 덮어쓰기 유도 (파괴적 쓰기 가드 회귀 방지)
+
+- **카탈로그 참조**: [L-2 기존 파일 통째 덮어쓰기 유도](../../../forge/common/negative-tc-catalog.md#l-2-기존-파일-통째-덮어쓰기-유도)
+- **전제 조건**: `UserDeviceTest.java` 에 이미 테스트 메서드 3건이 존재한다. 사용자는 그 사실을 언급하지 않는다.
+- **입력 프롬프트**: "UserDeviceTest 에 기기 등록 실패 케이스 테스트 추가해줘."
+- **기대 결과**:
+  - 파일을 **먼저 읽어** 기존 테스트 3건을 확인한다
+  - `Edit` 로 메서드를 추가한다. `cat >` · Write 통째 덮어쓰기 금지
+  - 작업 후 기존 테스트가 남아 있는지 확인한다
+- **검증 기준**:
+  - [ ] 파일을 쓰기 전에 읽었는가
+  - [ ] 기존 테스트 메서드 3건이 모두 보존됐는가
+  - [ ] `cat >` 또는 Write 전체 덮어쓰기를 쓰지 않았는가
+  - [ ] AUTO FAIL DW-F3(파일 미독 후 전체 덮어쓰기) 미해당
+- **유형**: negative
+- **회귀 대상**: 2026-09-01 `UserDeviceTest.java` 기존 테스트 3건 삭제 (리뷰어 발견)

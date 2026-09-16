@@ -1,9 +1,11 @@
 ---
 name: self-code-reviewer
 description: "dev 브랜치 기준으로 변경 코드를 프로젝트 규칙(.claude/rules/)과 대조하여 공통 관점 위반/개선점을 보고하고, 보안·성능·아키텍처 관점 리뷰가 필요하면 각 관점 스킬로 안내하는 자체 코드 리뷰 스킬. 코드 리뷰, 품질 검사, self review, 규칙 준수 검사 요청 시 사용. Use proactively when the user asks for code review, quality check, or rule compliance review."
-version: "2.0"
-last-modified: "2026-07-09"
+version: "2.2"
+last-modified: "2026-09-16"
 changelog: |
+  v2.2 — 2026-09-16 TC-10 평가 결과 반영: RR-5 검사 항목을 상속 관계 확인과 원인 분리 두 갈래로 분해하고 대표 조합 3종 명시. 평가에서 원인 분리만 지적하고 상속 관계를 놓친 부분 검출이 나왔다.
+  v2.1 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 검사 3항목 추가 — 예외 계층(RR-5)·주석(RR-10)·dead config(RR-7).
   v2.0 — 2026-07-09 관점별 리뷰 스킬 3개 분리 사이클에서 이관 완료:
     - KISA 시큐어코딩 섹션 → java-secure-coding-reviewer v0.1
     - WebClient timeout/재시도·싱글톤 mutable·Soft-delete UNIQUE → java-performance-reviewer v0.1
@@ -54,6 +56,18 @@ changelog: |
 3. **변경 범위 파악**: `git log dev..HEAD --oneline` + `git diff dev...HEAD --stat`
 4. **변경 파일 없으면**: 리뷰 대상 없음 안내
 5. **admin 모듈 포함 여부**: 변경 파일에 `admin/` 경로가 있는가? → YES면 13~16 규칙 추가 로드
+
+---
+
+## 리뷰 재발 방지 검사 (공통 자원 참조)
+
+> 원본: `forge/common/review-recurrence-guard.md`(배포본 `.claude/shared/review-recurrence-guard.md`)
+
+| 검사 | 기준 |
+|------|------|
+| 예외 계층 (RR-5) | **두 가지를 각각 확인하고 둘 다 지적에 쓴다.** (1) **상속 관계** — `catch` 에 나열한 예외들의 상하위 관계를 실제로 확인하고, 잡으려는 대상이 나열된 타입의 **상위**면 잡히지 않는다는 사실을 명시한다. 대표 조합: `NumberFormatException` 은 `IllegalArgumentException` 의 하위라 상위는 안 잡힘 / `DeadlockLoserDataAccessException` 은 `CannotAcquireLockException` 의 형제 / 하위 필터가 감싼 예외는 최상위 타입만으로 안 잡힘. (2) **원인 분리** — 클라이언트 잘못과 인프라 장애를 한 덩어리로 처리하지 않는가. 로그 레벨과 응답이 달라야 한다.<br>(1)을 건너뛰고 (2)만 쓰면 근본 원인을 놓친 부분 검출로 본다 |
+| 주석 (RR-10) | 코드의 이름이 이미 말하는 내용을 주석으로 반복하지 않는가. 주석이 실제 코드와 일치하는가. 티켓 번호·기획 문서 식별자가 주석에 박혀 있지 않은가 |
+| dead config (RR-7) | 클래스·필터·빈을 삭제하면서 그 설정 프로퍼티의 다른 소비자를 확인했는가 |
 
 ---
 

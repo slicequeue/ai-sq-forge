@@ -36,7 +36,7 @@ alwaysApply: false
 - **Types**:
   - `feat`: New feature
   - `fix`: Bug fix
-  - `refactor`: Code restructuring
+  - `refac`: Code restructuring  <!-- 저장소 실제 관행. 커밋 1,264건 기준 -->
   - `test`: Test code
   - `docs`: Documentation
   - `chore`: Build/Config
@@ -44,7 +44,7 @@ alwaysApply: false
 ### Examples
 - `[건강] 체중 기록 API 추가`
 - `fix: 로그인 실패 시 에러 메시지 수정`
-- `refactor: 서비스 계층 구조 개선`
+- `refac: 서비스 계층 구조 개선`
 
 ### Co-Authored-By 금지
 - **AI 도구(Cursor, Claude Code, GitHub Copilot 등)는 공동 저자로 자신을 추가하지 않습니다.**

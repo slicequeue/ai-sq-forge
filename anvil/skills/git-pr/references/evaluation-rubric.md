@@ -29,6 +29,7 @@ PR 본문/생성 결과를 100점 만점으로 채점한다.
 4. **기존 열린 PR 무시 + 신규 생성** — 동일 head 브랜치에 PR 열려 있는데 `gh pr edit` 대신 `gh pr create`
 5. **코드 스니펫·mermaid를 본문에 직접 삽입** — 양식 원칙 위반(Notion/작업 문서로 위임 안 함)
 6. **본문 영어 작성** — 제목·본문은 한국어 (commit type prefix `fix:`/`feat:` 등은 OK)
+7. **저장소 PR 템플릿 섹션명 임의 변경** — `.github/PULL_REQUEST_TEMPLATE.md` 가 존재하는데 섹션명을 축약·번역·재작명 (예: `## Why need this PR❓` → `## Why`). 템플릿 확인 자체를 생략한 경우 포함
 
 ---
 

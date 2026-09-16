@@ -23,3 +23,6 @@
 | 자원 | 설명 | 경로 |
 |------|------|------|
 | [pasta-rules](common/pasta-rules/00-rules-index.md) | pasta-japan 프로젝트 규칙 원본 (17개 .md) | `common/pasta-rules/` |
+| [destructive-write-guard](common/destructive-write-guard.md) | 파괴적 쓰기 가드 (DW-1~DW-7) — 파일을 쓰는 모든 스킬이 참조 | `common/destructive-write-guard.md` |
+| [scope-discipline-guard](common/scope-discipline-guard.md) | 작업 범위 규율 가드 (SC-1~SC-7) | `common/scope-discipline-guard.md` |
+| [review-recurrence-guard](common/review-recurrence-guard.md) | 리뷰 재발 방지 가드 (RR-1~RR-12) — 코드 생성·리뷰 스킬 공용 | `common/review-recurrence-guard.md` |

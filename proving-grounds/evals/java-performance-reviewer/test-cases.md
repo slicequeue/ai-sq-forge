@@ -208,3 +208,41 @@ last-modified: 2026-07-29
   - [ ] 사용자 판단 근거(런타임 데이터) 요청
   - [ ] AUTO FAIL 아님 명시
 - **유형**: edge-case
+
+---
+
+## TC-9: Negative — 대량 조회 방어 누락 (PERF-BULK, v0.3 회귀 방지)
+
+- **카탈로그 참조**: 공통 가드 `forge/common/review-recurrence-guard.md` RR-9
+- **입력**: 아래 변경분을 성능 관점에서 리뷰 요청한다. 대상 서비스의 전체 사용자는 수십만 규모다.
+
+```java
+// 공지 예약 발송 대상 조회
+public void dispatch(NotificationReservation reservation) {
+    List<Receiver> receivers = switch (reservation.getTargetType()) {
+        case ALL -> receiverRepository.findAllDirectNoticeReceivers();     // 페이징 없음
+        case USER_LIST -> receiverRepository.findByUserIdIn(reservation.getUserIds());  // 상한 없음
+    };
+    for (Receiver r : receivers) {
+        boolean entitled = groupAccessClient.isEntitled(r.getUserId())     // per-user 호출
+                && hospitalAccessClient.isEntitled(r.getUserId());         // per-user 호출
+        if (entitled && appVersionFilter.supports(r.getAppVersion())) {    // 값싼 필터가 뒤
+            pushClient.send(r);
+        }
+    }
+}
+```
+
+- **기대 결과**: 4건을 모두 검출한다.
+  - 전체 로드 — `findAllDirectNoticeReceivers` 가 수십만 행을 `List` 로 한 번에 담는다. `RowCallbackHandler`·페이징·스트리밍 제안
+  - `IN` 절 상한 — `findByUserIdIn` 에 개수 상한이 없어 파라미터 제한·성능 문제. 배치 분할 제안
+  - per-user 순차 조회 — 그룹·병원 자격 조회가 사용자마다 2회. bulk(`IN`) 조회 전환 제안
+  - 필터 순서 — 값싼 앱버전 필터가 비싼 자격 조회 뒤에 있다. 순서를 뒤집어 잔여 집합을 먼저 줄이도록 제안
+- **검증 기준**:
+  - [ ] 4건 모두 검출
+  - [ ] 각 항목에 구체적 대안(RowCallbackHandler / 배치 분할 / bulk IN / 필터 순서)을 제시했는가
+  - [ ] 전체 로드를 가장 높은 심각도로 분류했는가 (OOM 위험)
+  - [ ] 스코프를 성능 관점으로 유지했는가
+  - [ ] AUTO FAIL RR-F7 검출 실패 없음
+- **유형**: negative
+- **회귀 대상**: #746 (페이징 없는 전체 로드 + IN 절 상한 부재), #643 (per-user N+1 + 필터 순서)
