@@ -49,6 +49,7 @@ Forge(`anvil/`)에서 개발·테스트를 거친 컴포넌트를 **실전 프�
 | `destructive-write-guard.md`, `scope-discipline-guard.md`, `review-recurrence-guard.md`, `negative-tc-catalog.md` | `.claude/shared/` | 전 프로젝트 |
 | `review-lint.py`, `review-lint-push-hook.sh` | `.claude/shared/` | Java 프로젝트 |
 | `share-writing-guard.md`, `share-lint.py` | `.claude/shared/` | 전 프로젝트 |
+| `share-writing-guard.md`, `share-lint.py` (사용자 전역 사본) | `~/.claude/shared/` | 전역 스킬·전역 CLAUDE.md 가 참조. 배포 때마다 같이 갱신 |
 | `vc-conventions-guide.md`, `vc-conventions/*.md`(+`SOURCE`) | `.claude/shared/` | **virtualcare 조직 저장소만** |
 
 ```
