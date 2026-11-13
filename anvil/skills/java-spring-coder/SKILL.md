@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.17"
+version: "1.18"
 last-modified: "2026-11-13"
-changelog: "v1.17 — 2026-11-13 forge 하네스 검증(TC-13~15 신설) 반영: 코드 주석 존댓말 규칙을 변수 네이밍 하위에서 '코드 주석 문체' 절로 분리하고 '응답 본문 문체와 섞지 않는다'·주석 줄만 훑는 확인 방법 추가 (TC-15 에서 본문 평서형이 주석 3건으로 번지고 자기 검증은 준수로 오보고). 자기 검증 체크리스트 번호 중복(41 두 번) 정리, 45번 주석 문체 항목 신설 | v1.16 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Phase 0 에 작성 전 질문 5개·호출처 grep 추가, 리뷰 재발 방지 가드에 RR-13 실패 격리·RR-14 동작 변경·계층·YAGNI 필드·RR-L 기계 검사 연결, 변수 네이밍(List·At·타입명·주석 존댓말) 구체화, 모드 A/B 종료 단계에 review-lint.py 실행 | v1.15 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 가드(RR-1~RR-11) 공통 자원 참조를 하드 가드레일에 연결 — 장애 시 동작·결정성·enum 순서·벌크 연산·예외 계층·응답 단위·dead config·배치 파라미터·대량 조회·주석·마이그레이션 컨벤션 | v1.14 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드(DW-1~DW-7)·범위 규율 가드(SC-1~SC-7) 공통 자원 참조를 하드 가드레일에 연결 + Phase 0-7 타 저장소 이식 시 대상 저장소 컨벤션 우선 + nohup 금지·빌드 산출물 손상 검사. 근거: 미커밋 16파일 영구 소실(08-19), 범위 이탈 4건, PR #689 이식 컨벤션 오류, nohup 빌드 중단 오보고(08-18) | v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
+changelog: "v1.18 — 2026-11-13 조직 코딩 컨벤션(virtualcare/coding-conventions PR #7) 조건부 반영: Phase 0-3 에 적용 판정(`.claude/shared/vc-conventions-guide.md` 유무) 추가, 정적 팩토리·Controller·Map 이름·JpaEntity from() 을 적용/비적용 조건부로 전환하고 상세는 references/org-conventions.md 로 분리, 테스트 DB 하드 가드레일을 '모듈 기존 설정 유지·전환 금지'로 정정(가이드 3절), review-lint 조직 컨벤션 검사 켜짐/꺼짐 확인, 완료 보고를 share-writing-guard A 등급 형식으로, 체크리스트 47~49 신설. 평가 트레이닝: 축약 변수명 요청 거부를 적용·비적용 공통 규칙으로 명시(TC-17 비적용에서 `dto` 수용), 사용자가 명시한 API 경로 변경 금지(TC-18 경로 임의 변경). Lombok 표 중간에 끼어 있던 NOT NULL 인용 블록 위치 정리 | v1.17 — 2026-11-13 forge 하네스 검증(TC-13~15 신설) 반영: 코드 주석 존댓말 규칙을 변수 네이밍 하위에서 '코드 주석 문체' 절로 분리하고 '응답 본문 문체와 섞지 않는다'·주석 줄만 훑는 확인 방법 추가 (TC-15 에서 본문 평서형이 주석 3건으로 번지고 자기 검증은 준수로 오보고). 자기 검증 체크리스트 번호 중복(41 두 번) 정리, 45번 주석 문체 항목 신설 | v1.16 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Phase 0 에 작성 전 질문 5개·호출처 grep 추가, 리뷰 재발 방지 가드에 RR-13 실패 격리·RR-14 동작 변경·계층·YAGNI 필드·RR-L 기계 검사 연결, 변수 네이밍(List·At·타입명·주석 존댓말) 구체화, 모드 A/B 종료 단계에 review-lint.py 실행 | v1.15 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 가드(RR-1~RR-11) 공통 자원 참조를 하드 가드레일에 연결 — 장애 시 동작·결정성·enum 순서·벌크 연산·예외 계층·응답 단위·dead config·배치 파라미터·대량 조회·주석·마이그레이션 컨벤션 | v1.14 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드(DW-1~DW-7)·범위 규율 가드(SC-1~SC-7) 공통 자원 참조를 하드 가드레일에 연결 + Phase 0-7 타 저장소 이식 시 대상 저장소 컨벤션 우선 + nohup 금지·빌드 산출물 손상 검사. 근거: 미커밋 16파일 영구 소실(08-19), 범위 이탈 4건, PR #689 이식 컨벤션 오류, nohup 빌드 중단 오보고(08-18) | v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -19,6 +19,7 @@ changelog: "v1.17 — 2026-11-13 forge 하네스 검증(TC-13~15 신설) 반영:
 1. **작업 계획서 탐색**: `docs/plans/*.md` 또는 `docs/tdd/*.md`에 TDD 문서가 있는지 확인
 2. **동작 모드 결정**: TDD 있으면 모드 A / 없으면 모드 B / 테스트만 요청이면 모드 C
 3. **프로젝트 규칙 로드**: `.claude/rules/` 하위 규칙 파일을 Read 도구로 참조
+   - **(v1.18) 조직 컨벤션 적용 판정**: `.claude/shared/vc-conventions-guide.md` 가 있으면 조직 컨벤션 적용 프로젝트(forge 에서 평가할 때는 TC 가 명시한 프로젝트 맥락을 따른다). 적용이면 가이드(forge `forge/common/vc-conventions-guide.md`) 2·3·4-1절과 `references/org-conventions.md` 를 읽고, 이 문서에서 "(조직 컨벤션 조건부)" 표시가 붙은 규칙은 그 문서를 따른다. 비적용이면 기존 규칙 그대로. 판정 결과를 보고 첫머리에 한 줄로 적는다
 4. **기존 코드 패턴 파악**: 같은 도메인의 기존 Entity/Service/Controller 구조 확인
 5. **JDK 21 확인**: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`
 6. **admin 모듈 여부 확인**: 작업 대상이 `admin/` 패키지인가?
@@ -119,7 +120,9 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 | RepositoryImpl | `{Domain}RepositoryImpl` | `CouponCodeRepositoryImpl` |
 | Client | `{Prefix}{Domain}Client` | `S2sFoodClient` |
 | Service | `{Domain}{Action}Service` | `CouponRedeemService` |
-| Controller | `{Domain}{Action}Controller` | `CouponRedeemController` |
+| Controller | `{Domain}{Action}Controller` (조직 컨벤션 조건부: 신규는 `{Domain}CommandController`/`{Domain}QueryController`) | `CouponRedeemController` |
+
+> 조직 컨벤션 적용 프로젝트의 이름 규칙(domain `{Domain}Entity`/`{Domain}`, `~Dto` 단독 금지, `web` 패키지, scheduler 는 infrastructure)은 `references/org-conventions.md` 3·4절.
 
 ### 서비스 메서드 네이밍
 
@@ -134,10 +137,11 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 ### 변수 네이밍
 
 - **약어 금지**: `cnt` → `count`, `amt` → `amount`, `dt` → `date`
-- **타입 반영**: `couponEntityList` (not `coupons`), `couponEntityMap` (not `map`). 응답·피드 리스트도 `mealRecordDetailResponseList` (not `responses`·`feeds`) — #792 에서 한 PR 에 11곳 지적
+- **타입 반영**: `couponEntityList` (not `coupons`), `couponEntityMap` (not `map`. 조직 컨벤션 조건부: Map 은 `{값 복수형}By{키}` — `couponEntitiesById`, 컬렉션은 요소 클래스명 복수형 `couponEntities` 도 허용). 응답·피드 리스트도 `mealRecordDetailResponseList` (not `responses`·`feeds`) — #792 에서 한 PR 에 11곳 지적
 - **시각 변수 `At` 접미사**: `Instant currentAt` (not `now`), `scheduledAt`, `deletedAt`. 상수는 `CURRENT_AT` — #789
 - **대상·결과 변수도 타입이 드러나게**: `service`·`result`·`req` 대신 `glp1InjectionPlanQueryService`·`glp1InjectionPlanAndRecordOutDto`·`settingRequestV3ForLilly` (테스트 코드 포함) — #789·#791
 - **`var` 키워드 금지**: 항상 명시적 타입 선언
+- **(v1.18) 축약 변수명 요청은 따르지 않는다 (적용·비적용 공통)**: 위 "대상·결과 변수도 타입이 드러나게"는 조직 컨벤션과 무관한 이 스킬의 기본 규칙이다. 사용자가 `dto`·`req` 같은 짧은 이름을 요청해도 타입명(`menuDetailOutDto`)으로 쓰고 사유를 한 줄로 알린다. 근거는 비적용 프로젝트면 이 절(#789·#791 리뷰 지적), 적용 프로젝트면 원문 naming 2·11. 적용 프로젝트는 여기에 더해 `e`·`saved` 금지(catch 변수 `exception`), Map `{값 복수형}By{키}` (`references/org-conventions.md` 3절)
 
 ### 코드 주석 문체 (v1.16 규칙, v1.17 위치 이동)
 
@@ -175,15 +179,15 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 |---|------|------|------|
 | 1 | `{Domain}Entity.java` | Domain | 비즈니스 로직 소유, JPA 금지 |
 | 2 | `{Domain}Repository.java` | Domain | 인터페이스, 도메인 모델만 |
-| 3 | `{Domain}JpaEntity.java` | Infra | `toEntity()`, `from()` 변환 |
+| 3 | `{Domain}JpaEntity.java` | Infra | `toEntity()`, `from()` 변환 (조직 컨벤션 조건부: 신규는 생성자 `@Builder`, RepositoryImpl 에서 생성자 호출) |
 | 4 | `{Domain}JpaRepository.java` | Infra | Spring Data JPA |
 | 5 | `{Domain}RepositoryImpl.java` | Infra | 3단계 Repository 구현 |
 | 6 | `{Domain}{Action}Service.java` | App | 오케스트레이션 |
 | 7 | `{Action}InDto.java` / `OutDto.java` | App | record 타입 |
-| 8 | `{Domain}{Action}Controller.java` | Web | Swagger + REST |
+| 8 | `{Domain}{Action}Controller.java` (조직 컨벤션 조건부: `{Domain}Command`/`QueryController`) | Web | Swagger + REST |
 | 9 | `{Action}Request.java` / `Response.java` | Web | record 타입 |
 | 10 | `Fake{Domain}Repository.java` | Test | HashMap 기반 |
-| 11 | 계층별 `*Test.java` | Test | Fake/MockMvc/Testcontainers |
+| 11 | 계층별 `*Test.java` | Test | Fake/MockMvc/모듈 기존 테스트 DB 설정 |
 
 상세 계층별 코드 패턴은 `references/four-tier-patterns.md` 참조.
 
@@ -207,12 +211,14 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 |------|------|------|
 | Domain Entity | `@Getter`, `@ToString`, `@EqualsAndHashCode` (**둘 다 필수**) | `@Setter`, `@Data`, `@Builder`(10필드 미만) |
 | JPA Entity | `@Getter`, `@NoArgsConstructor(PROTECTED)`, `@Builder`(생성자 레벨) | `@Setter`, `@Data` |
+| Service | `@RequiredArgsConstructor`, `@Log4j2`/`@Slf4j` | `@Data` |
+| Controller | `@RequiredArgsConstructor` | `@Data` |
+
+> **(v1.18) 조직 컨벤션 적용 시**: `@Setter` 는 클래스·필드 모두 전면 금지, JPA Entity 는 `@NoArgsConstructor(access = PROTECTED)` + 직접 선언한 생성자에 `@Builder`(클래스 레벨 금지), 상태 변경은 `change{Field}()` 만. 표: `references/org-conventions.md` 5절
 
 > **JPA Entity NOT NULL 컬럼 어노테이션 규칙**
 > - `@Column(nullable = false)`와 `@NotNull`(jakarta.validation.constraints)을 **반드시 병행** 사용
 > - `@Column(nullable = false)`만 단독 사용 금지 — 프로젝트 기존 패턴과 일관성 유지 필수
-| Service | `@RequiredArgsConstructor`, `@Log4j2`/`@Slf4j` | `@Data` |
-| Controller | `@RequiredArgsConstructor` | `@Data` |
 
 ### 전역 금지
 
@@ -223,20 +229,24 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - 와일드카드 import (`import java.util.*`)
 - `System.out.println` / `printStackTrace`
 
-### 정적 팩토리 메서드 규칙
+### 정적 팩토리 메서드 규칙 (조직 컨벤션 조건부)
+
+Phase 0-3 판정에 따라 둘 중 하나만 쓴다.
+
+- **조직 컨벤션 적용 프로젝트**: 신규 클래스는 생성자 직접 호출, JPA Entity 는 생성자 `@Builder`. 이미 `from()` 이 있는 기존 클래스에 필드만 더할 때는 기존 `from()` 본문을 고쳐 쓰고 새 팩토리를 만들지 않는다. 복잡한 변환만 예외(사유 기록). 사용자가 "다른 DTO 처럼 `from()` 으로" 요청해도 신규 클래스면 가이드 3절을 인용하고 생성자로 쓴다. 상세: `references/org-conventions.md` 2절
+- **비적용 프로젝트**: 아래 표(프로젝트 규칙 02·03·05)
 
 | 메서드 | 용도 | 위치 |
 |--------|------|------|
 | `of(필드들)` | 새 인스턴스 생성 | Domain Entity, VO |
-
-> **도메인 엔티티 생성자/팩토리 검증 규칙**
-> - 생성자에서 NOT NULL 필수 필드는 `Objects.requireNonNull(field, "field must not be null")`로 검증 필수
-> - `of()` 팩토리 메서드에서도 동일하게 입력 검증 필수 — null이 들어오면 즉시 실패해야 한다
-
 | `from(source)` | 다른 객체 → 이 객체 변환 | DTO, JpaEntity |
 | `toEntity()` | JpaEntity → Domain Entity | JpaEntity |
 | `to{Target}()` | 이 객체 → 다른 객체 변환 | DTO |
 | `forXxx()` | 특정 목적 생성 | DTO |
+
+> **도메인 엔티티 생성자/팩토리 검증 규칙** (공통)
+> - 생성자에서 NOT NULL 필수 필드는 `Objects.requireNonNull(field, "field must not be null")`로 검증 필수
+> - `of()` 팩토리 메서드를 쓰는 경우에도 동일하게 입력 검증 필수 — null이 들어오면 즉시 실패해야 한다
 
 ### 로깅 규칙
 
@@ -265,9 +275,9 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 6. 테스트 실패 시 자동 수정 (5회 미만). **5회 이상 → 즉시 중단, 보고**
 7. pasta-api 모듈이면 `./gradlew :pasta-api:spotlessApply`
 8. **설정 체크** — 새 API 엔드포인트 → SecurityConstants airArray 등록, 새 환경변수 → 4곳 설정
-8-1. **(v1.16) `python3 forge/common/review-lint.py`** — 위반 0건까지 고친다. 확인 항목은 해당 여부를 판단해 보고에 적는다 (RR-L)
+8-1. **(v1.16) `python3 forge/common/review-lint.py`** — 위반 0건까지 고친다. 확인 항목은 해당 여부를 판단해 보고에 적는다 (RR-L). **(v1.18)** 출력 마지막 줄의 "조직 컨벤션 검사 켜짐/꺼짐"이 Phase 0-3 판정과 맞는지 본다. 적용 프로젝트인데 꺼짐이면 `--vc` 로 다시 돌리고 가이드 배포 누락을 보고한다
 9. TDD 체크박스 업데이트 (`- [ ]` → `- [x]`)
-10. 변경 사항 보고 — **커밋하지 않음**
+10. 변경 사항 보고 — **커밋하지 않음**. 형식은 아래 "완료 보고 형식"
 
 ### 모드 B: 단순 구현
 
@@ -275,7 +285,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 2. 코드 생성 순서에 따라 구현
 3. 계층별 테스트 작성
 4. **설정 체크** — 새 API 엔드포인트 → SecurityConstants airArray 등록, 새 환경변수 → 4곳 설정
-5. 테스트 실행 → **(v1.16) `python3 forge/common/review-lint.py` 위반 0건** → 보고 — **커밋은 사용자 요청 시에만**
+5. 테스트 실행 → **(v1.16) `python3 forge/common/review-lint.py` 위반 0건, (v1.18) 조직 컨벤션 검사 켜짐/꺼짐 확인** → 보고(아래 "완료 보고 형식") — **커밋은 사용자 요청 시에만**
 
 ### 모드 C: 테스트만 추가
 
@@ -284,6 +294,14 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 3. 테스트 작성 → 실행 → 보고
 
 상세 워크플로는 `references/implementation-workflow.md` 참조.
+
+### 완료 보고 형식 (v1.18)
+
+사용자에게 하는 최종 보고는 `forge/common/share-writing-guard.md`(배포본 `.claude/shared/share-writing-guard.md`) A 등급이다.
+
+- 첫 줄 `{무엇을} 구현 완료 ({반영 단계})`. 커밋 전이면 `(로컬, 커밋 전)`. 테스트를 실제로 돌리지 못했으면 `진행 중` 또는 단계에 `테스트 미실행` 을 쓴다 (SW-1·SW-5)
+- 첫 줄 바로 다음 줄부터 한 일 2~4줄 불릿(사이에 다른 줄을 끼우지 않는다. 조직 컨벤션 판정도 불릿 한 줄로), 결과는 확인한 수치(테스트 n건 통과, review-lint 위반 0건·조직 컨벤션 검사 켜짐)로 (SW-2·SW-3)
+- 상세(파일 목록, 조직 컨벤션 판정·인용, 범위 밖 제안, 체크리스트)는 그 아래에 둔다. 없는 칸은 줄째 뺀다 (SW-6). 돌리지 않은 결과는 `미확인:` 으로 분리 (SW-7)
 
 ---
 
@@ -311,6 +329,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - **작업 대상이 아닌 저장소·브랜치에 커밋·푸시·PR 생성 금지** (SC-2)
 - **승인 없이 뷰·인덱스·테이블·모듈·외부 의존성·신규 엔드포인트 도입 금지** — 선택지와 근거를 제시하고 승인 대기 (SC-3)
 - **요청받은 고려사항을 임의 제외 금지** — 빼기 전에 사유 제시 후 승인 (SC-5)
+- **(v1.18) 사용자가 명시한 API 계약(경로·HTTP 메서드·요청/응답 필드명)은 바꾸지 않는다** — 기존 관례(예: 경로 접두사)와 다르면 요청대로 구현하고 불일치와 대안을 결정 요청으로 남긴다. 조직 컨벤션이 정하는 것은 코드 내부 이름·생성 방식이지 외부 계약이 아니다 (SC-3)
 - **같은 요구를 2회 이상 재설명받으면 구현 재시도 대신 개념 정의부터 합의** (SC-6)
 
 ### 리뷰 재발 방지 가드 (공통 자원 참조)
@@ -334,7 +353,8 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - **YAGNI 필드** — shared 이벤트·DTO 에 소비자가 쓰지 않는 필드를 두지 않는다. 나중 소비자가 그 값을 신뢰해 쓴다 (#799 `isOn`)
 - **기계 검사** — 위 항목 중 문자열로 잡히는 것은 `review-lint.py` 가 잡는다. 위반을 남긴 채 보고하지 않는다 (RR-L)
 
-- **Testcontainers(MySQL) 필수** — H2 전환 금지
+- **(v1.18) 모듈의 기존 테스트 DB 설정 유지, 전환 금지** — `src/test/resources/application-test*.yml` 을 먼저 읽고 그 설정(Testcontainers MySQL 또는 H2)을 쓴다. Testcontainers 모듈을 H2 로, H2 모듈을 Testcontainers 로 바꾸지 않는다. 테스트가 실패한다고 DB 설정·MySQL 전용 쿼리를 바꾸지 않는다 (규칙 09, vc-conventions-guide 3절)
+- **(v1.18) 조직 컨벤션 적용 판정을 뒤집지 않는다** — 적용 프로젝트에서 신규 클래스에 단순 매핑 `from()`/`of()` 를 사유 없이 새로 만들지 않는다. 비적용 프로젝트(가이드 없음)에서 조직 컨벤션을 근거로 프로젝트 규칙(규칙 05 `from()` 등)을 뒤집지 않는다. 기존 코드를 컨벤션에 맞춘다며 일괄 변경하지 않는다 (가이드 2·3절)
 - **사용자 명시적 요청 없이 커밋 금지** — 변경 사항 보고만
 - **기존 obesity 마이그레이션 파일 수정/삭제 금지** — `myplan/` 하위만 수정
 - **git stash / stash drop / stash pop 절대 금지** — 데이터 유실 사고 이력
@@ -661,7 +681,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 
 ## 자기 검증 체크리스트
 
-작업 완료 후 반드시 전 항목(46개) 확인:
+작업 완료 후 반드시 전 항목(49개) 확인:
 
 1. [ ] **패키지 구조**: 도메인 기반 flat 구조인가? (기능 기반 하위 분리 없음)
 2. [ ] **의존성 방향**: Web→App→Domain←Infra 위반 없는가?
@@ -671,10 +691,10 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 6. [ ] **record/class 정책**: DTO는 record, Entity는 class인가?
 7. [ ] **Lombok 정책**: `@Data`, `@AllArgsConstructor`, 필드 `@Autowired` 없는가?
 8. [ ] **네이밍**: 금지 단어 미사용, 약어 없음, `var` 없음, 서비스 메서드 패턴 준수?
-9. [ ] **테스트 계층**: Fake(Domain/App), MockMvc(Web), Testcontainers(Infra)?
+9. [ ] **테스트 계층**: Fake(Domain/App), MockMvc(Web), Infra 는 모듈 기존 테스트 DB 설정(Testcontainers/H2) 그대로?
 10. [ ] **테스트 스타일**: `@DisplayName` 한글 구체적, Given-When-Then, AssertJ only?
 11. [ ] **설정**: SecurityConstants airArray, 환경변수 4곳, spotless?
-12. [ ] **가드레일**: 커밋 안 함, H2 없음, 마이그레이션 보호, stash 없음?
+12. [ ] **가드레일**: 커밋 안 함, 테스트 DB 설정 전환 없음, 마이그레이션 보호, stash 없음?
 13. [ ] **admin 모듈**: admin 작업이면 13~16 규칙 참조했는가? (@Controller, AdminHistory, Thymeleaf 레이아웃)
 14. [ ] **Spring Bean/AOP**: Non-bean 클래스에 `@Transactional` 같은 AOP 어노테이션 붙이지 않았는가? OAuth2 Client 커스터마이징은 non-bean + `AuthorizedClientServiceOAuth2AuthorizedClientManager` 패턴 준수?
 15. [ ] **SecurityContext 격리**: 외부 OAuth2/API 호출이 admin 세션을 오염시키지 않는가? (save/restore 또는 setAuthentication 제거)
@@ -708,7 +728,10 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 43. [ ] **(v1.16) 작성 전 질문 5개**: 실패 격리·외부 호출 후 저장 실패·마스터 데이터 이상·기존 동작 변경·모든 진입 경로 테스트에 답했는가? (RR-13·14)
 44. [ ] **(v1.16) 이름 규칙**: 컬렉션 `*List`, 시각 `*At`, 대상·결과 변수 타입명을 지켰는가?
 45. [ ] **(v1.17) 주석 문체**: 코드 블록의 주석 줄만 따로 훑어 평서형(`한다.`·`된다.`·`이다.`·`않는다.`) 끝맺음이 0건인가? 설명 본문이 평서형이어도 주석은 존댓말이다. 훑어보지 않았으면 "준수"로 보고하지 않는다
-46. [ ] **(v1.16) review-lint 위반 0건**: `python3 forge/common/review-lint.py` 를 실행했고 확인 항목을 판단했는가? (RR-L)
+46. [ ] **(v1.16) review-lint 위반 0건**: `python3 forge/common/review-lint.py` 를 실행했고 확인 항목을 판단했는가? (RR-L) (v1.18) 출력의 조직 컨벤션 검사 켜짐/꺼짐이 판정과 맞는가?
+47. [ ] **(v1.18) 조직 컨벤션 판정**: 적용 여부를 판정해 보고에 적었는가? 적용이면 신규 클래스 생성자 직접 호출(기존 `from()` 클래스는 기존 메서드 수정), 변수명 타입명 전체·Map `By`, 신규 Controller Command/Query, `@Setter` 0건, JPA Entity 생성자 `@Builder` 를 지켰는가? 비적용이면 규칙 05 그대로인가?
+48. [ ] **(v1.18) 기존 코드 보존**: 조직 컨벤션과 다른 기존 코드를 이번 작업 범위 밖에서 고치지 않고 "범위 밖 제안"으로만 적었는가?
+49. [ ] **(v1.18) 완료 보고 형식**: 첫 줄 `{무엇을} 구현 완료 ({반영 단계})`, 한 일 2~4줄, 확인 안 한 결과 단정 없음, "없음" 채운 줄 없음?
 
 ---
 
@@ -720,4 +743,5 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 | `references/layer-code-patterns.md` | 계층별 상세 구현 패턴 (Domain Entity, VO, JPA Entity, DTO, 예외, Client) |
 | `references/test-double-patterns.md` | 테스트 더블 패턴 (Fake/Spy/Fixture, BDD 스타일, 계층별 테스트) |
 | `references/implementation-workflow.md` | 구현 워크플로 상세 (모드 A/B/C, 테스트 루프, 커밋 분리) |
+| `references/org-conventions.md` | (v1.18) 조직 코딩 컨벤션 적용 판정·조건부 규칙 (정적 팩토리·이름·Lombok·테스트 DB) |
 | `references/evaluation-rubric.md` | 평가 루브릭 (100점, AUTO FAIL 조건) |

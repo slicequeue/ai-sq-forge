@@ -91,6 +91,8 @@ Commands는 `.claude/commands/` 디렉토리 심볼릭 링크로 통째 연결�
 
 ## Git 컨벤션
 
+아래는 **forge 저장소 자체**의 규칙이다. 배포 대상 중 조직 컨벤션 적용 저장소(virtualcare, `.claude/shared/vc-conventions-guide.md` 있음)는 `git-commit`·`git-pr` 의 조직 분기(`[핵심키워드] 명사형 요약`)를 따른다.
+
 이 프로젝트의 git 워크플로는 `commands/` 내 3개 커맨드로 정의되어 있다:
 
 - **브랜치**: `api/{type}/{task-name}` 형식 (type: feat/refac/fix). base branch는 `dev`.

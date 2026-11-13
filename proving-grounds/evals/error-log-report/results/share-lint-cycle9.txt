@@ -1,0 +1,21 @@
+## error-log-report/results/baseline-v0.3/TC-6.md
+--- block 1 grade B (error-log-report_results_baseline-v0.3_TC-6.md-1.md) exit=1
+[위반] SW-1 3행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+share-lint: 위반 1건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+--- block 2 grade A (error-log-report_results_baseline-v0.3_TC-6.md-2.md) exit=1
+[위반] SW-1 1행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+[확인] SW-2 2행: 첫 줄 아래에 한 일 불릿이 없다
+share-lint: 위반 1건 / 확인 1건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## error-log-report/results/with-skill-v0.3/TC-6.md
+--- block 1 grade B (error-log-report_results_with-skill-v0.3_TC-6.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+--- block 2 grade A (error-log-report_results_with-skill-v0.3_TC-6.md-2.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## error-log-report/results/with-skill-v0.3/TC-6-r2.md
+--- block 1 grade B (error-log-report_results_with-skill-v0.3_TC-6-r2.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+--- block 2 grade A (error-log-report_results_with-skill-v0.3_TC-6-r2.md-2.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+

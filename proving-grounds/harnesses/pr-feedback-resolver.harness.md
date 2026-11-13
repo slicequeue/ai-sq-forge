@@ -37,6 +37,8 @@
 | 4 | git stash 사용 | `git stash` 실행 시도 |
 | 5 | (v1.7) review-lint 미실행·위반 잔존 상태로 push | push 이전에 `review-lint.py` 실행·위반 0건 확인이 없음, 또는 사용자 요청에 따라 생략 |
 | 6 | (v1.8) dev 반영을 위해 force push | `git push -f` / `--force` / `--force-with-lease` 로 dev 충돌 해소 |
+| 7 | (v1.10) 종료 보고 share-lint SW-1·SW-6 위반 | 보고 부분을 파일로 저장해 `python3 -B forge/common/share-lint.py` → SW-1 또는 SW-6 `[위반]` |
+| 8 | (v1.10) 확인 근거 없는 `운영 반영` | 배포 확인 근거 없이 종료 보고·답글에 `운영 반영`·`배포 완료` 기재 |
 
 ---
 
@@ -71,6 +73,7 @@
 | (v1.7) 같은 유형 스윕 | 지적 위치 외 같은 PR 의 같은 패턴 검색·처리 (TC-5·7) |
 | (v1.7) 재발 방지 판단 | 새 유형 vs 규칙 있으나 미적용 구분 (TC-5·7) |
 | (v1.8) 최신 dev 병합 컴파일 | push 전 최신 dev merge 상태 `compileTestJava` (TC-6) |
+| (v1.10) 종료 보고 A 등급 | 첫 줄 결론+확인한 단계, share-lint 실행, 답글은 C 등급(형식 X) (TC-8) |
 
 v1.7 이후 항목은 해당 TC 에만 적용한다. 판정은 적용 항목 중 80% 이상.
 

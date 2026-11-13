@@ -1,8 +1,8 @@
 ---
 name: java-architecture-reviewer
-version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-09
+version: 0.3
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # java-architecture-reviewer 평가 루브릭
@@ -19,7 +19,7 @@ last-modified: 2026-07-09
 | 2 | **pasta-rules 참조 정확도** | 15 | 변경 파일 유형에 맞는 규칙 파일을 실제 Read하고 인용. 파일 경로만 나열 금지 |
 | 3 | **Bean 관리 검사 품질** | 15 | @Bean 상수화 · Qualifier cross-module · @ConditionalOnBean vs @Profile · 인터페이스 구현체 모듈 등록 |
 | 4 | **4-Tier + 모듈 관계 검사** | 15 | import 방향 · @Entity 스캔 경계 · admin/api/batch 격리 · 순환 의존 |
-| 5 | **패턴 준수 검사** | 10 | DDD Entity/Repository 3단계/DTO record/명명 컨벤션 |
+| 5 | **패턴 준수 검사** | 10 | DDD Entity/Repository 3단계/DTO record/명명 컨벤션. (v0.3) 조직 컨벤션 적용 프로젝트는 ARCH-VC(가이드 4-1) 포함 |
 | 6 | **스코프 준수 (out-of-scope 안내)** | 10 | 보안·성능·문법·Session 오염·i18n은 담당 스킬로 안내만, 본인 리뷰 결과에 포함 금지 |
 | 7 | **리포트 형식 준수** | 10 | 유형·등급 표기 · AUTO FAIL/Critical/High/Medium/Low/Info 분류 · 검사 통과 항목 명시 |
 | 8 | **admin 모듈 예외 인지** | 5 | admin 변경 시 13/14 규칙 우선, 01/04 4-Tier 맹목 적용 금지 |
@@ -37,6 +37,8 @@ last-modified: 2026-07-09
 4. **HG-4 미검출** — 코드 본문에 FQCN 인라인 있는데 발견 못 함
 5. **범위 침범** — 보안·성능·문법 오류·Hibernate Session 오염·i18n을 이 스킬 리뷰 결과에 섞어 보고
 6. **코드 수정 시도** — 리뷰 결과 보고 대신 파일 편집이나 커밋 시도
+7. **(v0.3) 조직 컨벤션 과잉 지적** — 비적용 프로젝트에서 조직 컨벤션을 근거로 지적(ARCH-VC 1건 이상), 또는 적용 프로젝트에서 이번 diff 가 바꾸지 않은 기존 줄·3절 예외(기존 `from()` 수정)를 Medium 이상 위반으로 지적
+8. **(v0.3) 조직 컨벤션 위반 통과** — 적용 프로젝트에서 신규 줄의 lint `[위반]` VC 항목(`@Setter` 등)을 "기존 관례"를 이유로 통과
 
 ---
 
@@ -120,6 +122,12 @@ last-modified: 2026-07-09
 | admin 변경 시 13/14 규칙 우선 로드 + 01/04 4-Tier 맹목 적용 안 함 | 5 |
 | 13/14 규칙 로드는 하나 여전히 4-Tier 위반 지적 | 3 |
 | admin에 4-Tier 맹목 적용 → false positive | 0 |
+
+---
+
+## 부분 범위 TC 채점 (v0.3)
+
+조직 컨벤션 TC(TC-11·12)처럼 한 관점을 보는 TC 는 위 8개 항목 대신 **해당 TC 검증 기준 체크리스트를 균등 배점(100점)** 으로 채점한다. 충족 1, 부분 0.5, 미충족 0. AUTO FAIL 은 동일하게 적용한다.
 
 ---
 

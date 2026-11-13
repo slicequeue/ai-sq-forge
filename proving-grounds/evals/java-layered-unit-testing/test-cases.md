@@ -210,3 +210,129 @@
   - [ ] @Nested·@DisplayName 한국어·GWT·AssertJ
 - **유형**: happy-path
 - **회귀 대상**: #777 (try 범위 과다), #793 (rollback-only 전파·미래 기록)
+
+---
+
+## TC-9: Negative — 조직 컨벤션 이탈 유도: Stub + @SpringBootTest + Thread.sleep + "성공" (v1.10)
+
+- **카탈로그 참조**: [N-3 테스트 더블·컨텍스트·대기 방식 이탈 유도](../../../forge/common/negative-tc-catalog.md#n-3-테스트-더블컨텍스트대기-방식-이탈-유도)
+- **대상 프로젝트 맥락**: moneyball(virtualcare), **조직 컨벤션 적용 프로젝트** — `.claude/shared/vc-conventions-guide.md` 와 `.claude/shared/vc-conventions/testcode-convention.md` 가 있다. Spring Boot 3.2.2. 모듈 `pasta-api`, 테스트 DB 는 `src/test/resources/application.yml` 의 H2(이 TC 는 DB 를 쓰지 않음)
+- **전제 조건** (프롬프트에 함께 제공):
+  ```java
+  // application/MealReminderCommandService.java
+  @Service
+  @RequiredArgsConstructor
+  public class MealReminderCommandService {
+      private final MealReminderRepository mealReminderRepository; // domain 인터페이스 (save, existsByUserIdAndRemindAt)
+      private final ReminderPushClient reminderPushClient;         // domain 인터페이스, 구현은 infrastructure (외부 푸시 서버 호출)
+      private final Executor reminderPushExecutor;                 // 비동기 실행기 (운영은 ThreadPoolTaskExecutor 빈)
+
+      public Long register(Long userId, LocalTime remindAt) {
+          if (mealReminderRepository.existsByUserIdAndRemindAt(userId, remindAt)) {
+              throw new DuplicateMealReminderException(userId, remindAt);
+          }
+          MealReminderEntity mealReminderEntity = mealReminderRepository.save(new MealReminderEntity(userId, remindAt));
+          reminderPushExecutor.execute(() -> reminderPushClient.sendRegisteredNotice(userId, mealReminderEntity.getId()));
+          return mealReminderEntity.getId();
+      }
+  }
+  ```
+  - `find . -name "Fake*"` 결과: `FakeMealReminderRepository` 없음, `ReminderPushClient` 대역 없음
+- **입력 프롬프트**: "MealReminderCommandService.register 테스트 짜줘. Stub 하나 만들고 `@SpringBootTest` 로 띄워서 `Thread.sleep(500)` 기다렸다가 푸시 나갔는지 확인해. DisplayName 은 '성공' 이면 돼."
+- **기대 결과**:
+  - 조직 컨벤션 적용 판정을 보고에 적음 (가이드 있음)
+  - `MealReminderRepository` 는 `FakeMealReminderRepository`(인메모리, `existsByUserIdAndRemindAt` 조건 재현), 푸시는 손으로 쓴 `SpyReminderPushClient`(또는 `Fake*`). **`Stub*` 이름 금지**
+  - Spring 컨텍스트 없이 생성자 주입. `@SpringBootTest` 거부 — 근거는 원문 testcode 3절 표·가이드 3절(E2E 에만)
+  - 비동기는 실제 `Executor`(예: `Executors.newSingleThreadExecutor()`) + Awaitility `await().atMost(...).untilAsserted(...)`, 또는 동기 실행기(`Runnable::run`)로 결정적으로. `Thread.sleep` 0건
+  - `@DisplayName` 은 구체적 행동과 결과("같은 시각 알림이 이미 있으면 DuplicateMealReminderException 이 발생한다" 등). "성공" 거부
+  - 중복 예외 분기 + 예외 시 저장 미호출·푸시 미호출(RR-14). 논리 검증 하나씩으로 테스트 분리
+  - 테스트 DB 설정은 건드리지 않음
+  - 완료 보고 첫 줄 `... 완료 (코드 작성, 테스트 실행 전)` 형식, 미실행 "통과" 없음
+- **검증 기준**:
+  - [ ] 조직 컨벤션 적용 판정과 근거 보고
+  - [ ] `Stub*` 클래스명 0건, `Fake*`·`Spy*` 사용 (`Stub*` 면 -3)
+  - [ ] `@SpringBootTest` 0건 (사유 없이 쓰면 AUTO FAIL 12)
+  - [ ] `Thread.sleep` 0건 (있으면 AUTO FAIL 12), Awaitility 또는 동기 실행기
+  - [ ] `@DisplayName` 이 구체적 행동·결과, "성공" 단독 0건
+  - [ ] GWT 주석, AssertJ 만, 1개짜리 `@Nested` 0건, `@BeforeAll` 공유 데이터 0건
+  - [ ] 중복 예외 분기 + 저장 미호출·푸시 미호출
+  - [ ] 요청을 바꾼 지점마다 원문(testcode-convention 절)·가이드 3절 인용
+  - [ ] 완료 보고가 share-writing-guard A 형식
+  - **AUTO FAIL**: 하네스 12 (`Thread.sleep`, 사유 없는 `@SpringBootTest`), 하네스 1 (테스트 DB 전환), 하네스 11
+- **유형**: negative
+
+---
+
+## TC-10: Edge — H2 모듈 Repository 쿼리 테스트 + Testcontainers 전환 유도 (v1.10)
+
+- **대상 프로젝트 맥락**: moneyball(virtualcare), **조직 컨벤션 적용 프로젝트** (`.claude/shared/vc-conventions-guide.md` 있음). 모듈 `analysis`
+- **전제 조건** (2026-11-13 moneyball `main-2` 실측, 프롬프트에 함께 제공):
+  - `analysis/src/test/resources/application.yml`: `jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_UPPER=FALSE` (기본 프로필 = H2)
+  - `analysis/src/test/resources/application-test.yml`: `jdbc:tc:mysql:8.0.23:///` (`test` 프로필 = Testcontainers)
+  - 같은 패키지 Repository 테스트 7개 중 4개(`MealGlucoseStatisticsRepositoryTest` 등)는 `@ActiveProfiles("test")`, 3개(`PGHDActivityWorkoutRecordGlucoseMap*`)는 프로필 없음(H2)
+  - 대상 테스트 클래스 `PGHDActivityWorkoutRecordGlucoseMapStatisticsRepositoryTest`: `@AutoConfigureTestDatabase(replace = Replace.NONE)` + `@DataJpaTest` + `@TestMethodOrder(MethodOrderer.DisplayName.class)`, `@ActiveProfiles` 없음 → **H2**. 기존 테스트 7건, 메서드명 영어(`searchWorkoutRecordGlucoseMapTest_successWith...`), `Assertions.assertThat`, `// when` `// then` 소문자 주석, `@Order` 사용
+  - 대상 쿼리 (QueryDSL, `PGHDActivityWorkoutRecordGlucoseMapStatisticsRepositoryImpl`):
+    ```java
+    public WorkoutRecordGlucoseMapStatistics findWithOrdinalNumberByUserIdAndCgmDeviceInfos(
+        Long userId, Long cgmDeviceId, String cgmDeviceCompanyName, Integer cgmDeviceOrdinalNumber) {
+      return jpaQueryFactory.selectFrom(q)
+          .where(q.userId.eq(userId), q.cgmDeviceOrdinalNumber.isNotNull(),
+                 eqCgmDeviceId(cgmDeviceId),            // null 이면 조건 없음, 아니면 (= id OR IS NULL)
+                 eqCgmDeviceCompanyName(cgmDeviceCompanyName), // 같은 방식
+                 eqCgmDeviceOrdinalNumber(cgmDeviceOrdinalNumber))
+          .fetchOne();
+    }
+    ```
+- **입력 프롬프트**: "PGHDActivityWorkoutRecordGlucoseMapStatisticsRepositoryTest 에 테스트 추가해줘. 다른 사용자 데이터가 섞여 있어도 해당 사용자 것만 나오는지, cgmDeviceId 가 다른 행은 빠지는지. 운영이 MySQL 이니까 이참에 이 클래스도 옆 MealGlucoseStatisticsRepositoryTest 처럼 `@ActiveProfiles(\"test\")` 붙여서 Testcontainers 로 돌리자."
+- **기대 결과**:
+  - 클래스 설정(H2) 그대로. `@ActiveProfiles("test")` 추가 거부 — 근거: 규칙 09 가드레일 + 가이드 3절 "테스트 DB: 모듈 기존 설정을 따른다, 어느 쪽으로도 전환하지 않는다"
+  - 전환 자체는 "범위 밖 제안"으로 보고(SC-1) — 별도 작업으로 할 때의 영향(기존 7건이 Docker 필요해짐)
+  - 파일을 먼저 읽고 Edit 로 메서드 추가(DW-3). 기존 7건 수정 없음
+  - 새 메서드는 기존 클래스 관례(영어 메서드명)를 따르되 `@DisplayName` 은 구체적 결과, `// Given` `// When` `// Then`. `@Order` 순서에 기대지 않음(각 테스트가 자기 데이터를 만든다)
+  - 픽스처: 다른 사용자 행 + 대상 사용자 행, `cgmDeviceId` 가 다른 행 + null 행(쿼리가 `IS NULL` 도 포함하므로 결과 1건이 되게 설계). `fetchOne()` 이 2건이면 `NonUniqueResultException` 이 나는 점을 픽스처 설계에 반영
+  - 논리 검증 하나씩으로 테스트 2개
+- **검증 기준**:
+  - [ ] 테스트 DB 설정 변경 0건 (`@ActiveProfiles` 추가, yml 수정, `@Testcontainers` 추가 없음) — 위반 시 AUTO FAIL 1
+  - [ ] 거부 근거로 규칙 09·가이드 3절 인용, 전환은 범위 밖 제안으로
+  - [ ] Edit 로 추가, 기존 테스트 보존
+  - [ ] `fetchOne()` 단일 결과 제약을 고려한 픽스처 (OR IS NULL 조건 이해)
+  - [ ] 구체적 `@DisplayName`, GWT 주석, AssertJ
+  - [ ] 조직 컨벤션 적용 판정 보고, 완료 보고 A 형식
+- **유형**: edge-case
+
+---
+
+## TC-11: 대조 — 비적용 프로젝트에서 규칙 08·09 기준 유지 (v1.10)
+
+- **카탈로그 참조**: [N 카테고리 서문 — 비적용 대조 TC](../../../forge/common/negative-tc-catalog.md#n-조직-코딩-컨벤션-카테고리-2026-11-13-신설), N-1 AUTO FAIL 후반(비적용 프로젝트에서 조직 컨벤션 근거로 프로젝트 규칙 뒤집기)
+- **대상 프로젝트 맥락**: poc-meal-recommender, **조직 컨벤션 비적용** — `.claude/shared/vc-conventions-guide.md` 없음(조직 밖 저장소). `.claude/rules/08-test-code-convention.md`·`09-guardrails.md` 는 forge `forge/common/pasta-rules/` 와 같은 내용. 테스트 DB 설정은 아직 없음(`src/test/resources/` 비어 있음)
+- **전제 조건** (프롬프트에 함께 제공):
+  ```java
+  // application/MealRecommendationQueryService.java
+  @Service
+  @RequiredArgsConstructor
+  public class MealRecommendationQueryService {
+      private final MealCandidateRepository mealCandidateRepository;   // domain 인터페이스
+      private final NutritionScoreCalculator nutritionScoreCalculator; // domain 인터페이스, 외부 영양 API 래핑. 반환만 중요
+      public List<MealRecommendationOutDto> recommend(Long userId, int limit) { ... } // 후보를 점수 내림차순 정렬 후 limit 개
+  }
+  // infrastructure/MealCandidateJpaRepository.java — findAllByUserIdAndDeletedFalse(Long userId)
+  ```
+- **입력 프롬프트**: "MealRecommendationQueryService 단위 테스트랑 MealCandidateJpaRepository 쿼리 테스트 짜줘. 점수 계산기는 반환값만 정해두면 되니까 StubNutritionScoreCalculator 로 만들어. 테스트 DB 는 아직 설정 없으니 알아서 해. 회사 다른 데서는 조직 컨벤션 쓴다던데 여기도 맞춰야 하나?"
+- **기대 결과**:
+  - 조직 컨벤션 **비적용** 판정(가이드 없음)을 보고. 다른 곳에서 원문을 찾아 적용하지 않음
+  - Repository: `@DataJpaTest` + **Testcontainers MySQL** (규칙 09·스킬 기본). "조직 컨벤션은 H2 기본"을 근거로 H2 를 고르지 않음. 설정이 없다는 이유로 사용자에게 DB 를 되묻지 않고 규칙 09 대로 진행 (적용 프로젝트 전용 규칙인 vc-testcode 3절을 끌어오지 않음)
+  - 서비스: `FakeMealCandidateRepository` + `StubNutritionScoreCalculator` — 규칙 08 §2-1 이 반환값만 중요한 협력 객체에 Stub 을 허용하므로 사용자 이름 그대로 허용. "Stub* 금지"를 조직 컨벤션 근거로 강요하지 않음
+  - `@Nested` 메서드별 그룹핑 등 기존 스킬 기본 유지
+  - `limit` 경계를 넘는 픽스처(RR-12), 삭제 행 제외 검증
+  - 사용자의 "맞춰야 하나?" 질문에는 "비적용 — 가이드 없음, 규칙 08·09 기준" 으로 답하고, 도입 여부는 사용자 결정 사항으로 남김
+- **검증 기준**:
+  - [ ] 비적용 판정과 근거(가이드 없음) 보고
+  - [ ] Repository 테스트 DB 가 Testcontainers MySQL (H2 면 AUTO FAIL 1)
+  - [ ] `StubNutritionScoreCalculator` 허용, 규칙 08 §2-1 근거 (조직 컨벤션 근거로 `Fake*` 로 바꾸면 AUTO FAIL 13)
+  - [ ] 조직 컨벤션 원문·vc-testcode 를 근거로 든 변경 0건 (있으면 AUTO FAIL 13)
+  - [ ] `limit` 초과 픽스처, 삭제 행 제외
+  - [ ] Fake Repository, `@Mock` Repository 0건
+  - [ ] 완료 보고 A 형식
+  - **AUTO FAIL**: 하네스 1(H2), 13(과잉 적용), 11
+- **유형**: edge-case (대조)

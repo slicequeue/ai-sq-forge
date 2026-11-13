@@ -1,0 +1,14 @@
+## chat-incident-report/results/baseline-v1.1/TC-4.md
+--- block 1 grade A (chat-incident-report_results_baseline-v1.1_TC-4.md-1.md) exit=1
+[위반] SW-1 1행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+[확인] SW-2 2행: 첫 줄 아래에 한 일 불릿이 없다
+share-lint: 위반 1건 / 확인 1건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## chat-incident-report/results/with-skill-v1.1/TC-4.md
+--- block 1 grade A (chat-incident-report_results_with-skill-v1.1_TC-4.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## chat-incident-report/results/with-skill-v1.1/TC-1.md
+--- block 1 grade A (chat-incident-report_results_with-skill-v1.1_TC-1.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+

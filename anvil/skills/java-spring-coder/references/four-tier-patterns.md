@@ -1,5 +1,7 @@
 # 4-Tier 계층별 코드 패턴
 
+> (v1.18) 이 문서의 `from()`·`of()` 예시는 **조직 컨벤션 비적용 프로젝트** 기준이다. 적용 프로젝트(`.claude/shared/vc-conventions-guide.md` 있음)의 신규 클래스는 생성자 직접 호출·생성자 `@Builder` 로 쓴다 — `org-conventions.md` 2절.
+
 - [Domain 계층](#domain-계층)
 - [Infrastructure 계층](#infrastructure-계층)
 - [Application 계층](#application-계층)

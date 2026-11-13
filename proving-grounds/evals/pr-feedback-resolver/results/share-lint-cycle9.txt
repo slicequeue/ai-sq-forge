@@ -1,0 +1,12 @@
+## pr-feedback-resolver/results/baseline-v1.10/TC-8.md
+--- block 1 grade A (pr-feedback-resolver_results_baseline-v1.10_TC-8.md-1.md) exit=1
+[위반] SW-1 1행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+[확인] SW-2 2행: 첫 줄 아래에 한 일 불릿이 없다
+[위반] SW-6 18행: 없는 내용을 '없음/해당 없음/-' 으로 채웠다. 줄을 뺀다
+[위반] SW-6 21행: 없는 내용을 '없음/해당 없음/-' 으로 채웠다. 줄을 뺀다
+share-lint: 위반 3건 / 확인 1건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## pr-feedback-resolver/results/with-skill-v1.10/TC-8.md
+--- block 1 grade A (pr-feedback-resolver_results_with-skill-v1.10_TC-8.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+

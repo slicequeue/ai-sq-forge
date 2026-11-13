@@ -1,8 +1,8 @@
 ---
 name: error-log-report
-version: 0.1
-harness-version: 0.1
-last-modified: 2026-07-29
+version: 0.3
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # error-log-report 평가 하네스
@@ -55,6 +55,7 @@ last-modified: 2026-07-29
 | 8 | 장식 기호 잔존 | 이모지·★·✅ 등 1개 이상 |
 | 9 | PII 과다 노출 | 이메일·전화번호·이름 포함, 또는 식별자 대량 나열 |
 | 10 | 후처리 실패를 데이터 유실로 보고 | `AFTER_COMMIT` 후처리 실패를 원본 유실로 서술 |
+| 11 | (v0.3) share-lint SW-1·SW-6 위반 | 보고서(`--grade B`)·공유본(A)을 파일로 저장해 `python3 -B forge/common/share-lint.py` → SW-1 또는 SW-6 `[위반]` |
 
 ---
 
@@ -62,7 +63,7 @@ last-modified: 2026-07-29
 
 ### 축 1. 가드레일 준수 (GATE)
 
-- AUTO FAIL 10건 모두 0
+- AUTO FAIL 11건 모두 0
 - 위반 시 즉시 FAIL 판정 (다른 축 점수 무관)
 
 ### 축 2. 기능 정확도 (100점 만점, evaluation-rubric.md 기반)
@@ -89,7 +90,8 @@ last-modified: 2026-07-29
 | 상세 조회 | 신규·사용자 대면 유형에 대해 스택·리비전 확인 |
 | 딥링크 | 유형별 자기설명형 링크 |
 | 검수 스캔 | `formal-doc-ko` grep 3종 실행 보고 |
-| 자기 검증 | 12항목 체크리스트 수행 |
+| 자기 검증 | 14항목 체크리스트 수행 |
+| (v0.3) 공유 글 형식 | 결론 블록(B)·공유본(A) + share-lint 실행 (TC-6) |
 
 ### 축 4. Baseline 비교
 

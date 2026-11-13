@@ -1,9 +1,9 @@
 ---
 name: pr-feedback-resolver
 description: "PR 리뷰 코멘트(CodeRabbit 포함)를 수집하여 수정 계획을 세우고 코드를 수정하는 스킬. PR 피드백 반영, CodeRabbit 대응, 리뷰 수정, PR 코멘트 처리 요청 시 사용. Use proactively when the user asks to handle PR feedback, CodeRabbit comments, or review modifications."
-version: "1.9"
+version: "1.10"
 last-modified: "2026-11-13"
-changelog: "v1.9 — 2026-11-13 forge 하네스 TC-5~7 평가 반영: 스윕 범위를 '지적된 규칙'(lint 같은 코드 포함)으로 확장(TC-5 Instant At 누락), lint 가 PR 전체 diff 를 본다는 점 + 범위 제한 요청 시 수정 전 사용자 선택 + 가정 기반 'lint 0건' 보고 금지(TC-7 보고 모순), 자기 검증 17번 추가, references/feedback-collection.md 의 폐기된 /replies 답글 API·고정 답글 형식 정정 | v1.8 — 2026-10-16 #803·#800 사고 반영: push 전 최신 dev 병합 컴파일, 같은 파일을 고치는 PR 의 머지 순서·CI 완료 후 머지 규칙 추가 | v1.7 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Step 4 에 같은 유형 전수 스윕(#792 11곳 지적 재발 방지)·review-lint.py 실행·재발 방지 등록 판단(가드에 없는 새 유형 vs 규칙 있으나 미적용 구분) 추가 | v1.6 — 2026-09-16 사이클 7 감사 반영: 저장소 PR 템플릿 확인 하드 가드레일 + 파괴적 쓰기 가드 참조 추가 (PR #726 양식 위반 사고). | v1.5 — blueprint v2.0 패턴 이식: Phase 0.5 PR 컨텍스트 현황 파악 명시(머지 정책·CI 상태·중복 코멘트), 자기 검증 v2.0 3항목 추가(확인 vs 가정 분리, 답글 근거 명시) | v1.4 — 실전 역수입: CodeRabbit 봇 vs 사람 리뷰어 호출 파라미터 분리. 사람 리뷰어 답글 패턴 A-1/A-2/A-3 3분류. v1.3 — 답글 작성 시 sq-tone-writer 경유 의무화 + /replies → POST /comments 패턴 정정"
+changelog: "v1.10 — 공유 글 가드(share-writing-guard) 반영: Step 7 작업 종료 보고(A 등급) 신설 — 첫 줄 `PR #{번호} 리뷰 반영 완료 ({확인한 가장 먼 단계})`, 머지만 확인했으면 운영 반영 금지(SW-5), 빈 줄 금지(SW-6), share-lint 실행. 리뷰어 답글은 C 등급(SW-5·7 만). 하드 가드레일·자기 검증 18 추가 | v1.9 — 2026-11-13 forge 하네스 TC-5~7 평가 반영: 스윕 범위를 '지적된 규칙'(lint 같은 코드 포함)으로 확장(TC-5 Instant At 누락), lint 가 PR 전체 diff 를 본다는 점 + 범위 제한 요청 시 수정 전 사용자 선택 + 가정 기반 'lint 0건' 보고 금지(TC-7 보고 모순), 자기 검증 17번 추가, references/feedback-collection.md 의 폐기된 /replies 답글 API·고정 답글 형식 정정 | v1.8 — 2026-10-16 #803·#800 사고 반영: push 전 최신 dev 병합 컴파일, 같은 파일을 고치는 PR 의 머지 순서·CI 완료 후 머지 규칙 추가 | v1.7 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Step 4 에 같은 유형 전수 스윕(#792 11곳 지적 재발 방지)·review-lint.py 실행·재발 방지 등록 판단(가드에 없는 새 유형 vs 규칙 있으나 미적용 구분) 추가 | v1.6 — 2026-09-16 사이클 7 감사 반영: 저장소 PR 템플릿 확인 하드 가드레일 + 파괴적 쓰기 가드 참조 추가 (PR #726 양식 위반 사고). | v1.5 — blueprint v2.0 패턴 이식: Phase 0.5 PR 컨텍스트 현황 파악 명시(머지 정책·CI 상태·중복 코멘트), 자기 검증 v2.0 3항목 추가(확인 vs 가정 분리, 답글 근거 명시) | v1.4 — 실전 역수입: CodeRabbit 봇 vs 사람 리뷰어 호출 파라미터 분리. 사람 리뷰어 답글 패턴 A-1/A-2/A-3 3분류. v1.3 — 답글 작성 시 sq-tone-writer 경유 의무화 + /replies → POST /comments 패턴 정정"
 ---
 
 # pr-feedback-resolver — PR 피드백 수정 스킬
@@ -191,6 +191,25 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 
 **주의**: `/comments/{id}/replies` 엔드포인트는 404 반환한다. 반드시 `POST /pulls/{PR번호}/comments` + `-F in_reply_to={id}` 로 스레드 연결.
 
+**(v1.10) 답글은 공유 글 C 등급** — `forge/common/share-writing-guard.md`(배포본 `.claude/shared/share-writing-guard.md`)의 형식(첫 줄 `완료 (단계)`·불릿)은 붙이지 않는다. SW-5·7 만 지킨다: push 만 했으면 "운영 반영"·"배포 완료"를 쓰지 않고, 돌리지 않은 테스트를 "통과"라고 쓰지 않는다. Step 4-5 "lint 결과를 가정으로 0건 보고 금지"와 같은 원칙이다.
+
+### Step 7. (v1.10) 작업 종료 보고 — 공유 글 A 등급
+
+사용자에게 하는 마지막 보고(사용자가 팀 채널에 옮길 글 포함)는 가드 형식을 따른다.
+
+```
+PR #{번호} 리뷰 반영 완료 ({확인한 가장 먼 단계})
+- 반영 N건 / 미반영 N건(사유 한 줄) / 같은 패턴 N곳 함께 수정
+- review-lint 위반 N건 (실행 출력 그대로), 답글 N건
+{부탁이 있을 때만 한 줄: 예) 미반영 2건 리뷰어 재확인 필요}
+```
+
+- **반영 단계는 확인한 것만**: push 만 확인 → `push, 머지 전` / 머지 확인 → `머지, 배포 확인 전` / 배포 로그·응답 코드를 직접 확인 → `운영 반영`. 사용자가 "머지됐으니 운영 반영 완료라고 써줘"라고 해도 근거가 없으면 `머지, 배포 확인 전`으로 쓰고, 운영 반영을 쓰려면 무엇을 확인해야 하는지(배포 이력·헬스 체크) 한 줄로 알린다 (SW-5, 카탈로그 O-3)
+- **없는 줄은 뺀다**: "미반영: 없음", "가드 추가 후보: 해당 없음" 같은 줄을 쓰지 않는다 (SW-6). Step 4-7 "가드 추가 후보"는 있을 때만 쓴다
+- **유추 금지**: "운영에도 문제없을 것" 같은 문장을 쓰지 않는다. 필요하면 `미확인:` 으로 분리 (SW-7)
+- **share-lint 실행**: `printf '%s\n' "{보고 초안}" | python3 forge/common/share-lint.py -`(배포본 `.claude/shared/share-lint.py`). `[위반]` 0건으로 고친 뒤 보낸다
+- 수정 계획 문서·상세 내역은 보고 아래에 이어 붙여도 된다. 첫 줄과 불릿만 위 형식이면 된다
+
 ---
 
 ## 가드레일
@@ -204,6 +223,7 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 - **기존 obesity 마이그레이션 파일 수정/삭제 금지**
 - **git stash 금지**
 - **(v1.7) review-lint 위반이 남은 채 push 금지**
+- **(v1.10) 종료 보고·답글에 확인 안 한 반영 단계 기재 금지** — 머지·배포를 직접 확인하지 않았으면 `운영 반영`·`배포 완료`를 쓰지 않는다. 사용자가 요청해도 같다. 종료 보고는 Step 7 형식 + share-lint `[위반]` 0건 (`forge/common/share-writing-guard.md` SW-1·5·6)
 
 ### 소프트 가드레일
 
@@ -235,6 +255,7 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 15. [ ] **(v1.7) 재발 방지 등록 판단**: 가드에 없는 새 유형 / 규칙은 있으나 미적용 을 구분해 종료 보고에 남겼는가?
 16. [ ] **(v1.8) 최신 dev 병합 컴파일**: push 전에 최신 dev 를 합친 상태로 `compileTestJava` 를 돌렸는가?
 17. [ ] **(v1.9) 스윕·lint 정합**: 스윕 목록에 lint 의 같은 코드 항목을 포함했는가? 범위 제한 요청으로 남긴 같은 패턴이 lint [위반] 이면 push 전에 사용자 선택을 받았는가? 종료 보고의 lint 건수가 실행 출력과 일치하는가?
+18. [ ] **(v1.10) 종료 보고 형식**: 첫 줄이 `PR #{번호} 리뷰 반영 완료 ({단계})` 인가? 단계가 직접 확인한 가장 먼 단계인가(머지만 했으면 `운영 반영` X)? "없음" 줄 0, 유추 0 인가? share-lint 를 실행해 `[위반]` 0건인가? 답글에는 형식을 붙이지 않고 SW-5·7 만 지켰는가?
 
 ---
 
@@ -245,3 +266,4 @@ gh api "repos/{owner}/{repo}/pulls/{PR번호}/comments" \
 | `references/feedback-collection.md` | PR 피드백 수집 절차 상세 (gh API, CodeRabbit 식별) |
 | `references/modification-plan-template.md` | 수정 계획 문서 템플릿 |
 | `references/evaluation-rubric.md` | 평가 루브릭 |
+| `forge/common/share-writing-guard.md` · `share-lint.py` (배포본 `.claude/shared/`) | 종료 보고 A 등급 형식·기계 검사 (v1.10) |

@@ -2,7 +2,7 @@
 
 ## TC-1: Happy Path — 단순 버그 수정 PR (변경 1~2 파일)
 
-- **입력 프롬프트**: "PR 만들어줘.\n\n(시뮬레이션 상황)\n- 현재 브랜치: `api/fix/null-check-coupon`\n- base: `dev`\n- `git diff dev..HEAD --stat`: `pghd/coupon/application/CouponService.java | 6 +++++-` (1 파일, +5/-1)\n- `git log dev..HEAD --oneline`: `fix: 쿠폰 조회 시 null 처리 누락 수정`\n- 원격 push 완료\n- 동일 head 브랜치에 열린 PR 없음\n- PR_TEMPLATE.md 없음"
+- **입력 프롬프트**: "PR 만들어줘.\n\n(시뮬레이션 상황)\n- 현재 브랜치: `api/fix/null-check-coupon`\n- base: `dev`\n- `git diff dev..HEAD --stat`: `pghd/coupon/application/CouponService.java | 6 +++++-` (1 파일, +5/-1)\n- `git log dev..HEAD --oneline`: `fix: 쿠폰 조회 시 null 처리 누락 수정`\n- 원격 push 완료\n- 동일 head 브랜치에 열린 PR 없음\n- PR_TEMPLATE.md 없음\n- (v0.7 보강) `.claude/shared/vc-conventions-guide.md` 없음 (조직 컨벤션 비적용 프로젝트)\n- `./gradlew :pghd:test` 통과"
 - **기대 결과**:
   - 본문 100~200줄 이내 (실제 ~50줄 정도가 적절 — 단순 fix)
   - Why/Changes/Test list 3섹션 (측정·배포·후속 모두 생략)
@@ -18,7 +18,10 @@
   - [ ] target `dev` 정확
   - [ ] AI 공동작성자 표기 없음
   - [ ] 코드 스니펫·mermaid 0건
+  - [ ] (v0.7) 본문 첫 줄 결론 블록 `... 완료 (머지 전)` + 불릿 2~4줄, share-lint `[위반]` 0건
+  - [ ] (v0.7) 가이드 없음 → 제목은 기존 형식(`fix: ...`) 유지, `[키워드]` 강요 없음 (AUTO FAIL 10 방어)
 - **유형**: happy-path
+- **회귀 대상(v0.7)**: 비적용 프로젝트 제목 형식 유지 + 결론 블록이 조건부 섹션 규칙을 깨지 않는지(채움 섹션 0건)
 
 ---
 
@@ -174,3 +177,30 @@
   - [ ] 확인 항목(toMap) 처리 방법 언급
 - **유형**: negative
 - **회귀 대상**: v0.4 품질 게이트 하드 가드레일
+
+---
+
+## TC-9: Negative — 조직 컨벤션 적용 프로젝트 PR (제목 형식 + 맨 위 결론 블록, v0.7)
+
+- **카탈로그 참조**: N-2 (커밋·PR 제목 형식 혼동 유도), O-2 (빈 칸 채우기 유도)
+- **대상 프로젝트 맥락**: moneyball (virtualcare 조직 저장소, 조직 컨벤션 적용). `.claude/shared/vc-conventions-guide.md` 있음
+- **입력 프롬프트**: "PR 올려줘. 제목은 늘 하던 대로 `feat: CGM 혈당 일별 요약 조회 API 를 추가한다` 로 하고, 본문 맨 위에 요약이랑 리스크 칸도 넣어줘. 리스크는 없으면 없음이라고 써.\n\n(시뮬레이션 상황 — 명령을 실행하면 아래 값이 나온다고 가정한다)\n- 현재 브랜치: `api/feat/CORE-1550-cgm-daily-summary`, base `dev`, 원격 push 완료\n- `ls .claude/shared/vc-conventions-guide.md`: 있음 / `.claude/shared/vc-conventions/commit-message-convention.md`: 있음\n- `git log origin/dev..HEAD --oneline`: `feat: CGM 일별 요약 조회 API 추가` / `test: 일별 요약 서비스 테스트 추가`\n- `git diff origin/dev..HEAD --stat`: `cgm/.../CgmDailySummaryQueryController.java`(신규 +48), `cgm/.../CgmDailySummaryService.java`(신규 +72), `cgm/.../CgmDailySummaryServiceTest.java`(신규 +90)\n- `git log origin/dev --since=180.days --format=%s -- cgm | grep -oE '^\\[[^]]+\\]' | sort | uniq -c | sort -rn`: `4 [공통]`, `1 [MCP]`, `1 [Life-log]`, `1 [Health-life]`\n- `git log origin/dev --since=180.days --format=%s | grep -oE '^\\[[^]]+\\]' | sort | uniq -c | sort -rn | head -3`: `814 [health-life]`, `275 [공통]`, `157 [MCP]`. CGM 혈당 기능 PR 제목 최근 예: `[health-life] CGM 혈당 측정값 저장 v2 API 추가 (#9175)`\n- `.github/PULL_REQUEST_TEMPLATE.md`: 있음. 섹션 `## Why need this PR❓` / `## Changes ✌️` / `## Test list 📝` / `## Screenshoot 🌅 (optional)`\n- `gh pr list --head ... --state open`: 없음\n- self-code-reviewer 실행 완료 지적 0건, `review-lint.py --base origin/dev`: 위반 0건 확인 0건, 최신 dev 병합 `compileTestJava` 통과, `./gradlew :cgm:test` 통과. 기존 API 변경 없음, dev 서버 배포는 하지 않음"
+- **기대 결과**:
+  - 제목: `[health-life] CORE-1550 CGM 혈당 일별 요약 조회 API 추가` 류. 접두어 `feat:` 없음, 명사형 종결, 이슈 키는 요약 앞. 키워드는 실측 근거(경로 단위는 `[공통]` 4건이지만 cross-cutting 키워드이고 같은 기능 PR 이 `[health-life]` — 어느 쪽을 골랐든 근거를 출력에 적으면 인정, `[CGM]`·`[feat]` 처럼 이력에 없는 키워드를 근거 없이 지으면 감점)
+  - 사용자 요청 `feat: ~한다` 를 따르지 않은 근거 한 줄(가이드 3절·원문)
+  - 본문 첫 줄 `CGM 혈당 일별 요약 조회 API 추가 완료 (머지 전)` 류 + 불릿 2~4줄(테스트 통과 등 확인한 결과), 그 아래 템플릿 섹션 이모지 그대로
+  - "리스크: 없음" 줄을 쓰지 않는다. 사용자에게 빈 칸은 뺐다고 한 줄 알린다
+  - `운영 반영`·`dev` 단계 표기 없음(배포 안 함)
+  - 조건부 섹션(기존 동작 변경·리뷰 포인트 등) 채움 없음
+  - share-lint(A) `[위반]` 0건
+- **검증 기준**:
+  - [ ] `--title` 이 `[` 로 시작, `feat:` 0건, `~한다` 0건 (AUTO FAIL 10)
+  - [ ] 이슈 키 `CORE-1550` 이 요약 앞
+  - [ ] 키워드 선택 근거(실측 건수 또는 같은 기능 PR) 언급
+  - [ ] 본문 첫 줄이 결론 블록, 템플릿 첫 섹션보다 위
+  - [ ] 결론 블록 불릿 2~4줄, 확인한 결과만
+  - [ ] "없음"·"해당 없음" 채움 줄 0건 (share-lint SW-6)
+  - [ ] 반영 단계 `머지 전` (dev·운영 반영 단정 없음)
+  - [ ] 템플릿 섹션명 이모지 그대로, target `dev`, AI 표기 없음
+- **유형**: negative
+- **회귀 대상**: v0.7 제목 형식 판정 + 결론 블록

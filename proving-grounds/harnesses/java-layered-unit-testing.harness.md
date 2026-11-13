@@ -31,7 +31,7 @@
 
 | # | 규칙 | 감지 키워드/패턴 |
 |---|------|-----------------|
-| 1 | H2 DB 사용 | `H2`, `h2`, `mem:testdb`, `h2database` in 테스트 설정/코드 |
+| 1 | 테스트 DB 위반 (v1.10 조건부) | 비적용 프로젝트: `H2`, `h2`, `mem:testdb`, `h2database` in 테스트 설정/코드. 적용 프로젝트: TC 가 준 모듈·클래스 기존 설정과 다른 DB 로 전환(설정 yml 변경, `@ActiveProfiles` 추가·제거, `@Testcontainers`·`MySQLContainer` 신설 또는 제거) |
 | 2 | Domain 계층에 @SpringBootTest | `@SpringBootTest` in Domain 테스트 |
 | 3 | 테스트 전체 실패 | 컴파일 에러 또는 전체 테스트 실패 |
 | 4 | 계층 무시 일괄 @SpringBootTest | 모든 테스트에 `@SpringBootTest` |
@@ -42,6 +42,8 @@
 | 9 | 경계 미통과 픽스처 (v1.7, RR-12) | `limit`·임계값 로직인데 경계를 넘지 않는 픽스처만 사용 |
 | 10 | 테스트 코드 `var` 사용 (v1.7) | 테스트 메서드 본문에 `var` 선언. 명시 타입이 컨벤션 |
 | 11 | 상태 저장소 Mock 정답 주입 (v1.8, RR-F14) | Application 단위 테스트 코드에 `@Mock` 또는 `mock(` 대상이 `*Repository`·`*UseCase`·`*QueryService` 이고 `given(..).willReturn`/`when(..).thenReturn` 으로 반환값 주입. `@WebMvcTest` 의 `@MockBean` UseCase 는 제외. 금지 선언·거부 설명 문장 안의 언급은 오탐이므로 **코드 블록 안**만 매칭 |
+| 12 | 조직 컨벤션 하드 위반 (v1.10, 적용 프로젝트, N-3) | 코드 블록에 `Thread.sleep(`, 또는 E2E 아닌 테스트에 사유 주석 없는 `@SpringBootTest` |
+| 13 | 조직 컨벤션 과잉 적용 (v1.10, 비적용 프로젝트) | 가이드 없는 프로젝트에서 조직 컨벤션을 근거로 규칙 08·09 와 다르게 구현 |
 
 > 감지 시 주의 (v1.7 리포트 4절 후속): 금지 규칙을 설명하는 문장이 패턴을 포함하면 오탐이다. 자동 매칭 결과는 반드시 코드 블록 본문으로 재확인한다.
 
@@ -51,7 +53,7 @@
 
 ### 축 1. 가드레일 준수 (GATE)
 
-- H2 사용 0건
+- 테스트 DB 위반 0건 (비적용: H2 0건 / 적용: 기존 설정 전환 0건)
 - Domain 테스트에 Spring 컨텍스트 로드 0건
 - 계층별 적절한 테스트 방식 적용 (Application = Fake 우선, v1.8)
 
@@ -77,6 +79,8 @@
 | 테스트 실행 | ./gradlew test 명령으로 테스트를 실행했는가? |
 | Fake 탐색 (v1.8) | Application 대상이면 기존 `Fake*` 를 먼저 찾고(`find . -name "Fake*"`) 재사용, 없을 때만 신설했는가? |
 | review-lint 실행 (v1.8) | 종료 단계에서 `python3 forge/common/review-lint.py` 를 실행(또는 실행 계획 명시)했는가? |
+| 조직 컨벤션 판정 (v1.10) | 가이드 존재 여부로 적용/비적용을 판정하고 보고에 적었는가? |
+| 테스트 DB 확인 (v1.10) | Infrastructure·통합 테스트면 클래스·이웃 테스트·모듈 yml 의 실제 설정을 확인했는가? (해당 없으면 N/A) |
 
 ### 축 4~6
 
@@ -88,9 +92,9 @@ java-spring-coder.harness.md와 동일 구조.
 
 | 조건 | 모두 충족 시 |
 |------|-------------|
-| 축 1 가드레일 | PASS (H2 0건, Domain Spring 0건) |
+| 축 1 가드레일 | PASS (테스트 DB 위반 0건, Domain Spring 0건, AUTO FAIL 12·13 0건) |
 | 축 2 기능 정확도 | Happy Path 75+ PASS |
-| 축 3 행동 패턴 | 6항목 중 5항목 이상 (80%+, Application 대상이 아니면 Fake 탐색 N/A 로 분모 제외) |
+| 축 3 행동 패턴 | 8항목 중 80%+ (Application 대상이 아니면 Fake 탐색, DB 무관 TC 면 테스트 DB 확인을 N/A 로 분모 제외) |
 | 축 4 Baseline 비교 | PASS |
 
 → **실전 배치 가능**

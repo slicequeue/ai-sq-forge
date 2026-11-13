@@ -57,7 +57,7 @@ TDD 문서가 없을 때:
 4. .claude/rules/ 규칙에 맞게 코드 작성
    - 계층 구조, 네이밍, DTO 패턴 등
 5. 계층별 테스트 작성
-   - Fake(Domain/App), MockMvc(Web), Testcontainers(Infra)
+   - Fake(Domain/App), MockMvc(Web), Infra 는 모듈 기존 테스트 DB 설정(Testcontainers/H2) 그대로 — 전환 금지
 6. JDK 21 설정 후 테스트 실행
    export JAVA_HOME=$(/usr/libexec/java_home -v 21)
    ./gradlew :{module}:test

@@ -3,9 +3,9 @@ name: eval-harness
 description: "컴포넌트 자동 평가 하네스를 실행합니다. 하네스 정의 파일 기반으로 baseline vs with-skill 비교 테스트를 자동 실행하고 6축 채점 리포트를 생성합니다."
 trigger: "/eval-harness"
 args: "{컴포넌트명} [--tc TC-1,TC-2] [--repeat N] [--baseline-only] [--skip-baseline]"
-version: "1.0"
-last-modified: "2026-04-10"
-changelog: "초기 배포"
+version: "1.1"
+last-modified: "2026-11-13"
+changelog: "v1.1: 리포트 맨 앞 공유 글 가드 B 등급 결론 블록 + Step 7 share-lint --grade B 검사 | v1.0: 초기 배포"
 ---
 
 # /eval-harness
@@ -177,8 +177,19 @@ changelog: "초기 배포"
 
 `proving-grounds/evals/{컴포넌트}/report.md`에 아래 형식으로 작성:
 
+**결론 블록 (v1.1)**: 평가 리포트는 남는 문서다. `forge/common/share-writing-guard.md` B 등급에 따라 제목 바로 아래 3~5줄 결론 블록을 둔다.
+
+- 첫 줄 `{컴포넌트} v{X} 평가 완료 (forge, 배포 전): {PASS|FAIL|AUTO FAIL}`. share-lint 는 `완료 (` 바로 뒤 괄호를 반영 단계로 읽으므로 판정은 괄호 뒤에 쓴다. 실전 배포를 직접 확인하지 않았으면 `배포 전` 을 유지한다(SW-5)
+- 다음 줄: 핵심 점수(with-skill 평균, baseline → with-skill), AUTO FAIL 건수와 TC, 후속(재평가·트레이닝·배포 대기)이 있을 때만 한 줄
+- 본문 형식은 아래 그대로. 본문 전체에 SW-5~7: 실행하지 않은 축(일관성 등)은 점수를 쓰지 않고 `N/A (미실행)`, 빈 칸을 "없음"·"-" 로 채우지 않는다, 확인 안 한 추정은 `미확인:` 으로 분리
+
 ```markdown
 # {컴포넌트명} 테스트 리포트
+
+{컴포넌트명} v{X} 평가 완료 (forge, 배포 전): {PASS|FAIL|AUTO FAIL}
+- 기능 정확도 with-skill 평균 {점수}/100, baseline {점수} → with-skill {점수}
+- AUTO FAIL {N}건 ({TC 번호}, 0건이면 "AUTO FAIL 0건")
+- {후속이 있을 때만: 재평가·트레이닝·배포 대기}
 
 - **테스트 일시**: {날짜}
 - **하네스**: proving-grounds/harnesses/{컴포넌트명}.harness.md
@@ -221,6 +232,15 @@ changelog: "초기 배포"
 {발견된 개선점 나열}
 ```
 
+### Step 7. 리포트 검사 (v1.1)
+
+```
+1. python3 -B forge/common/share-lint.py --grade B proving-grounds/evals/{컴포넌트}/report.md
+2. [위반] 이 있으면 리포트를 고쳐 재실행 → 위반 0 이 될 때까지. [위반] 잔존 시 완료 보고 금지
+3. [확인] 은 판단해서 남기거나 고친다(남기면 리포트에 사유 한 줄)
+4. 실행하지 못했으면 출력에 "share-lint 미실행" 이라고 쓴다 — 통과로 쓰지 않는다
+```
+
 ---
 
 ## 출력 형식
@@ -244,6 +264,7 @@ eval-harness 실행: {컴포넌트명}
   축 6 효율성:     토큰 {N} / 시간 {N}초 / tool {N}회
 
 리포트 저장: proving-grounds/evals/{컴포넌트명}/report.md
+share-lint --grade B: 위반 {N}건 / 확인 {N}건 (미실행이면 "미실행")
 판정: {최종 판정}
 ```
 
@@ -255,6 +276,7 @@ eval-harness 실행: {컴포넌트명}
 - **서브에이전트는 시뮬레이션만** — 실제 파일 변경 금지. 코드를 "어떻게 구현할지" 설명만.
 - **기존 report.md 보호** — 덮어쓰기 전 사용자 확인. 이전 리포트는 `report-{날짜}.md`로 백업.
 - **채점 불확실성 표시** — AI 판단에 확신이 낮은 항목은 `[수동 검토 필요]`로 마킹.
+- **(v1.1) 결론 블록 없는 리포트·share-lint `[위반]` 잔존 리포트로 완료 보고하지 않는다** — `forge/common/share-writing-guard.md` B 등급.
 - **일관성 테스트 비용 고지** — `--repeat 3`은 에이전트 6~18개 실행. 토큰 비용 안내 후 확인.
 
 ---

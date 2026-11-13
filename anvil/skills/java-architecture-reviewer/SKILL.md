@@ -1,9 +1,9 @@
 ---
 name: java-architecture-reviewer
 description: "백엔드 Java Spring Boot 아키텍처·컨벤션 리뷰 전용 스킬 — 4-Tier 계층·Bean 관리·모듈 관계·패턴 준수·pasta-rules 컨벤션. 아키텍처 관점 요청 시 자동 트리거, java-composite-reviewer 에이전트 안에서도 조합 가능. Use when the user asks for architecture review, layering audit, Bean/module boundary check, or convention compliance."
-version: "0.2"
-last-modified: "2026-09-16"
-changelog: "v0.2 — 2026-09-16 사이클 7 감사 역수입: 핵심 규칙 7 방어 로직 적용 범위 검사 신설 (공용 진입점 우선, 실측 근거로 커버리지 축소 금지. PR #552 사례). | v0.1 — 2026-07-09 self-code-reviewer v1.11에서 아키텍처·컨벤션 관점 분리·신설. self의 Bean Qualifier cross-module·구현체 모듈·FQCN·Bean 이름 매직 스트링 룰 이관 + pasta-rules 참조 + 모듈 관계·@Entity 스캔 경계·패턴 준수 확장. java-spring-coder v1.11의 4-Tier·공용 모듈 @Entity 회피·@ConditionalOnBean 회피 하드 가드레일과 짝."
+version: "0.3"
+last-modified: "2026-11-13"
+changelog: "v0.3 — 2026-11-13 조직 코딩 컨벤션(virtualcare/coding-conventions PR #7) 반영: Phase 0 항목 6 적용 판정, 핵심 규칙 8 조직 컨벤션 검사(유형 `ARCH-VC`, 가이드 4-1 위반) 신설, review-lint VC 출력 원문을 기계 검사 근거로 인용, 신규·변경 줄만 지적(기존 줄은 지적하지 않음), 비적용 프로젝트 ARCH-VC 금지, 핵심 규칙 4 DTO 정적 팩토리 문구 조건부화, 가드레일·자기 검증 11~13 | v0.2 — 2026-09-16 사이클 7 감사 역수입: 핵심 규칙 7 방어 로직 적용 범위 검사 신설 (공용 진입점 우선, 실측 근거로 커버리지 축소 금지. PR #552 사례). | v0.1 — 2026-07-09 self-code-reviewer v1.11에서 아키텍처·컨벤션 관점 분리·신설. self의 Bean Qualifier cross-module·구현체 모듈·FQCN·Bean 이름 매직 스트링 룰 이관 + pasta-rules 참조 + 모듈 관계·@Entity 스캔 경계·패턴 준수 확장. java-spring-coder v1.11의 4-Tier·공용 모듈 @Entity 회피·@ConditionalOnBean 회피 하드 가드레일과 짝."
 harness-status: pending
 ---
 
@@ -30,6 +30,7 @@ harness-status: pending
 - 모듈 관계: 공용 모듈 배치 · `@Entity` 스캔 경계 · admin/api/batch 격리 · 순환 의존
 - 패턴 준수: DDD · 헥사고날 · 포트-어댑터 · 명명 컨벤션
 - pasta-rules 컨벤션 참조: 01/02/03/04/05/07/13/14/19 등
+- (v0.3) 조직 컨벤션 위반 (적용 프로젝트만, 가이드 4-1) — 핵심 규칙 8
 - FQCN 인라인 사용 검출 (import 위반)
 
 **Out-of-Scope**
@@ -47,6 +48,7 @@ harness-status: pending
 3. **변경 범위**: `git log dev..HEAD --oneline` + `git diff dev...HEAD --stat`
 4. **admin 모듈 포함 여부**: 변경 파일에 `admin/` 경로가 있으면 → 13/14 규칙 로드, 01/04 4-Tier를 admin에 맹목 적용 금지
 5. **rules 위치 결정**: 대상 프로젝트가 실전 배포된 상태면 `.claude/rules/`, forge 자체 개발 중이면 `forge/common/pasta-rules/`
+6. **(v0.3) 조직 컨벤션 적용 판정**: `.claude/shared/vc-conventions-guide.md` 가 있으면 조직 컨벤션 적용 프로젝트(forge 에서 평가할 때는 TC 가 명시한 프로젝트 맥락을 따른다). 적용이면 가이드(`forge/common/vc-conventions-guide.md`, 배포본 `.claude/shared/vc-conventions-guide.md`)와 4절의 원문(pkg-structure·entity·dto·lombok·naming)을 읽는다. 없으면 비적용 — 핵심 규칙 8 을 건너뛰고 원문을 다른 곳에서 찾지 않는다
 
 ---
 
@@ -118,7 +120,7 @@ Domain이 Infrastructure/Web을 import하거나, Application이 Web을 import하
 | Domain Entity class | record 금지, class 사용, primitive/wrapper, `@Getter` + `@EqualsAndHashCode`, NOT NULL 생성자 검증 |
 | JPA Entity | `@Entity`/`@Table`/`@Getter`, `toEntity()`/`from()` 변환, `@Builder` 생성자 레벨만 |
 | Repository 3단계 | Domain `*Repository` — Infra `*JpaRepository` — Infra `*RepositoryImpl` |
-| DTO record | `*Request`/`*Response`/`*InDto`/`*OutDto`, `of`/`from`/`to` 팩토리, Controller는 Application만 주입 |
+| DTO record | `*Request`/`*Response`/`*InDto`/`*OutDto`, Controller는 Application만 주입. 정적 팩토리: 조직 컨벤션 비적용이면 규칙 05 대로 `of`/`from`/`to`, 적용이면 핵심 규칙 8(신규 클래스는 생성자 직접 호출) |
 | 명명 컨벤션 | 서비스 메서드 · 클래스 · 패키지 (`07-general-project-convention.md` §명명) |
 | Controller | `@Controller` (admin Thymeleaf) vs `@RestController` (api) 분리 |
 
@@ -168,6 +170,25 @@ Domain이 Infrastructure/Web을 import하거나, Application이 Web을 import하
 
 **참고 선례**: PR #633(서비스 계층 이동 + 공용 예외 판별 유틸 + 원자적 UPDATE), PR #647(재시도 판정 철학 문서화, 공용 private static 헬퍼, 경계 양쪽 회귀 테스트), PR #653(단건 이벤트 풀 포화 시 `CallerRunsPolicy`).
 
+### 8. 조직 컨벤션 검사 (v0.3, 적용 프로젝트만)
+
+**정본**: `vc-conventions-guide.md` 3절(충돌 판정)·4-1(프로덕션 코드 요약), 원문 `vc-conventions/{pkg-structure,entity,dto,lombok,naming}-convention.md`. 본문을 복사하지 말고 원문 문구를 인용한다.
+
+**대상 줄**: 이번 diff 의 **신규·변경 줄만**. 기존 코드가 조직 컨벤션과 다르다는 이유만으로 지적하지 않는다(가이드 3절 "기존 코드 일괄 변경 금지"). diff 문맥에 보이는 기존 줄도 같다. 고칠 가치가 있으면 리포트 끝 "범위 밖 제안"에 한 줄로만 적는다.
+
+**기계 검사 근거**: `review-lint.py` 출력의 `VC` 행(가이드 옆에서 자동으로 켜짐, 마지막 줄 "조직 컨벤션 검사 켜짐")을 근거로 쓴다. 출력 원문(`[위반]`/`[확인]`, 파일:줄, 메시지)을 인용한 뒤 판단을 붙인다. 실행하지 못했으면 "review-lint 미실행(사유)"로 적고 결과를 추정하지 않는다.
+
+| 검사 항목 (4-1) | 판정 | 등급 |
+|----------------|------|------|
+| `@Setter`·`@Data`·`@AllArgsConstructor`(테스트 제외), 와일드카드 import, `var`, `System.out` | lint `[위반]` 과 같은 판정. 수정 필수 | High |
+| 신규 클래스의 정적 팩토리 `from`/`of`/`create` (단순 매핑) | 생성자 직접 호출. 3절: 이미 `from()` 이 있는 클래스에 필드만 더한 변경은 정상 | Medium |
+| 패키지·의존 방향: 신규 `presentation` 파일, web DTO 의 application 전달, application 의 비즈니스 판단 | `web` 패키지, Controller 가 `Request → InDto` 변환. 의존 역행은 HG-2 로 판정 | Medium |
+| 이름: `~Dto` 단독, `JpaEntity` 아닌 `@Entity`, 신규 Controller 의 `Command`/`Query` 구분 | 4-1 계층 이름. 3절: 기존 Controller 에 엔드포인트 추가는 정상 | Medium |
+| 줄임 변수명(`req`·`dto`·`e`·`cnt`…), `list`·`resultMap` | 타입명 전체 | Low |
+
+- lint `[확인]` 은 위 판정으로 해당 여부를 가린다. 3절 예외에 해당하면 "검사 통과"에 사유와 함께 적는다
+- **비적용 프로젝트에서는 ARCH-VC 를 0건으로 둔다.** 조직 컨벤션을 근거로 프로젝트 규칙(05 정적 팩토리 등)을 뒤집거나 권장하지 않는다. 리포트 머리에 "조직 컨벤션: 비적용"만 적는다
+
 ---
 
 ## 실행 프로토콜
@@ -182,9 +203,10 @@ git diff dev...HEAD -- {path}
 ### Step 2. 규칙 로드
 - 변경 파일 유형별로 위 "pasta-rules 컨벤션 검사" 표에서 필요한 규칙 Read
 - **본문 복사 금지** — 참조·인용만
+- (v0.3) 조직 컨벤션 적용이면 가이드 + 4절 원문 Read, `python3 forge/common/review-lint.py`(배포본 `.claude/shared/review-lint.py`) 출력 확보(사용자가 준 출력이 있으면 그것)
 
 ### Step 3. 항목별 검사
-5개 카테고리(4-Tier / Bean / 모듈 / 패턴 / 컨벤션) + FQCN을 순서대로 대조.
+5개 카테고리(4-Tier / Bean / 모듈 / 패턴 / 컨벤션) + FQCN을 순서대로 대조. 조직 컨벤션 적용이면 핵심 규칙 8 을 신규·변경 줄에 대조.
 
 ### Step 4. 리포트 작성
 아래 "리포트 형식" 참조.
@@ -200,8 +222,9 @@ git diff dev...HEAD -- {path}
 **비교 기준**: dev
 **커밋 수**: {N} · **변경 파일**: {N}
 **로드된 규칙**: {01, 07, 19, ...}
+**조직 컨벤션**: {적용 (vc-conventions-guide, review-lint VC 켜짐) / 비적용}
 
-### AUTO FAIL (기동/컴파일 실패 확정)
+### AUTO FAIL (하드 가드레일 HG-1~4 위반 — 기동 실패만이 아니라 HG-2 계층 역행도 여기에 둔다)
 
 | # | 유형 | 파일:라인 | 위반 | 등급 |
 |---|------|----------|------|------|
@@ -224,6 +247,10 @@ git diff dev...HEAD -- {path}
 - Bean Qualifier cross-module: OK (검증 상수 {N}건)
 - 순환 의존: 없음
 - FQCN 인라인: 없음
+- (적용 시) 조직 컨벤션: 신규·변경 줄 기준, 3절 예외 적용 {항목}
+
+### 범위 밖 제안 (없으면 이 절을 뺀다. "없음"으로 채우지 않는다)
+- 기존 코드의 조직 컨벤션 차이 등 이번 diff 밖 항목 1줄씩
 ```
 
 **유형 (Type prefix)**:
@@ -232,6 +259,7 @@ git diff dev...HEAD -- {path}
 - `ARCH-MODULE` : 모듈 관계·@Entity·순환 의존
 - `ARCH-PATTERN` : DDD·Repository·DTO·명명
 - `ARCH-CONVENTION` : pasta-rules 개별 컨벤션
+- `ARCH-VC` : (v0.3) 조직 컨벤션 위반 — 적용 프로젝트의 신규·변경 줄만
 
 **등급**: `AUTO FAIL` > `Critical` > `High` > `Medium` > `Low` > `Info`
 
@@ -243,6 +271,8 @@ git diff dev...HEAD -- {path}
 - **코드 변경 금지** — 리뷰 결과 보고만
 - **커밋/push/stash 금지**
 - **rules 원본 수정 금지** — 참조만
+- **(v0.3) 조직 컨벤션 지적 범위** — 적용 프로젝트에서도 이번 diff 의 신규·변경 줄만 ARCH-VC 로 지적한다. 기존 줄은 "범위 밖 제안"까지만. 비적용 프로젝트에서는 ARCH-VC 0건, 조직 컨벤션을 근거로 프로젝트 규칙을 뒤집지 않는다
+- **(v0.3) 3절 판정 우선** — "다른 코드도 다 그렇다"는 이유로 신규 줄의 ARCH-VC 를 통과시키지 않는다. 통과는 가이드 3절 예외(기존 `from()` 수정, 기존 Controller 에 엔드포인트 추가 등)에 해당할 때만
 
 ### 소프트 가드레일
 - 변경되지 않은 기존 코드에 대한 리뷰 최소화
@@ -266,6 +296,9 @@ git diff dev...HEAD -- {path}
 8. [ ] **@ConditionalOnBean vs @Profile**: 설정 게이팅에 `@ConditionalOnBean` 있으면 `@Profile` 대체 검토 권장?
 9. [ ] **모듈 순환 의존**: A→B→A 경로 검사했는가? gradle 의존성 그래프 또는 grep?
 10. [ ] **out-of-scope 존중**: 보안·성능·문법 오류·Hibernate Session 오염·i18n을 이 스킬이 아닌 담당 스킬로 안내했는가? (본인 관점 밖 위반은 "타 스킬 참조"로만 표시)
+11. [ ] **(v0.3) 조직 컨벤션 판정**: Phase 0 에서 가이드 존재로 적용/비적용을 정하고 리포트 머리에 적었는가? 비적용이면 ARCH-VC 0건인가?
+12. [ ] **(v0.3) 신규·변경 줄만**: ARCH-VC 가 전부 이번 diff 의 신규·변경 줄인가? 기존 줄은 범위 밖 제안으로만 갔는가? 3절 예외(기존 `from()` 수정 등)를 위반으로 잡지 않았는가?
+13. [ ] **(v0.3) review-lint 인용**: VC 판정에 lint 출력 원문을 인용했는가? 미실행이면 "미실행(사유)"로 적었는가?
 
 ---
 
@@ -275,6 +308,8 @@ git diff dev...HEAD -- {path}
 |------|------|
 | `references/evaluation-rubric.md` | 평가 루브릭 (100점, AUTO FAIL 조건) — 하네스 작성 시 추가 |
 | `references/pattern-detail.md` | DDD·헥사고날 상세 패턴 (필요 시 분리) |
+| `forge/common/vc-conventions-guide.md` (배포본 `.claude/shared/vc-conventions-guide.md`) | 조직 컨벤션 적용 판정·충돌 판정·4-1 요약 (핵심 규칙 8) |
+| `forge/common/review-lint.py` (배포본 `.claude/shared/review-lint.py`) | VC 기계 검사 (`review-recurrence-guard.md` §15) |
 
 **짝 스킬**
 - `self-code-reviewer` v1.11 — 공통 룰(@Profile 문법, 임시 로그, Hibernate Session 오염, 입력 검증 등)

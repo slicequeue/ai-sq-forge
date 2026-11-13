@@ -1,5 +1,11 @@
 # 사이클 8 — 실전 역수입 + 재평가·트레이닝 (2026-11-13)
 
+사이클 8 실전 역수입·재평가 완료 (forge, 실전 재배포 전)
+- pasta-japan-server(10/16)·moneyball(9/30) 실전 수정분을 3-way 병합으로 역수입
+- 8개 컴포넌트 재평가·트레이닝: 최종 93.4~100점, with-skill AUTO FAIL 0건
+- 공용 자원 3종 반영: review-recurrence-guard, negative-tc-catalog, review-lint.py
+미결 6건 결정 필요 (맨 아래 "미결" 절)
+
 ## 배경
 
 사이클 7 배포(2026-09-16) 이후 forge 커밋이 없는 동안, 실전 저장소에서 컴포넌트가 직접 수정됐다. forge 원본이 실전보다 한 사이클 뒤처진 상태였다.

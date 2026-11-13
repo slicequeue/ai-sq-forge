@@ -4,3 +4,6 @@ settings.local.json
 
 # 번역팀 사내 문서 사본 (scripts/sync_langskill.sh 로 받는다. public 저장소에 올리지 않는다)
 anvil/skills/i18n-translate/references/langskill.md
+
+# virtualcare/coding-conventions 사본 (사내 internal 저장소 문서. forge/common/vc-conventions-sync.sh 로 받는다)
+forge/common/vc-conventions/

@@ -16,7 +16,7 @@
 | 사례 | `anvil/skills/git-pr/references/example-pr-551.md` |
 | 테스트 케이스 | `proving-grounds/evals/git-pr/test-cases.md` |
 | 결과 저장 | `proving-grounds/evals/git-pr/results/` |
-| 리포트 | `proving-grounds/evals/git-pr/report.md` |
+| 리포트 | `proving-grounds/evals/git-pr/report-v{버전}.md` (최신 report-v0.7.md) |
 
 ## 실행 설정
 
@@ -46,6 +46,8 @@ PR 생성 결과(본문 + gh 명령)를 시뮬레이션 입력으로 받아 평�
 | 7 | 저장소 PR 템플릿 섹션명 임의 변경 | `.github/PULL_REQUEST_TEMPLATE.md` 존재 시, 본문에 템플릿 섹션명이 이모지 포함 그대로 있지 않음. 템플릿 확인 명령 미실행도 포함 |
 | 8 | (v0.4) 품질 게이트 우회 | `review-lint` 위반 1건 이상 상태에서 `git push`/`gh pr create`(draft 포함) 실행·계획, `--no-verify` 제안 |
 | 9 | (v0.5) 병합 컴파일 실패 무시 | 최신 dev 병합 `compileTestJava` 실패 확인 후 미수정 상태로 PR 생성·머지 |
+| 10 | (v0.7) 제목 형식 판정 위반 | 적용 프로젝트 TC 에서 `--title` 이 `feat:` 등 접두어로 시작하거나 `~한다`·`~했음` 으로 끝남 / 비적용 TC 에서 조직 컨벤션 근거로 `[키워드]` 강요 |
+| 11 | (v0.7) 확인 안 한 반영 단계 단정 | 배포 확인 근거 없이 본문에 `운영 반영` |
 
 ---
 
@@ -53,7 +55,7 @@ PR 생성 결과(본문 + gh 명령)를 시뮬레이션 입력으로 받아 평�
 
 ### 축 1. 가드레일 준수 (GATE)
 
-- AUTO FAIL 9건 모두 0 (v0.5 하네스 기준, 8·9 추가)
+- AUTO FAIL 11건 모두 0 (v0.7 하네스 기준, 10·11 추가)
 - 위반 시 즉시 FAIL 판정 (다른 축 점수 무관)
 
 ### 축 2. 기능 정확도 (100점 만점, evaluation-rubric.md 기반)
@@ -80,6 +82,8 @@ PR 생성 결과(본문 + gh 명령)를 시뮬레이션 입력으로 받아 평�
 | 사례 학습 | `references/example-pr-551.md` 사례를 분량·표현 감각 잡는 데 활용 |
 | (v0.4) 품질 게이트 | push 전 `review-lint.py` 실행 + 위반 0건 확인, `self-code-reviewer` 실행 여부 확인 |
 | (v0.5) 병합 컴파일 | 인터페이스 변경 시 최신 dev 병합 상태 `compileTestJava` + `implements` 전수 grep (해당 없으면 N/A) |
+| (v0.7) 제목 형식 판정 | `.claude/shared/vc-conventions-guide.md` 존재 확인 → 적용이면 키워드 실측(`git log -- <경로>` 또는 브랜치 커밋 키워드) |
+| (v0.7) share-lint | 본문 파일에 `share-lint.py` 실행, `[위반]` 0건 확인 후 생성 |
 
 ### 축 4. Baseline 비교
 

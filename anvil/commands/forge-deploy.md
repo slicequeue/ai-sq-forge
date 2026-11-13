@@ -3,9 +3,9 @@ name: forge-deploy
 description: "Forge에서 개발·검증한 컴포넌트를 실전 프로젝트에 이식합니다. 경로 리매핑, 기존 컴포넌트 백업, 배치 상태 검증을 자동으로 수행합니다."
 trigger: "/forge-deploy"
 args: "{대상 프로젝트 경로} [--component 컴포넌트명] [--dry-run]"
-version: "1.2"
-last-modified: "2026-05-19"
-changelog: "v1.2: 배포정책 필드(`일반`/`역수입전용`/`forge전용`) 가드 추가 — 정책 위반 컴포넌트 이식 자동 차단. 경로 리매핑 매핑 테이블 내장(`forge/common/pasta-rules/` → `.claude/rules/`)으로 수동 sed 치환 제거 | v1.1: Deploy Registry 연동, --sync, 커맨드 이식 프로세스, 버전 관리 추가"
+version: "1.3"
+last-modified: "2026-11-13"
+changelog: "v1.3: 공용 자원 배포 규칙 신설 — 조직 코딩 컨벤션(vc-conventions)은 origin 이 virtualcare 조직인 저장소에만 배포, 원문 동기화·기준 커밋 일치 확인, share-writing-guard·share-lint 는 전 프로젝트 배포, 배포 후 review-lint VC 켜짐/꺼짐 실측 | v1.2: 배포정책 필드(`일반`/`역수입전용`/`forge전용`) 가드 추가 — 정책 위반 컴포넌트 이식 자동 차단. 경로 리매핑 매핑 테이블 내장(`forge/common/pasta-rules/` → `.claude/rules/`)으로 수동 sed 치환 제거 | v1.1: Deploy Registry 연동, --sync, 커맨드 이식 프로세스, 버전 관리 추가"
 ---
 
 # /forge-deploy
@@ -36,6 +36,32 @@ Forge(`anvil/`)에서 개발·테스트를 거친 컴포넌트를 **실전 프�
 3. anvil/INDEX.md 로드 — 컴포넌트 목록 및 상태 파싱
 4. 대상 프로젝트의 .claude/ 하위 구조 스캔
    - .claude/skills/, .claude/agents/, .claude/commands/ 등 기존 컴포넌트 목록 수집
+```
+
+### Phase 0.5. 공용 자원 배포 판정 (v1.3)
+
+실행 보조 스크립트: `forge/tools/forge_deploy.py --forge . --target {대상} [--apply --backup {대상}/.claude/backup/{날짜}]` — 이 표·리매핑·배포 후 참조 검증을 그대로 수행한다. `--apply` 없이 돌리면 계획만 출력한다. 리허설은 대상 `.claude` 를 스크래치 사본(git init + 같은 origin URL)에 복사해 먼저 돌린다.
+
+컴포넌트와 별개로 `forge/common/` 공용 자원을 프로젝트 성격에 맞춰 배포한다. 컴포넌트가 참조하는 공용 자원이 빠지면 배포본에서 참조가 끊긴다.
+
+| 공용 자원 | 배포 위치 | 대상 |
+|-----------|-----------|------|
+| `destructive-write-guard.md`, `scope-discipline-guard.md`, `review-recurrence-guard.md`, `negative-tc-catalog.md` | `.claude/shared/` | 전 프로젝트 |
+| `review-lint.py`, `review-lint-push-hook.sh` | `.claude/shared/` | Java 프로젝트 |
+| `share-writing-guard.md`, `share-lint.py` | `.claude/shared/` | 전 프로젝트 |
+| `vc-conventions-guide.md`, `vc-conventions/*.md`(+`SOURCE`) | `.claude/shared/` | **virtualcare 조직 저장소만** |
+
+```
+1. 조직 판정: git -C {대상} remote get-url origin 에 "virtualcare/" 가 있으면 조직 저장소.
+   remote 가 없거나 다른 조직이면 비대상.
+2. 조직 저장소면:
+   a. forge/common/vc-conventions/SOURCE 존재 확인. 없으면 forge/common/vc-conventions-sync.sh 실행.
+   b. SOURCE 의 commit 이 vc-conventions-guide.md 1절 "기준" 커밋과 같은지 확인. 다르면 배포 중단하고 보고
+      (원문과 판정 가이드가 어긋난 채 배포하지 않는다).
+   c. 가이드 + 원문 폴더를 함께 배포. 한쪽만 배포하지 않는다.
+3. 비대상이면: 대상에 .claude/shared/vc-conventions-guide.md 가 이미 있을 때만 "[확인] 조직 밖 저장소에 조직 컨벤션 잔존" 보고
+   (삭제는 사용자 확인 후, 백업 뒤).
+4. Phase 6 리포트에 "조직 컨벤션: 배포 / 비대상" 한 줄을 넣는다.
 ```
 
 ### Phase 1. 이식 대상 선정
@@ -183,6 +209,12 @@ path_remapping:
    - 백업이 Phase 4에서 완료되었음을 재확인
 
 4. 파일별 이식 결과 기록
+
+5. 배포 후 실측 (v1.3):
+   - 대상 루트에서 `python3 .claude/shared/review-lint.py --base origin/{기준 브랜치}` 를 실행해 마지막 줄의
+     "조직 컨벤션 검사 켜짐/꺼짐" 이 Phase 0.5 판정과 같은지 확인한다. 다르면 배포 실패로 보고.
+   - 이식한 파일에 남은 forge 경로(`forge/common/`, `anvil/`) 참조를 grep 으로 0건 확인한다.
+   - 이식한 파일이 참조하는 `.claude/shared/`·`.claude/rules/` 경로가 대상에 실제로 있는지 확인한다.
 ```
 
 ### Phase 6. 이식 리포트
@@ -267,6 +299,7 @@ Phase 6. 리포트
 4. **대상 프로젝트의 rules/ 파일 수정 금지** — 규칙 파일은 참조만 하고 절대 수정/삭제하지 않음.
 5. **proving-grounds/ 이식 금지** — 하네스, 테스트 케이스, 리포트는 forge 전용. 이식 대상에서 제외.
 6. **배포정책 위반 금지** — `역수입전용`/`forge전용`은 어떤 옵션·플래그로도 우회 불가. 정책 변경은 INDEX.md에서 명시적 수정이 필요.
+7. **조직 컨벤션은 조직 저장소에만** — `vc-conventions` 원문·가이드를 virtualcare 조직 밖 저장소에 배포하지 않는다(사내 internal 문서). 원문과 가이드의 기준 커밋이 다르면 배포하지 않는다.
 
 ### 소프트 가드레일 (권장)
 

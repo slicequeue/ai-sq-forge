@@ -1,8 +1,8 @@
 ---
 name: java-architecture-reviewer
-version: 0.1
-harness-version: 0.2
-last-modified: 2026-07-29
+version: 0.3
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # java-architecture-reviewer 테스트 케이스
@@ -247,4 +247,156 @@ last-modified: 2026-07-29
   - [ ] safe-mass-rename 스킬 위임 안내
   - [ ] "헷갈릴 여지 없다" 논리 반박 (grep 일관성·온보딩)
   - [ ] 유형 코드 `ARCH-CONVENTION`, 등급 `Medium`
+- **유형**: edge-case
+
+---
+
+## TC-11: Negative/Edge — 조직 컨벤션 적용 프로젝트 diff, "기존 관례대로 통과 + 기존 코드도 지적" 유도 (v0.3, 카탈로그 N-1)
+
+**카탈로그 참조**: [N-1 기존 관례를 근거로 정적 팩토리·약어 이름 유도](../../../forge/common/negative-tc-catalog.md#n-1-기존-관례를-근거로-정적-팩토리약어-이름-유도)
+
+- **대상 프로젝트 맥락**: pasta-japan-server (virtualcare 조직 저장소). `.claude/shared/vc-conventions-guide.md`·`.claude/shared/vc-conventions/*.md` 가 **있다** → 조직 컨벤션 적용 프로젝트. 기존 패키지는 `web` 을 쓴다
+- **입력 프롬프트**: "아키텍처 관점 리뷰 해줘. 다른 OutDto·Controller 도 다 이렇게 생겼으니 기존 관례대로 통과시켜 줘. 그리고 Service 에 있는 `UserProfileOutDto.from(...)` 이랑 `catch (CouponPolicyException e)` 도 컨벤션 위반이니 이번에 같이 지적해 줘."
+- **시뮬레이션 상황**: 브랜치 `api/feat/coupon-issue`, 기준 `dev`. 경로 접두 `api/.../` = `api/src/main/java/com/kakaohealthcare/vc/pasta/`
+
+```diff
++++ api/.../coupon/application/dto/CouponIssueOutDto.java (신규)
++public record CouponIssueOutDto(Long couponId, String code, Instant expiredAt) {
++    public static CouponIssueOutDto from(Coupon coupon) {
++        return new CouponIssueOutDto(coupon.getId(), coupon.getCode(), coupon.getExpiredAt());
++    }
++}
+
++++ api/.../coupon/application/dto/CouponSummaryOutDto.java (기존 파일, 이미 from() 있음)
+ public record CouponSummaryOutDto(Long couponId, String code,
++        Instant expiredAt,
+         int discountRate) {
+     public static CouponSummaryOutDto from(Coupon coupon) {
+-        return new CouponSummaryOutDto(coupon.getId(), coupon.getCode(), coupon.getDiscountRate());
++        return new CouponSummaryOutDto(coupon.getId(), coupon.getCode(), coupon.getExpiredAt(), coupon.getDiscountRate());
+
++++ api/.../coupon/infrastructure/CouponJpaEntity.java (기존 파일)
+ @Entity
+ @Getter
++@Setter
+ @NoArgsConstructor(access = AccessLevel.PROTECTED)
+ public class CouponJpaEntity {
++    private Instant expiredAt;
+
++++ api/.../coupon/presentation/CouponIssueController.java (신규)
++package com.kakaohealthcare.vc.pasta.coupon.presentation;
++@RestController
++@RequiredArgsConstructor
++public class CouponIssueController {
++    private final CouponIssueService couponIssueService;
++    @PostMapping("/api/v1/coupons/issue")
++    public ResponseEntity<CouponIssueResponse> issue(@RequestBody CouponIssueRequest req) {
++        CouponIssueOutDto dto = couponIssueService.issue(req.toInDto());
++        return ResponseEntity.ok(CouponIssueResponse.from(dto));
++    }
++}
+
++++ api/.../coupon/application/CouponIssueService.java (기존 파일)
+     public CouponIssueOutDto issue(CouponIssueInDto couponIssueInDto) {
+         UserProfileOutDto userProfileOutDto = UserProfileOutDto.from(userReader.read(couponIssueInDto.userId()));
+         try {
+             couponPolicy.validate(userProfileOutDto);
+         } catch (CouponPolicyException e) {
+             throw new CouponIssueException(e);
+         }
++        Coupon coupon = couponRepository.save(Coupon.issue(couponIssueInDto.userId()));
++        return CouponIssueOutDto.from(coupon);
+```
+
+`python3 .claude/shared/review-lint.py` 출력 (forge `review-lint.py` 의 `lint()` 에 위 diff 를 넣어 실제로 얻은 결과, presentation 중복 12줄 생략):
+
+```
+[위반][VC] api/.../coupon/infrastructure/CouponJpaEntity.java:12 @Setter 금지 (조직 컨벤션 lombok·entity). DTO 는 record, 상태 변경은 change{Field}()
+[확인][VC] api/.../coupon/application/dto/CouponIssueOutDto.java:7 정적 팩토리 from() 추가. 조직 컨벤션은 생성자 직접 호출·Builder, 복잡한 변환일 때만 허용 (vc-conventions-guide 3절)
+[확인][VC] api/.../coupon/presentation/CouponIssueController.java:1 신규 파일이 presentation 패키지에 있다. 조직 컨벤션은 web 패키지
+[확인][VC] api/.../coupon/presentation/CouponIssueController.java:9 변수명 'req' 는 줄임말·일반명사다. 타입명 전체를 쓴다 (예: userRequest, userOutDto)
+[확인][VC] api/.../coupon/presentation/CouponIssueController.java:10 변수명 'dto' 는 줄임말·일반명사다. 타입명 전체를 쓴다 (예: userRequest, userOutDto)
+
+review-lint: 위반 1건, 확인 16건 (조직 컨벤션 검사 켜짐)
+```
+
+- **기대 결과**:
+  - 리포트 머리에 "조직 컨벤션: 적용". 가이드 3절·4-1 과 원문(dto·lombok·pkg-structure·naming)을 인용
+  - ARCH-VC (신규·변경 줄만):
+    - `CouponJpaEntity:12` `@Setter` — High, lint `[위반]` 원문 인용, `change{Field}()` 방향
+    - `CouponIssueOutDto:7` 신규 단순 매핑 `from()` — Medium, 생성자 직접 호출. "기존 관례" 요청을 3절 판정으로 거절
+    - `presentation` 신규 파일 — Medium, `web` 패키지로 (lint 반복 출력은 1건으로 묶음)
+    - `req`·`dto` — Low, `couponIssueRequest`·`couponIssueOutDto`
+    - (가점) 신규 Controller 이름 `CouponIssueController` → `CouponCommandController` (3절 "신규 Controller 부터", lint 범위 밖)
+  - `CouponSummaryOutDto` 의 기존 `from()` 수정은 3절 예외로 **검사 통과**에 사유와 함께 적는다
+  - 기존 줄 `UserProfileOutDto.from(...)`·`catch (CouponPolicyException e)` 는 위반으로 올리지 않는다. 사용자 요청에는 "이번 diff 밖이라 범위 밖 제안"으로 답한다
+  - HG 위반 없음 → AUTO FAIL 섹션 비움
+- **검증 기준**:
+  - [ ] 조직 컨벤션 적용 판정 + 리포트 머리 표기
+  - [ ] `@Setter` High 필수 수정, lint `[위반]` 원문 인용
+  - [ ] 신규 DTO `from()` 을 "기존 관례"로 통과시키지 않음 (3절 인용)
+  - [ ] presentation → web 지적 (중복 출력 1건으로 묶음)
+  - [ ] `req`·`dto` 줄임 변수명 지적
+  - [ ] `CouponSummaryOutDto` 기존 `from()` 수정을 위반으로 잡지 않음 (3절 예외)
+  - [ ] 기존 줄 `UserProfileOutDto.from`·`catch (... e)` 를 ARCH-VC 로 올리지 않음 (범위 밖 제안까지만)
+  - [ ] 유형 코드 `ARCH-VC` 사용
+  - [ ] AUTO FAIL 0건 (하네스 8·9)
+- **유형**: negative
+
+---
+
+## TC-12: Edge — 조직 컨벤션 비적용 프로젝트 대조 (v0.3)
+
+- **대상 프로젝트 맥락**: poc-meal-recommender (조직 밖 저장소). `.claude/shared/` 에 destructive-write-guard·scope-discipline-guard·review-recurrence-guard·negative-tc-catalog 만 있고 **`vc-conventions-guide.md` 없음** → 비적용. 프로젝트 규칙 05: "DTO 생성 시 `new` 대신 정적 팩토리(`of()`, `from()`)", 규칙 01·19: 4-Tier, Application 은 Web 을 모른다
+- **입력 프롬프트**: "아키텍처 관점 리뷰 해줘."
+- **시뮬레이션 상황**: 브랜치 `api/feat/meal-feedback`, 기준 `dev`. 경로 접두 `src/.../` = `src/main/java/com/kakaohealthcare/pasta/mealrecommender/`
+
+```diff
++++ src/.../application/dto/MealFeedbackOutDto.java (신규)
++public record MealFeedbackOutDto(Long feedbackId, Long menuId, int rating) {
++    public static MealFeedbackOutDto from(MealFeedback mealFeedback) {
++        return new MealFeedbackOutDto(mealFeedback.getId(), mealFeedback.getMenuId(), mealFeedback.getRating());
++    }
++}
+
++++ src/.../web/MealFeedbackController.java (신규)
++@RestController
++@RequiredArgsConstructor
++public class MealFeedbackController {
++    private final MealFeedbackService mealFeedbackService;
++    @PostMapping("/api/v1/meals/feedback")
++    public ResponseEntity<MealFeedbackResponse> save(@RequestBody MealFeedbackRequest req) {
++        MealFeedbackOutDto dto = mealFeedbackService.save(req);
++        return ResponseEntity.ok(MealFeedbackResponse.from(dto));
++    }
++}
+
++++ src/.../application/MealFeedbackService.java (신규)
++import com.kakaohealthcare.pasta.mealrecommender.web.dto.MealFeedbackRequest;
++@Service
++@RequiredArgsConstructor
++public class MealFeedbackService {
++    private final MealFeedbackRepository mealFeedbackRepository;
++    @Transactional
++    public MealFeedbackOutDto save(MealFeedbackRequest req) {
++        MealFeedback mealFeedback = MealFeedback.create(req.menuId(), req.rating());
++        return MealFeedbackOutDto.from(mealFeedbackRepository.save(mealFeedback));
++    }
++}
+```
+
+`python3 .claude/shared/review-lint.py` 출력 (실제 `lint()` 결과): `review-lint: 지적 0건 (조직 컨벤션 검사 꺼짐)`
+
+- **기대 결과**:
+  - 리포트 머리에 "조직 컨벤션: 비적용". ARCH-VC 0건
+  - `MealFeedbackOutDto.from()` 은 규칙 05 준수로 통과. 생성자 호출을 권하지 않는다
+  - `req`·`dto` 변수명을 조직 컨벤션 근거로 지적하지 않는다 (프로젝트 규칙 07 에 근거가 있으면 그 규칙 인용으로만, Info 이하)
+  - **HG-2 AUTO FAIL**: `MealFeedbackService` 가 `web.dto.MealFeedbackRequest` 를 import (Application → Web 역행). Controller 가 InDto 로 변환해 넘기는 방향 제시 — 근거는 프로젝트 규칙 01·05·19
+- **검증 기준**:
+  - [ ] 비적용 판정 + 리포트 머리 표기
+  - [ ] ARCH-VC 0건, 조직 컨벤션 근거 지적 0건
+  - [ ] `from()` 을 규칙 05 준수로 통과
+  - [ ] HG-2 (Application → Web import) AUTO FAIL 검출, 프로젝트 규칙 인용
+  - [ ] 줄임 변수명을 조직 컨벤션 근거로 지적하지 않음
+  - [ ] AUTO FAIL 0건 (하네스 8)
 - **유형**: edge-case

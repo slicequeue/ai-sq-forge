@@ -276,10 +276,13 @@ python3 forge/common/review-lint.py --head <sha>   # 특정 커밋 재검사
 | LAYER | domain 패키지가 HTTP 예외·`ExceptionConstants`·web 을 import | 위반 |
 | LAYER | `@RestController` 의 새 메서드가 `ResponseEntity` 를 반환하지 않음 | 확인 |
 | NAMING | 컬렉션 변수에 `List` 등 접미사 없음, `Instant` 변수에 `At` 접미사 없음 | 확인 |
-| NAMING | 코드 주석이 평서형 `~다.` 로 끝남 (주석은 존댓말, #791) | 확인 |
 | FQCN·PII | 본문 패키지 경로, 로그 본문 `userId` | 위반 |
+| VC | 조직 컨벤션: `@Setter`·`@Data`·`@AllArgsConstructor`(테스트 제외), 와일드카드 import, `var`, `System.out`·`printStackTrace()`, 테스트 `Thread.sleep`·JUnit `Assertions` | 위반 |
+| VC | 조직 컨벤션: 정적 팩토리 `from`/`of`/`create` 추가, 줄임 변수명(`req`·`dto`·`cnt`…)·예외 변수 `e`, `~Dto` 단독 접미사, `JpaEntity` 아닌 `@Entity`, 신규 `presentation` 파일, `Stub*` 더블, `@BeforeAll`, 모호한 `@DisplayName`, 인수 테스트 아닌 신규 `@SpringBootTest` | 확인 |
 
 - **위반**은 고친다. **확인**은 해당 없으면 PR 본문이나 답글에 사유를 남긴다.
+- **VC 행은 조직 컨벤션 배포 프로젝트에서만 켜진다** — 스크립트 옆에 `vc-conventions-guide.md` 가 있으면 자동으로 켜지고, `--vc`/`--no-vc` 로 강제한다. 출력 마지막 줄에 "조직 컨벤션 검사 켜짐/꺼짐"이 나온다. 판정 우선순위는 `vc-conventions-guide.md` 3절
+- **커밋 전 새 파일도 검사한다** — `--head` 없이 실행하면 아직 `git add` 하지 않은 `.java`·`.sql` 새 파일을 전부 바뀐 줄로 본다(2026-11-13 이전에는 미추적 파일이 검사에서 빠졌다)
 - **`[위반]` 이 남은 상태로는 완료 보고·커밋·push·PR 생성을 하지 않는다.** 사용자가 "일단 올려줘"라고 해도 같다. 위반별 수정 방향을 제시하고 고친 뒤 재실행한다. 의도적으로 남기려면 사유를 PR 본문 "리뷰 포인트"에 적고 사용자 명시 승인을 받는다 (2026-11-13 git-pr TC-8·coding-implementer TC-12 baseline 이 요청대로 위반 상태 PR·커밋)
 - **`[확인]` 사유는 lint 출력 원문(코드, 파일:줄, 메시지)을 인용한 뒤 판단을 붙인다.** 메시지를 풀어 쓰다 반대로 읽는 오류가 반복 관찰됐다 (git-pr TC-6 2회)
 - **실행하지 못했으면 결과를 추정해 적지 않는다.** "미실행(사유)"로 표기하고, 예상 결과를 쓸 때는 스크립트 검사 범위(위 표) 안의 항목만 쓴다. 표에 없는 유형(주석 RR-10, yml RR-7 등)을 lint 결과로 적지 않는다 (self-code-reviewer TC-10 v2.3 지어내기 사례)
@@ -359,3 +362,4 @@ python3 forge/common/review-lint.py --head <sha>   # 특정 커밋 재검사
 | 2026-09-16 | 신설. PR 262건 리뷰 코멘트 전수 조사(사람 279 + 봇 477) 결과 중 스킬 미반영 14개 유형을 규칙화 |
 | 2026-10-16 | GLP-1 PR 19건(#777~#801) 리뷰 45건(카일 21·코드래빗 14·이안 10) 반영. RR-13 실패 격리, RR-14 동작 변경·검증 순서, RR-L 기계 검사(`review-lint.py`), 작성 전 질문 5개 신설. RR-9·11·12 확장. 진단: 지적의 절반은 기존 규칙에 이미 있던 내용(Fake 우선·이름·계층)이라 규칙 추가보다 실행 강제가 핵심 |
 | 2026-11-13 | 사이클 8 forge 역수입·평가 반영: RR-12 표 끊김 수정, §15 `[위반]` 잔존 시 완료 보고·커밋 금지·`[확인]` 원문 인용·미실행 추정 금지·FQCN/LAYER 리뷰 소유권, §16 답할 수 없는 질문 처리 |
+| 2026-11-13 | §15 VC 행 2개(조직 컨벤션 virtualcare/coding-conventions PR #7 기준, 가이드 존재 시 자동 켜짐), 미추적 새 파일 검사, 컬렉션 이름 규칙을 "요소 클래스명 복수형 또는 List 접미사"로 완화. 주석 평서형 행 제거(실측: pasta 최근 30커밋 240줄 검출로 출력이 묻힘, 문체는 java-spring-coder 자기 검증으로) |

@@ -1,9 +1,9 @@
 ---
 name: git-pr
 description: "현재 브랜치의 변경사항을 분석하여 PR을 생성하거나 본문을 업데이트하는 스킬. 'PR 만들어줘', 'PR 생성', 'PR 본문 갱신', 'PR 리프레시', 'pr create', 'pr edit', 'gh pr', 'pull request 작성/수정' 요청 시 사용한다. 사람 친화 표현 + 표 위주 + 100~200줄 이내 표준 양식을 따른다."
-version: "0.6"
+version: "0.7"
 last-modified: "2026-11-13"
-changelog: "v0.6 — 2026-11-13 forge 하네스 트레이닝(TC-6~8 신설, TC-1·5 회귀): 조건부 섹션 채움 금지 — 해당 없으면 섹션 통째 생략, '변경 없음'·'해당 없음' 한 줄로 리뷰 포인트를 만들지 않는다(TC-1·TC-5 회귀에서 재현). lint 사유 기재는 [확인] 출력이 있을 때만. 템플릿 저장소에서 선택 섹션 위치를 Changes 뒤·Test list 앞으로 명시(#551 순서, 2-0 '뒤에' 문구의 위치/내용 모호성 해소). 체크리스트 15·16 조건부 문구 | v0.5 — 2026-10-16 #803 사고 반영: 푸시·머지 직전 최신 dev 병합 상태 compileTestJava + 바꾼 인터페이스의 구현체(테스트 Fake) dev 기준 전수 grep 게이트 추가. review-lint 는 줄 단위라 PR 간 인터페이스 충돌을 못 잡는다 | v0.4 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: 푸시 전 품질 게이트(review-lint.py 위반 0건 + self-code-reviewer) 하드 가드레일, 선택 섹션 기존 동작 변경·리뷰 포인트 추가 — 리뷰어 질문(#800 의도한 변경인가, #799 범위 밖 위험)을 본문에서 선제 답변 | v0.3 — 2026-09-16 사이클 7 감사 반영: Phase 2-0 저장소 PR 템플릿 확인 하드 가드레일 신설(섹션명 문자 그대로 사용, 선택 섹션은 템플릿 섹션을 대체하지 않음). PR #726 양식 위반 사고 기반. | v0.2: forge 일반화 — pasta 특정 `--repo` 플래그 제거(gh 자동 감지), pasta-rules/메모리 참조 제거. PR #551 사례를 references/example-pr-551.md로 분리(본문 244→182줄). 자기 검증 체크리스트 12개 추가. 평가 루브릭(100점 + AUTO FAIL 6건) + 하네스 + 테스트 케이스(Happy 2/Edge 1/Negative 1) 동반 작성 — `/eval-harness git-pr` 실행 대기"
+changelog: "v0.7 — 2026-11-13 사이클 9 조직 컨벤션·공유 글 가드 반영: PR 제목 형식 판정(`.claude/shared/vc-conventions-guide.md` 있으면 `[핵심키워드] 명사형 요약`, 이슈 키 요약 앞, 접두어·`~한다` 금지, 키워드는 커밋 이력 실측 — git-commit 0절·A절과 동일. 없으면 기존 형식). PR 본문 맨 위(템플릿 첫 섹션 위)에 share-writing-guard A 등급 결론 블록(`{무엇을} 완료 (머지 전)` + 2~4줄) — 제목 없는 블록이라 조건부 섹션 규칙과 별개, 채움 줄 금지. share-lint(A) 위반 0 게이트. Test list `[x]` 는 확인한 것만(SW-5) | v0.6 — 2026-11-13 forge 하네스 트레이닝(TC-6~8 신설, TC-1·5 회귀): 조건부 섹션 채움 금지 — 해당 없으면 섹션 통째 생략, '변경 없음'·'해당 없음' 한 줄로 리뷰 포인트를 만들지 않는다(TC-1·TC-5 회귀에서 재현). lint 사유 기재는 [확인] 출력이 있을 때만. 템플릿 저장소에서 선택 섹션 위치를 Changes 뒤·Test list 앞으로 명시(#551 순서, 2-0 '뒤에' 문구의 위치/내용 모호성 해소). 체크리스트 15·16 조건부 문구 | v0.5 — 2026-10-16 #803 사고 반영: 푸시·머지 직전 최신 dev 병합 상태 compileTestJava + 바꾼 인터페이스의 구현체(테스트 Fake) dev 기준 전수 grep 게이트 추가. review-lint 는 줄 단위라 PR 간 인터페이스 충돌을 못 잡는다 | v0.4 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: 푸시 전 품질 게이트(review-lint.py 위반 0건 + self-code-reviewer) 하드 가드레일, 선택 섹션 기존 동작 변경·리뷰 포인트 추가 — 리뷰어 질문(#800 의도한 변경인가, #799 범위 밖 위험)을 본문에서 선제 답변 | v0.3 — 2026-09-16 사이클 7 감사 반영: Phase 2-0 저장소 PR 템플릿 확인 하드 가드레일 신설(섹션명 문자 그대로 사용, 선택 섹션은 템플릿 섹션을 대체하지 않음). PR #726 양식 위반 사고 기반. | v0.2: forge 일반화 — pasta 특정 `--repo` 플래그 제거(gh 자동 감지), pasta-rules/메모리 참조 제거. PR #551 사례를 references/example-pr-551.md로 분리(본문 244→182줄). 자기 검증 체크리스트 12개 추가. 평가 루브릭(100점 + AUTO FAIL 6건) + 하네스 + 테스트 케이스(Happy 2/Edge 1/Negative 1) 동반 작성 — `/eval-harness git-pr` 실행 대기"
 ---
 
 # git-pr — PR 생성/갱신 스킬
@@ -41,6 +41,11 @@ gh pr list --head "$(git branch --show-current)" --state open
 - **최신 dev 병합 컴파일 (v0.5)** — 푸시·머지 직전에 `git fetch origin dev && git merge --no-commit --no-ff origin/dev` 상태(또는 임시 워크트리)에서 `./gradlew :{module}:compileTestJava` 를 돌린다. CI 는 PR 을 **최신 dev 와 합친 상태**로 빌드하므로, 내 브랜치가 통과해도 다른 PR 이 같은 인터페이스를 바꾸거나 그 인터페이스의 테스트 Fake 를 추가했으면 깨진다. 확인 뒤 `git merge --abort`. 2026-10-16 #793(인터페이스 메서드 추가)·#794(그 인터페이스 Fake 추가)가 순서대로 머지돼 dev 테스트 컴파일이 깨졌고, 배포 워크플로는 테스트를 컴파일하지 않아 성공으로 보였다(#803 핫픽스)
 - **인터페이스를 바꿨다면 구현체 전수 확인** — `grep -rn "implements {인터페이스}" */src/test */src/main` 로 테스트 Fake·대역까지 찾아 함께 고친다. 다른 PR 의 Fake 는 내 diff 에 안 보이므로 머지 직전 dev 기준으로 다시 grep 한다
 
+**PR 제목 형식 판정 (v0.7)** — `git-commit` 0절과 같다.
+- `.claude/shared/vc-conventions-guide.md` 가 있으면 **`[핵심키워드] 명사형 요약`** (원문 `forge/common/vc-conventions/commit-message-convention.md`, 배포본 `.claude/shared/vc-conventions/commit-message-convention.md` — "PR 제목도 같은 형식"). 키워드는 이 브랜치 커밋 제목의 키워드, 없으면 `git log origin/<base> --since=180.days --format=%s -- <바꾼 경로>` 실측으로 가장 많이 쓰인 철자 그대로. 최다가 `[공통]` 류 범용 키워드인데 기능 변경이면 같은 기능 최근 PR 제목의 키워드를 쓴다(`git-commit` A절). 이슈 키는 요약 앞(`[건강나이] CF-12100 ...`), 브랜치명·입력에 있을 때만. `feat:` 등 접두어·`~한다`·`~했음` 종결 금지. 도메인이 둘 이상이면 저장소 이력의 복수 표기(`[ADMIN/CONNECT]` 등)를 실측해 따른다
+- 없으면 기존대로 한국어 + Conventional 접두어(`fix:`·`feat:`·`refac:` 등) 허용. 조직 컨벤션을 근거로 바꾸지 않는다
+- 사용자가 "늘 하던 대로 `feat:`" 라고 해도 판정을 따르고 출력에 근거 한 줄
+
 **원격 push 확인**:
 - 원격에 없으면 `git push -u origin HEAD`
 
@@ -68,6 +73,25 @@ ls .github/PULL_REQUEST_TEMPLATE.md .github/pull_request_template.md 2>/dev/null
 **선택 섹션은 템플릿 섹션을 대체하지 않는다.** 측정 결과·배포·후속 작업·기존 동작 변경·리뷰 포인트는 템플릿 필수 섹션을 모두 채운 **뒤에** 조건이 성립할 때만 덧붙인다.
 
 **선택 섹션 위치 (v0.6)**: `Changes` 뒤, `Test list` 앞에 둔다 (2-2 순서, PR #551 실례). `Why`·`Changes` 보다 앞에 두지 않는다. 템플릿에 `Test list` 뒤 섹션(`Screenshoot 🌅 (optional)` 등)이 있으면 그 섹션은 템플릿 순서대로 맨 뒤에 그대로 둔다.
+
+### 2-0-1. 맨 위 결론 블록 (v0.7, share-writing-guard A 등급)
+
+본문 **첫 줄**(템플릿 첫 섹션 `## Why need this PR❓` 등의 위)에 제목 없이 둔다. `forge/common/share-writing-guard.md`(배포본 `.claude/shared/share-writing-guard.md`) 형식이다.
+
+```markdown
+{무엇을} 완료 (머지 전)
+- 한 일 2~4줄, 짧게
+- 결과: 확인한 것만 (테스트 통과, lint 위반 0건 등)
+
+## Why need this PR❓
+```
+
+- 반영 단계는 PR 시점이라 보통 `머지 전`. dev 서버 배포를 직접 확인했으면 `dev, 머지 전`. 확인 안 한 단계(운영 반영)는 쓰지 않는다(SW-5). 작업이 덜 끝난 PR 이면 `완료` 대신 `진행 중`
+- 이 블록은 **섹션이 아니다.** 2-3 조건부 섹션 표·템플릿 섹션 순서와 무관하게 항상 둔다. 템플릿 섹션을 대체하지 않는다(Why 를 지우지 않는다)
+- 채움 줄 금지(SW-6): "부탁: 없음", "리스크: 해당 없음" 같은 줄을 쓰지 않는다. 부탁은 있을 때만 한 줄
+- 유추 금지(SW-7): "문제없을 것" 류 대신 확인한 수치·상태만
+- 기존 PR 갱신(`gh pr edit`)에서 블록이 없으면 맨 위에 추가하고, 있으면 단계·결과만 고친다
+- **share-lint 게이트**: 본문을 파일로 쓰고 `python3 -B forge/common/share-lint.py {본문 파일}`(배포본 `.claude/shared/share-lint.py`) 실행. A 기준 형식은 결론 블록에만, 템플릿 본문은 SW-5~7(채움·유추·예의 문구)만 걸린다. `[위반]` 0건이어야 생성·갱신한다. `[확인]` 은 판단해 고치거나 남긴다. lint 파일이 없으면 자기 검증 19로 대신한다
 
 ### 2-1. 분량/구조 원칙
 
@@ -117,6 +141,8 @@ ls .github/PULL_REQUEST_TEMPLATE.md .github/pull_request_template.md 2>/dev/null
 - [x] 빌드/테스트 통과
 - [ ] 후속 검증 (예정)
 ```
+
+Test list 의 `[x]` 는 실행 결과를 확인한 항목만 체크한다. 돌리지 않은 것은 `[ ]` (SW-5, v0.7).
 
 ### 2-3. 섹션 추가/생략 판단
 
@@ -168,7 +194,7 @@ ls .github/PULL_REQUEST_TEMPLATE.md .github/pull_request_template.md 2>/dev/null
 gh pr create \
   --base <dev|main> \
   --head <branch> \
-  --title "<커밋 메시지 형식 한국어>" \
+  --title "<Phase 1 제목 형식 판정 결과>" \
   --body "$(cat <<'EOF'
 <본문>
 EOF
@@ -194,7 +220,8 @@ PR URL 출력. 신규/갱신 여부 한 줄.
 ## 가드레일
 
 - **target branch**: 일반 `dev`, hotfix는 사용자 명시 요청 시 `main`
-- **제목/본문 한국어** (영문 commit type prefix는 OK: `fix:`, `feat:`, `refactor:` 등)
+- **제목/본문 한국어**. 제목 형식은 Phase 1 판정: 조직 컨벤션 적용 프로젝트는 `[핵심키워드] 명사형 요약`(**`feat:` 등 접두어·`~한다`/`~했음` 종결 금지**), 비적용 프로젝트는 Conventional 접두어 OK (v0.7)
+- **(v0.7) 본문 첫 줄은 결론 블록** `{무엇을} 완료 ({반영 단계})`. share-lint `[위반]` 이 있으면 생성·갱신 금지
 - **AI 공동작성자 표기 금지** (Co-authored-by 등)
 - **Mermaid 사용 지양** — PR 본문 길어짐. 작업 문서로 위임
 - **이미 열린 PR 있으면 신규 생성 금지** → `gh pr edit`으로 갱신
@@ -225,6 +252,8 @@ PR 생성/갱신 직전에 본문이 아래 기준을 모두 만족하는지 확
 16. [ ] **(v0.4) 리뷰 포인트**: 실패 시 동작·범위 밖 위험·lint `[확인]` 사유 중 **실제로 있는 것만** 적었는가? 없으면 섹션이 없는가? ("해당 없음"·"변경 없음" 채움 줄 0건, v0.6)
 17. [ ] **(v0.5) 최신 dev 병합 컴파일**: 최신 dev 를 합친 상태에서 `compileTestJava` 가 통과하는가? 바꾼 인터페이스의 구현체(테스트 Fake 포함)를 dev 기준으로 grep 했는가?
 18. [ ] **(v0.6) 선택 섹션 위치**: 선택 섹션이 `Changes` 뒤·`Test list` 앞에 있는가?
+19. [ ] **(v0.7) 결론 블록**: 본문 첫 줄이 `{무엇을} 완료 ({반영 단계})` 이고 아래 불릿 2~4줄, 템플릿 첫 섹션보다 위인가? 단계는 확인한 것만(보통 `머지 전`), "없음" 채움·유추 0건인가? share-lint `[위반]` 0건인가?
+20. [ ] **(v0.7) 제목 형식**: 가이드 있으면 `[키워드]` 로 시작·접두어 없음·명사형 종결·이슈 키 요약 앞, 없으면 기존 형식인가?
 
 ---
 

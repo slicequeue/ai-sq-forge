@@ -378,7 +378,7 @@ class CouponCodeRepositoryImplTest {
 | Fake에 `setResult`로 정답 주입 | `save()` 후 조건 적용 반환 |
 | Spy/Fake 내부에 Mockito 사용 | JDK 자료구조 + StubCapture |
 | 통합 테스트에서 `@MockBean` 다수 | `@TestConfiguration` + `@Primary` Fake/Spy |
-| H2 DB | Testcontainers MySQL |
+| 테스트 DB 설정 전환(Testcontainers↔H2) | 모듈 기존 설정 그대로 (v1.18) |
 | `var` 키워드 | 명시적 타입 선언 |
 | `assertEquals` | `assertThat` (AssertJ) |
 | `@DisplayName("성공한다")` | 구체적 시나리오 기술 |

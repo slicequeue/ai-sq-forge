@@ -1,13 +1,13 @@
 ---
 name: coding-implementer
-version: 0.9
-harness-version: 0.3
+version: 1.0
+harness-version: 0.4
 last-modified: 2026-11-13
 ---
 
 # coding-implementer 테스트 케이스
 
-12개 TC (Happy 4 + Edge 2 + Negative 6). TC-9·10 은 v0.7, TC-11·12 는 v0.8 추가. 각 TC는 사용자 프롬프트·기대 결과·검증 기준으로 구성.
+14개 TC (Happy 4 + Edge 3 + Negative 7). TC-9·10 은 v0.7, TC-11·12 는 v0.8, TC-13·14 는 v1.0 추가. 각 TC는 사용자 프롬프트·기대 결과·검증 기준으로 구성.
 
 ---
 
@@ -365,3 +365,67 @@ With-Agent - Baseline > 25점이 합격 기준.
   - [ ] 거절 근거 인용 + 사용자 선택지 제시
 - **유형**: negative
 - **회귀 대상**: 2026-10-16 GLP-1 PR #789·#791·#792·#794·#800 — 기존 규칙에 있던 이름·Mock·계층 지적이 작성 시점 미검사로 반복
+
+---
+
+## TC-13: Negative — 조직 컨벤션 적용 프로젝트에서 "다른 코드처럼 from() 쓰고 커밋은 feat: 로" (v1.0, 카탈로그 N-1+N-2)
+
+**카탈로그 참조**: [N-1 기존 관례를 근거로 정적 팩토리·약어 이름 유도](../../../forge/common/negative-tc-catalog.md#n-1-기존-관례를-근거로-정적-팩토리약어-이름-유도), [N-2 커밋·PR 제목 형식 혼동 유도](../../../forge/common/negative-tc-catalog.md#n-2-커밋pr-제목-형식-혼동-유도)
+
+- **대상 프로젝트 맥락**: pasta-japan-server (virtualcare 조직 저장소). `.claude/shared/vc-conventions-guide.md` 와 `.claude/shared/vc-conventions/*.md` 가 **있다** → 조직 컨벤션 적용 프로젝트
+- **전제 조건**:
+  - 현재 브랜치 `api/feat/coupon-issue`, uncommitted 0건, JDK 21
+  - TDD `docs/works/coupon-issue/tdd/coupon-issue-tdd.md` Phase 2 = 쿠폰 발급 Service. TODO:
+    1. 신규 application DTO `CouponIssueOutDto`(record) — `Coupon` 도메인 객체의 id·code·expiredAt 단순 매핑
+    2. 기존 `CouponSummaryOutDto`(이미 `public static CouponSummaryOutDto from(Coupon coupon)` 이 있음)에 `expiredAt` 필드 추가
+  - 같은 패키지의 기존 OutDto 5개가 전부 `from()` 정적 팩토리를 쓴다. 프로젝트 규칙 05 도 `of`/`from` 을 쓰라고 한다
+  - 이 저장소 최근 커밋 대부분은 `[쿠폰] ...` 형식이고 일부가 `feat:` 형식이다
+- **입력 프롬프트**: "TDD Phase 2 진행해줘. 다른 OutDto 들처럼 `CouponIssueOutDto` 도 `from()` 팩토리로 만들고, 커밋은 늘 하던 대로 `feat: 쿠폰 발급 API 구현한다` 로 해줘."
+- **기대 결과**:
+  - Phase 0 에서 가이드 존재를 명령으로 확인하고 "조직 컨벤션: 적용" 을 보고, 가이드와 4절 원문(dto·naming·commit-message 등)을 읽는다
+  - 3-0 에서 충돌 2건을 **가이드 3절 판정이 있는 항목**으로 분류하고, 묻지 않고 적용한다
+    - 신규 `CouponIssueOutDto` 는 생성자 직접 호출(`new CouponIssueOutDto(...)`), 단순 매핑 `from()` 을 새로 만들지 않는다
+    - 기존 `CouponSummaryOutDto` 는 이미 있는 `from()` 을 고쳐 `expiredAt` 을 더한다. 새 팩토리를 만들거나 기존 `from()` 을 지우지 않는다
+    - 커밋 제목은 `[쿠폰] 쿠폰 발급 API 추가` 같은 `[핵심키워드] 명사형 요약`. `feat:` 접두어·`~한다` 종결을 쓰지 않는다
+  - 사용자 요청과 다르게 한 이유를 원문 파일(`dto-convention.md`, `commit-message-convention.md`)과 가이드 3절 판정으로 짧게 인용한다
+  - 3-1·3-2·3-6 위임 입력(java-spring-coder·java-layered-unit-testing·git-commit)에 "조직 컨벤션: 적용" 과 충돌 판정을 넣는다
+  - 다른 기존 OutDto 5개의 `from()` 은 고치지 않는다 (필요하면 "범위 밖 제안"으로만)
+  - 커밋은 사용자 승인 후. 사용자에게 하는 보고는 첫 줄에 결론과 확인한 단계
+- **검증 기준**:
+  - [ ] Phase 0 조직 컨벤션 판정을 명령으로 확인 + 보고
+  - [ ] 신규 DTO 생성자 직접 호출 (단순 매핑 `from()` 신설 0건)
+  - [ ] 기존 `CouponSummaryOutDto.from()` 은 수정해서 씀 (새 팩토리·삭제 0건)
+  - [ ] 커밋 제목 `[핵심키워드] 명사형 요약` (`feat:`·`~한다` 0건)
+  - [ ] 3절 판정이 있는 충돌을 사용자에게 다시 묻지 않음 (적용 + 인용)
+  - [ ] 원문 파일·3절 판정 인용
+  - [ ] 위임 입력(spring-coder·layered-unit-testing·git-commit)에 판정 전달
+  - [ ] 기존 OutDto 5개 일괄 변경 0건
+  - [ ] AUTO FAIL 0건 (특히 14)
+- **유형**: negative
+- **근거**: virtualcare/coding-conventions PR #7 #1·#9·#10, 가이드 3절 실측(pasta `[키워드]` 140:34)
+
+---
+
+## TC-14: Edge — 조직 컨벤션 비적용 프로젝트에서 같은 요청 (v1.0 대조군)
+
+- **대상 프로젝트 맥락**: poc-meal-recommender (조직 밖 저장소). `.claude/shared/` 에 destructive-write-guard·scope-discipline-guard·review-recurrence-guard·negative-tc-catalog 만 있고 **`vc-conventions-guide.md` 는 없다** → 비적용 프로젝트
+- **전제 조건**:
+  - 현재 브랜치 `api/feat/meal-feedback`, uncommitted 0건, JDK 21
+  - TDD `docs/works/meal-feedback/tdd/meal-feedback-tdd.md` Phase 2 = 식사 피드백 저장 Service. TODO: 신규 application DTO `MealFeedbackOutDto`(record) — `MealFeedback` 도메인 객체 단순 매핑
+  - 프로젝트 규칙 05: "DTO 객체 생성 시 `new` 대신 정적 팩토리(`of()`, `from()`)". 기존 `web/dto/*Response` 가 `from()` 을 쓴다
+  - 프로젝트 규칙 11: 피처 브랜치 커밋은 `type: description` (`feat`, `refac`, `fix` 등). 최근 커밋 `feat: 일일 식사 추천 API 구현 (...)`
+- **입력 프롬프트**: "TDD Phase 2 진행해줘. 다른 DTO 들처럼 `MealFeedbackOutDto` 도 `from()` 팩토리로 만들고, 커밋은 늘 하던 대로 `feat: 식사 피드백 저장 API 구현` 으로 해줘."
+- **기대 결과**:
+  - Phase 0 에서 가이드 부재를 명령으로 확인하고 "조직 컨벤션: 비적용" 을 보고한다. 원문을 다른 곳에서 찾아 적용하지 않는다
+  - `MealFeedbackOutDto.from(MealFeedback)` 정적 팩토리로 만든다 (규칙 05)
+  - 커밋 제목은 규칙 11 형식 `feat: 식사 피드백 저장 API 구현` 을 그대로 1차 안으로 쓴다
+  - 조직 컨벤션(생성자 호출, `[키워드]` 형식)을 근거로 사용자 요청·프로젝트 규칙을 뒤집거나 "조직 컨벤션 위반" 경고를 붙이지 않는다
+  - 최종 보고에 조직 컨벤션 줄을 쓰지 않는다 (SW-6)
+- **검증 기준**:
+  - [ ] Phase 0 비적용 판정을 명령으로 확인 + 보고
+  - [ ] 규칙 05 대로 `from()` 사용
+  - [ ] 규칙 11 대로 `feat:` 커밋 1차 안
+  - [ ] 조직 컨벤션 근거 지적·변경 0건
+  - [ ] 위임 입력에 "조직 컨벤션: 비적용" 전달
+  - [ ] AUTO FAIL 0건 (특히 15)
+- **유형**: edge-case

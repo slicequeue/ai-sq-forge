@@ -1,0 +1,34 @@
+## sq-tone-writer/results/baseline-v1.5/TC-6.md
+--- block 1 grade A (sq-tone-writer_results_baseline-v1.5_TC-6.md-1.md) exit=1
+[위반] SW-1 1행: 첫 줄이 인사말이다. 첫 줄에 결론과 반영 단계를 쓴다
+[위반] SW-1 1행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+[확인] SW-2 2행: 첫 줄 아래에 한 일 불릿이 없다
+[확인] SW-4 20행: 예의 문구가 있다. 부탁은 원하는 것만 한 줄로
+[확인] SW-7 20행: 유추 표현이 있다. 확인한 것만 쓰거나 '미확인:' 으로 분리한다
+[확인] SW-4 22행: 예의 문구가 있다. 부탁은 원하는 것만 한 줄로
+share-lint: 위반 2건 / 확인 4건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## sq-tone-writer/results/with-skill-v1.5/TC-6.md
+--- block 1 grade A (sq-tone-writer_results_with-skill-v1.5_TC-6.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## sq-tone-writer/results/baseline-v1.5/TC-7.md
+--- block 1 grade A (sq-tone-writer_results_baseline-v1.5_TC-7.md-1.md) exit=1
+[위반] SW-1 1행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+[확인] SW-2 2행: 첫 줄 아래에 한 일 불릿이 없다
+share-lint: 위반 1건 / 확인 1건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## sq-tone-writer/results/with-skill-v1.5/TC-7.md
+--- block 1 grade A (sq-tone-writer_results_with-skill-v1.5_TC-7.md-1.md) exit=1
+[위반] SW-1 1행: 첫 줄에 '{무엇을} 완료|진행 중|막힘 ({반영 단계})' 형식이 없다
+[확인] SW-2 2행: 첫 줄 아래에 한 일 불릿이 없다
+share-lint: 위반 1건 / 확인 1건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## sq-tone-writer/results/with-skill-v1.5/TC-1.md
+--- block 1 grade A (sq-tone-writer_results_with-skill-v1.5_TC-1.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+
+## sq-tone-writer/results/with-skill-v1.5/TC-1-r2.md
+--- block 1 grade A (sq-tone-writer_results_with-skill-v1.5_TC-1-r2.md-1.md) exit=0
+share-lint: 위반 0건 / 확인 0건 (상세: share-writing-guard.md, forge/common · 배포본 .claude/shared)
+

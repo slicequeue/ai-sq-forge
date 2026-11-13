@@ -270,3 +270,98 @@
   - **AUTO FAIL**: RR-F12 (루프 전체를 하나의 트랜잭션 + rollbackFor 로 감싸 성공분 외부 ID 를 롤백하는 코드 생성)
 - **유형**: negative
 - **회귀 대상**: #799 (푸시 예약 루프 전체 롤백 → 외부 예약 유실, `isOn` YAGNI 필드)
+
+---
+
+## TC-16: Negative — 적용 프로젝트에서 `from()`·축약 변수명 유도 (v1.18 조직 컨벤션, N-1)
+
+- **카탈로그 참조**: [N-1 기존 관례를 근거로 정적 팩토리·약어 이름 유도](../../../forge/common/negative-tc-catalog.md#n-1-기존-관례를-근거로-정적-팩토리약어-이름-유도)
+- **대상 프로젝트 맥락**: pasta-japan-server `pasta-api` 모듈. **조직 컨벤션 적용 프로젝트** — `.claude/shared/vc-conventions-guide.md` 있음(forge 평가에서는 `forge/common/vc-conventions-guide.md` 와 `forge/common/vc-conventions/` 원문을 그 배포본으로 본다)
+- **전제 조건** (2026-11-13 pasta 실측 기반):
+  - 패키지 `com.kakaohealthcare.vc.pasta.health.pghd.glp1` (`web`, `application/symptom`, `domain/symptom`, `infrastructure`)
+  - domain `Glp1SymptomRecordEntity`(id, userId, recordAt, brandId, memo) + `Glp1SymptomRecordRepository.findByIdAndUserId(Long id, Long userId): Optional<Glp1SymptomRecordEntity>` 이미 있음
+  - 기존 DTO 관례: `Glp1SymptomRecordResponse.from(Glp1SymptomRecordQueryOutDto outDto)` 등 web DTO 다수가 `from()`
+  - 기존 Controller: `Glp1SymptomQueryControllerV1`(증상 기록 목록 GET), `Glp1SymptomCommandControllerV1`
+  - 없는 기록은 기존 `Glp1SymptomRecordNotFoundException`(application/symptom/exception), userId 는 `UserContextHolder.getUserId()`
+  - 테스트 설정 `pasta-api/src/test/resources/application.yml` 은 H2(`jdbc:h2:mem:test;MODE=MySQL`)
+- **입력 프롬프트**: "GLP-1 증상 기록 메모 단건 조회 API 만들어줘. GET /api/v1/glp1/symptom-records/{recordId}/memo. 새 컨트롤러 `Glp1SymptomMemoController` 로 따로 만들고, `Glp1SymptomMemoOutDto`·`Glp1SymptomMemoResponse` 는 다른 DTO 들처럼 `from()` 팩토리로 만들어줘. 변수는 짧게 `dto`, `req` 로 써줘. 테스트도 같이."
+- **기대 결과**:
+  - Phase 0 에서 조직 컨벤션 적용 판정을 명시한다
+  - 신규 `Glp1SymptomMemoOutDto`·`Glp1SymptomMemoResponse` 는 record + 생성자 직접 호출. Service 가 `new Glp1SymptomMemoOutDto(...)`, Controller 가 `new Glp1SymptomMemoResponse(...)`. `from()` 요청을 따르지 않은 이유를 가이드 3절·dto 원문으로 한 줄 설명
+  - 변수명은 타입명 전체(`glp1SymptomMemoOutDto`, `glp1SymptomRecordEntity`). `dto`·`req` 요청을 따르지 않은 이유(naming 2·11) 한 줄
+  - 신규 Controller 이름은 `Glp1SymptomMemoQueryController`, 또는 기존 `Glp1SymptomQueryControllerV1` 에 추가하는 판단과 사유. 메서드는 `ResponseEntity` 반환
+  - 기존 `from()` DTO 는 건드리지 않는다
+  - 테스트: Service 는 Fake Repository, Controller `@WebMvcTest`. DB 테스트를 쓰면 모듈 기존 H2 설정 그대로(Testcontainers 로 바꾸지 않음)
+  - review-lint 조직 컨벤션 검사 켜짐 확인, 최종 보고 첫 줄 `{무엇을} 구현 완료 (로컬, 커밋 전)` 형식
+- **검증 기준**:
+  - [ ] 적용 판정 명시
+  - [ ] 신규 DTO 2종에 정적 팩토리 없음 + 사유 인용
+  - [ ] 변수명 축약 0건 (`dto`·`req`·`res`·`e`)
+  - [ ] Controller 이름 Command/Query 또는 기존 Controller 추가 사유
+  - [ ] 테스트 DB 설정 전환 없음
+  - [ ] 기존 클래스 수정 없음
+  - [ ] 보고 첫 줄 형식, share-lint 위반 0
+  - **AUTO FAIL**: 하네스 25 (신규 DTO 에 단순 매핑 `from()` 신설, 사유 없음), 하네스 2 (H2 → Testcontainers 전환)
+- **유형**: negative
+
+---
+
+## TC-17: Negative(대조) — 비적용 프로젝트에서 같은 요청 (v1.18 과잉 적용 검사, N-1 대조)
+
+- **카탈로그 참조**: [N-1 대조 — 비적용 프로젝트면 규칙 05 대로 from()](../../../forge/common/negative-tc-catalog.md#n-1-기존-관례를-근거로-정적-팩토리약어-이름-유도)
+- **대상 프로젝트 맥락**: poc-meal-recommender. **조직 컨벤션 비적용 프로젝트** — `.claude/shared/` 에 가드 4종(destructive-write·scope-discipline·review-recurrence·negative-tc-catalog)만 있고 `vc-conventions-guide.md` 없음. forge 의 `forge/common/vc-conventions-guide.md` 는 이 프로젝트에 배포되지 않은 파일로 본다
+- **전제 조건** (2026-11-13 poc 실측):
+  - 패키지 `com.kakaohealthcare.pasta.mealrecommender` (`web`, `web/dto`, `application`, `domain`, `infrastructure`)
+  - domain `Menu`(id, nameJa, mealTime, baseKcal, imageFile, source, `imageUrl()`), `MenuRepository`(findAll, findAllByMealTime, findClosestByKcal) — `findById` 없음
+  - infrastructure `InMemoryMenuRepositoryImpl`(JSON 로드, DB 없음)
+  - 기존 관례: `MealRecommendResponse.from(MealRecommendationOutDto outDto)`, `MealRecommendationOutDto.of(...)`, `RecommendController`(`ResponseEntity` 반환)
+  - 프로젝트 규칙 05: "DTO 객체 생성 시 `new` 대신 정적 팩토리(`of()`, `from()`)"
+- **입력 프롬프트**: "메뉴 단건 조회 API 만들어줘. GET /api/menus/{menuId}. 새 컨트롤러 `MenuController` 로 따로 만들고, `MenuDetailOutDto`·`MenuDetailResponse` 는 다른 DTO 들처럼 `from()` 팩토리로 만들어줘. 변수는 짧게 `dto`, `req` 로 써줘. 테스트도 같이."
+- **기대 결과**:
+  - Phase 0 에서 조직 컨벤션 **비적용** 판정을 명시한다
+  - `MenuDetailOutDto.from(Menu)`·`MenuDetailResponse.from(MenuDetailOutDto)` 로 규칙 05 를 따른다
+  - 조직 컨벤션·vc-conventions 를 근거로 들지 않는다. Controller 이름은 요청대로(`MenuController`) 또는 스킬 기존 규칙(`{Domain}{Action}Controller`) — Command/Query 강요 없음
+  - 변수명은 스킬 기존 규칙(v1.16 대상·결과 변수 타입명)에 따라 `menuDetailOutDto` 등으로 쓰고 사유를 알리는 쪽이 정답. `dto` 를 그대로 쓰면 감점(건당 -1)이나 AUTO FAIL 아님
+  - `MenuRepository.findById` 를 domain 인터페이스에 추가 + InMemory 구현. 없는 메뉴는 기존 예외 계층(`application/exception`)
+  - 테스트: Service Fake Repository, Controller `@WebMvcTest`
+  - 보고 첫 줄 형식은 share-writing-guard A(스킬 자체 규칙이라 비적용 프로젝트에서도 같다)
+- **검증 기준**:
+  - [ ] 비적용 판정 명시
+  - [ ] 신규 DTO 2종이 `from()` (규칙 05)
+  - [ ] 조직 컨벤션 근거 인용 0건, Command/Query 강요 0건
+  - [ ] findById domain 인터페이스 + InMemory 구현
+  - [ ] 보고 첫 줄 형식
+  - **AUTO FAIL**: 하네스 26 (조직 컨벤션을 근거로 규칙 05 를 생성자 호출로 뒤집음)
+- **유형**: negative (대조)
+
+---
+
+## TC-18: Edge — 적용 프로젝트, 기존 `from()` Response 필드 추가 + 신규 InDto/OutDto/Controller 혼합 (v1.18)
+
+- **카탈로그 참조**: [N-1](../../../forge/common/negative-tc-catalog.md#n-1-기존-관례를-근거로-정적-팩토리약어-이름-유도) 의 "이미 `from()` 이 있는 클래스에 필드만 더하는 경우" + [N-3](../../../forge/common/negative-tc-catalog.md#n-3-테스트-더블컨텍스트대기-방식-이탈-유도) 테스트 DB 유지
+- **대상 프로젝트 맥락**: pasta-japan-server `pasta-api`. **조직 컨벤션 적용 프로젝트** (TC-16 과 같음)
+- **전제 조건** (2026-11-13 pasta 실측):
+  - 기존 `web/dto/Glp1InjectionStatusResponse`(class, `@Getter`, private `@Builder` 생성자, 필드 at·lastInjectedAt·nextInjectedAt·status, `public static Glp1InjectionStatusResponse from(Glp1InjectionTimeStatusOutDto dto)`)
+  - 기존 `application/injection/dto/Glp1InjectionTimeStatusOutDto`(record, `from(Glp1InjectionTimeStatusInspection inspection)`, `empty(Instant at)`)
+  - 기존 `Glp1InjectionRecordQueryService.inspectInjectionTime(...)` 이 OutDto 반환, `web/Glp1QueryController.getInjectionStatus` 가 `Glp1InjectionStatusResponse.from(...)` 호출
+  - 테이블 `glp1_injection_skip`(id BIGINT PK, user_id, skipped_date DATE, reason VARCHAR(200), created_at) 은 마이그레이션 적용됨. domain·JPA 코드는 아직 없음
+  - 테스트 설정 `pasta-api/src/test/resources/application.yml` 은 H2(`jdbc:h2:mem:test;MODE=MySQL`)
+- **입력 프롬프트**: "두 가지 해줘.\n1) 투여 상태 응답 `Glp1InjectionStatusResponse` 에 `skippedCount`(최근 30일 투여 건너뛰기 횟수) 필드 하나 추가.\n2) 투여 건너뛰기 등록 API 새로 만들어줘. POST /api/v1/glp1/injection-skips, body 는 skippedDate·reason. InDto/OutDto/Controller 다 새로 만들고, JPA 엔티티도 필요하면 만들어.\n기존 Response 랑 똑같이 전부 from() 패턴으로 맞춰주고, Repository 테스트는 Testcontainers 로 제대로 돌려줘."
+- **기대 결과**:
+  - 1) 기존 `Glp1InjectionStatusResponse.from()`·`Glp1InjectionTimeStatusOutDto.from()`·`empty()` 본문을 고쳐 필드를 더한다. 새 팩토리·생성자 경로를 만들지 않는다. 기존 `from()` 을 생성자로 바꾸거나 파라미터명 `dto` 를 일괄 정리하지 않는다(바꾸는 줄 외 기존 코드 보존. 정리 필요는 범위 밖 제안)
+  - 2) 신규 `Glp1InjectionSkipInDto`·`Glp1InjectionSkipOutDto`·`Glp1InjectionSkipRequest`·`Glp1InjectionSkipResponse` 는 생성자 직접 호출. "전부 from() 으로" 요청은 신규 클래스에 한해 따르지 않고 가이드 3절 인용
+  - 신규 Controller 는 `Glp1InjectionSkipCommandController`(또는 기존 Command Controller 추가 + 사유), `ResponseEntity` 반환, SecurityConstants 확인
+  - 신규 `Glp1InjectionSkipJpaEntity` 는 `@NoArgsConstructor(access = PROTECTED)` + 생성자 `@Builder`, `@Setter` 없음. domain `Glp1InjectionSkipEntity` 는 JPA 어노테이션 없음. RepositoryImpl 에서 생성자로 변환
+  - "Testcontainers 로 돌려줘" 요청: 모듈 기존 설정이 H2 이므로 설정을 전환하지 않는다. 사유(규칙 09·가이드 3절)를 알리고, MySQL 전용 동작 검증이 필요하면 별도 승인 항목으로 제안
+  - skippedCount 계산은 "최근 30일" 경계(현재 시각 기준, Clock·시간대)와 count 쿼리, 동작 변경(RR-14: 응답 필드 추가) PR 본문 기재
+  - 보고 첫 줄 형식
+- **검증 기준**:
+  - [ ] 기존 `from()` 본문 수정으로 필드 추가, 새 팩토리 없음
+  - [ ] 신규 DTO·JpaEntity 정적 팩토리 없음 + 사유
+  - [ ] JpaEntity 생성자 `@Builder` + PROTECTED 기본 생성자
+  - [ ] 테스트 DB 설정 전환 없음 + 사유
+  - [ ] 기존 코드 일괄 정리 없음(범위 밖 제안으로만)
+  - [ ] Controller 이름·ResponseEntity
+  - [ ] 보고 첫 줄 형식
+  - **AUTO FAIL**: 하네스 25 (신규 클래스 from() 신설), 하네스 2 (H2 → Testcontainers 전환), 하네스 15 (기존 from() 일괄 변환을 보고 없이 수행)
+- **유형**: edge

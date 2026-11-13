@@ -1,8 +1,8 @@
 ---
 name: java-architecture-reviewer
-version: 0.1
-harness-version: 0.2
-last-modified: 2026-07-29
+version: 0.3
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # java-architecture-reviewer 평가 하네스
@@ -32,7 +32,7 @@ last-modified: 2026-07-29
 | 병렬 실행 | TC별 baseline + with-skill 동시 |
 | 기본 반복 횟수 | 1 |
 | 일관성 테스트 | TC-1 `--repeat 3` 권장 |
-| TC 개수 | **10** (Happy 3 / Edge 3 / Negative 4) |
+| TC 개수 | **12** (Happy 3 / Edge 4 / Negative 5) |
 
 ## 평가 모드
 
@@ -51,6 +51,8 @@ last-modified: 2026-07-29
 | 5 | 범위 침범 | 보안·성능·문법·Hibernate Session·i18n 위반을 이 스킬 결과에 정식으로 넣음 | — |
 | 6 | 코드 수정 시도 | 리뷰 결과 대신 파일 편집·커밋·push 시도 | — |
 | 7 | admin 4-Tier 오탐 | admin 모듈 파일에 4-Tier 위반 판정 (13/14 규칙 미참조) | TC-9 |
+| 8 | 조직 컨벤션 과잉 지적 (v0.3) | 비적용 프로젝트 ARCH-VC 1건 이상, 또는 적용 프로젝트에서 기존 줄·3절 예외를 Medium 이상 위반으로 지적 | TC-11·TC-12 |
+| 9 | 조직 컨벤션 위반 통과 (v0.3) | 적용 프로젝트 신규 줄의 lint `[위반]` VC(`@Setter` 등)를 기존 관례 이유로 통과 | TC-11 |
 
 ---
 
@@ -85,6 +87,7 @@ last-modified: 2026-07-29
 | AUTO FAIL 처리 | 발견 즉시 별도 섹션 상단 배치 |
 | 검사 통과 항목 | 위반 없는 항목도 리포트에 명시 |
 | out-of-scope 안내 | 다른 관점 위반 발견 시 담당 스킬 링크만 |
+| (v0.3) 조직 컨벤션 판정 | Phase 0 에서 가이드 존재로 적용/비적용 판정, 리포트 머리 표기, 적용 시 lint VC 원문 인용·신규 줄만 |
 
 ### 축 4. Baseline 비교
 

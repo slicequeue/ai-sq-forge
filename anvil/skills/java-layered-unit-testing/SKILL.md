@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
-description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application은 Fake 우선(외부 통신만 Spy·Mock), Web은 @WebMvcTest, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.9"
+description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application은 Fake 우선(외부 통신만 Spy·Mock), Web은 @WebMvcTest, Infrastructure는 @DataJpaTest(테스트 DB는 조직 컨벤션 적용 프로젝트면 모듈 기존 설정 유지, 비적용이면 Testcontainers MySQL). 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
+version: "1.10"
 last-modified: "2026-11-13"
-changelog: "v1.9 — 2026-11-13 forge 하네스 첫 평가(신규 TC-6~8 + 회귀 TC-1·4) 감점 반영: (1) 자기 검증 #2 의 'App=Mockito' 잔재를 Fake 우선으로 정합화(TC-1 응답자가 충돌 지적), (2) v1.4 예시의 var·Mockito spy 를 명시 타입·손으로 쓴 Spy 로 교체(규칙 08 §2-2·v1.7 var 금지와 충돌), (3) 요청 범위가 예외 분기보다 좁아도 빠진 분기 작성(TC-6 NotFound 분기 제안만), (4) 스스로 찾은 결함은 제출 코드에서 수정(TC-4 이중 호출 결함을 설명만 붙여 제출), (5) 요청 변경 시 규칙 원본 인용(TC-4 규칙 07 미인용), 체크리스트 #22·#23 추가 | v1.8 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Application 계층 기본 방식을 Mockito → Fake 우선으로 교체(규칙 08 과 충돌하던 예시가 #789·#794 Mock 지적의 원인), 기본값과 다른 값 검증·모든 진입 경로 테스트·느슨한 JSON 단언 금지·이름 규칙·실패 격리 테스트 추가, review-lint.py 실행 단계 추가 | v1.7 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: RR-12 테스트 실효성 검사 추가 — 동어반복·위임만 검증·목표 경로 미실행·수동 나열 목록·경계값 픽스처·테스트 var 금지 | v1.6 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드 참조 연결 — 기존 테스트 파일은 먼저 읽고 Edit 로 추가, 통째 덮기 금지(DW-3). 근거: 2026-09-01 UserDeviceTest.java 기존 테스트 3건 삭제 | v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
+changelog: "v1.10 — 2026-11-13 조직 코딩 컨벤션(virtualcare/coding-conventions PR #7, vc-conventions-guide 3·4-2절) 반영: (1) Phase 0-5 조직 컨벤션 적용 판정 추가, 적용 시 references/vc-testcode.md(Fake* 이름·Stub* 금지, 구체적 @DisplayName, GWT 주석, 상태 공유·Thread.sleep 금지, 1개짜리 @Nested 금지, AssertJ 만, 논리 검증 하나, 대상별 테스트 더블 표), (2) 테스트 DB 를 적용 프로젝트에서는 '모듈 기존 설정 유지, H2↔Testcontainers 전환 금지(규칙 09)'로 조건부 변경 — 비적용 프로젝트는 Testcontainers 필수·H2 금지 유지, (3) @SpringBootTest 는 적용 프로젝트에서 E2E 만, 슬라이스로 재현 안 되는 검증(RR-13 rollback-only 등)만 예외(테스트 주석+PR 본문 사유), (4) 자기 검증 #7 @Nested 기준을 조건부로 조정, #24·#25 추가, (5) 작업 종료 출력을 share-writing-guard A 등급 형식으로 — 첫 평가 후 요약 위치(응답 맨 앞)·하위 불릿 금지·"없음" 줄 금지 보강 | v1.9 — 2026-11-13 forge 하네스 첫 평가(신규 TC-6~8 + 회귀 TC-1·4) 감점 반영: (1) 자기 검증 #2 의 'App=Mockito' 잔재를 Fake 우선으로 정합화(TC-1 응답자가 충돌 지적), (2) v1.4 예시의 var·Mockito spy 를 명시 타입·손으로 쓴 Spy 로 교체(규칙 08 §2-2·v1.7 var 금지와 충돌), (3) 요청 범위가 예외 분기보다 좁아도 빠진 분기 작성(TC-6 NotFound 분기 제안만), (4) 스스로 찾은 결함은 제출 코드에서 수정(TC-4 이중 호출 결함을 설명만 붙여 제출), (5) 요청 변경 시 규칙 원본 인용(TC-4 규칙 07 미인용), 체크리스트 #22·#23 추가 | v1.8 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Application 계층 기본 방식을 Mockito → Fake 우선으로 교체(규칙 08 과 충돌하던 예시가 #789·#794 Mock 지적의 원인), 기본값과 다른 값 검증·모든 진입 경로 테스트·느슨한 JSON 단언 금지·이름 규칙·실패 격리 테스트 추가, review-lint.py 실행 단계 추가 | v1.7 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: RR-12 테스트 실효성 검사 추가 — 동어반복·위임만 검증·목표 경로 미실행·수동 나열 목록·경계값 픽스처·테스트 var 금지 | v1.6 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드 참조 연결 — 기존 테스트 파일은 먼저 읽고 Edit 로 추가, 통째 덮기 금지(DW-3). 근거: 2026-09-01 UserDeviceTest.java 기존 테스트 3건 삭제 | v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -12,6 +12,7 @@ changelog: "v1.9 — 2026-11-13 forge 하네스 첫 평가(신규 TC-6~8 + 회�
 
 **범위**: Java Spring Boot 4-Tier 아키텍처의 계층별 단위 테스트 작성
 **비범위**: 통합 테스트, E2E 테스트, 프론트엔드 테스트
+**참조**: `references/evaluation-rubric.md`(채점), `references/vc-testcode.md`(조직 컨벤션 적용 프로젝트 전용, v1.10)
 
 ---
 
@@ -21,6 +22,10 @@ changelog: "v1.9 — 2026-11-13 forge 하네스 첫 평가(신규 TC-6~8 + 회�
 2. **기존 테스트 패턴 탐색**: 같은 패키지의 기존 `*Test` 파일을 읽어 프로젝트 관례 파악
 3. **JDK 버전 확인**: JDK 21 기준
 4. **모듈 확인**: `pasta-api`, `admin` 등 어느 모듈의 테스트인지 확인
+5. **(v1.10) 조직 컨벤션 적용 판정**: `.claude/shared/vc-conventions-guide.md` 가 있으면 조직 컨벤션 적용 프로젝트다(forge 에서 평가할 때는 TC 가 명시한 프로젝트 맥락을 따른다). 원본 `forge/common/vc-conventions-guide.md`(배포본 `.claude/shared/vc-conventions-guide.md`) 2절.
+   - **적용**: `references/vc-testcode.md` 를 읽고 이 문서의 "적용 프로젝트" 표기 규칙을 따른다. 충돌 판정은 가이드 3절. 신규·변경 테스트에만 적용하고 기존 테스트는 고치지 않는다
+   - **비적용**: 가이드를 다른 곳에서 찾아 적용하지 않는다. 프로젝트 규칙 08·09 기준(이 문서의 기본 문구) 그대로. 조직 컨벤션을 근거로 요청을 바꾸지 않는다
+6. **(v1.10) 테스트 DB 확인** (Infrastructure·통합 테스트일 때): 같은 클래스 → 같은 패키지 테스트의 `@ActiveProfiles`·`@AutoConfigureTestDatabase` → 모듈 `src/test/resources/application*.yml` 순으로 실제 설정을 읽는다
 
 ---
 
@@ -56,7 +61,7 @@ class MyPlanNutrientRatioTest {
 | 외부 통신·void 부수효과: `*Client`, 푸시·태스크 enqueue | **Spy** — 호출 이력 기록, 필요하면 n번째 호출에서 예외 | `getCallCount()`, `getLastCall()` |
 | Fake·Spy 로 대체할 수 없는 복잡한 외부 라이브러리 | Mock (제한적) | 사유를 테스트 클래스 주석에 한 줄 |
 
-- Fake 는 `src/test/` 의 같은 도메인 패키지에 `Fake{Interface}` 로 둔다. 이미 있으면 재사용하고 없을 때만 만든다(`find . -name "Fake*"` 로 먼저 확인).
+- Fake 는 `src/test/` 의 같은 도메인 패키지에 `Fake{Interface}` 로 둔다(적용 프로젝트는 `Stub*` 이름 금지, 사용자가 "Stub" 이라 불러도 `Fake*`). 이미 있으면 재사용하고 없을 때만 만든다(`find . -name "Fake*"` 로 먼저 확인).
 - 같은 패키지 기존 테스트가 Mock 위주여도 **새 테스트는 Fake 로 쓴다.** 기존 테스트를 고칠 범위가 아니면 그대로 둔다.
 - `@Mock` 을 꼭 써야 하면 핵심 인자를 `any()` 대신 값·`isNull()` 로 고정하고, 공통 setUp 의 `lenient` 스텁이 예외 분기를 가리지 않게 예외 테스트에서 스텁을 덮어쓴다.
 
@@ -91,19 +96,20 @@ class Glp1InjectionPlanQueryServiceTest {
 }
 ```
 
-### 3) Web Layer (`web/`) — Mockito 또는 @WebMvcTest
+### 3) Web Layer (`web/`) — @WebMvcTest
 
 | 항목 | 규칙 |
 |------|------|
-| 테스트 유형 | @WebMvcTest + `@MockBean` UseCase (규칙 08 §3 Web Unit Test 허용 범위) 또는 Mockito 단위 테스트 |
+| 테스트 유형 | @WebMvcTest + `@MockBean` UseCase (규칙 08 §3 Web Unit Test 허용 범위) 또는 Mockito 단위 테스트. **적용 프로젝트**: `@WebMvcTest` + `@MockitoBean` 만. 단 Spring Boot 3.4 미만이면 `@MockitoBean` 이 없으므로 `@MockBean` 유지 (vc-testcode.md 1절) |
 | 초점 | 컨트롤러 로직, 요청 매핑, 상태 코드, DTO 사용 |
 
-### 4) Infrastructure Layer (`infrastructure/`) — @DataJpaTest + Testcontainers
+### 4) Infrastructure Layer (`infrastructure/`) — @DataJpaTest
 
 | 항목 | 규칙 |
 |------|------|
 | 테스트 유형 | `@DataJpaTest` |
-| DB | **Testcontainers MySQL 필수** — H2 절대 금지 |
+| DB (비적용 프로젝트) | **Testcontainers MySQL 필수** — H2 절대 금지 (규칙 09) |
+| DB (적용 프로젝트) | **모듈의 기존 테스트 DB 설정 유지.** Testcontainers 모듈을 H2 로, H2 모듈을 Testcontainers 로 전환하지 않는다(규칙 09, 가이드 3절). 기존 클래스에 더할 때 `@ActiveProfiles` 를 더하거나 빼지 않는다. H2 에서 안 도는 MySQL 전용 쿼리면 쿼리·설정을 바꾸지 말고 보고 후 확인 (vc-testcode.md 3절) |
 | 초점 | 쿼리 정확성, 매핑 정확성, DB 제약조건 |
 
 ```java
@@ -130,6 +136,8 @@ class MyRepositoryTest {
 
 `@DataJpaTest`(4계층)와 별개로, **아래 조건 중 하나라도 해당하면 통합 테스트 필수**. 단위 테스트로는 회귀 검증 불가한 영역.
 
+> **적용 프로젝트**: `@SpringBootTest` 는 E2E 에만 쓴다. 아래 트리거 중 DB 제약·Session 상태는 `@DataJpaTest` 로 먼저 재현하고, 트랜잭션 전파(rollback-only·`REQUIRES_NEW`)·다중 트랜잭션 경합처럼 **슬라이스로 재현되지 않는 검증만** 예외로 `@SpringBootTest` 를 쓴다. 예외일 때 테스트 클래스 주석과 PR 본문에 사유를 적는다 (vc-testcode.md 2절, 가이드 3절).
+
 | 트리거 | 이유 |
 |--------|------|
 | 동시 이벤트 처리 경합 (예: 뱃지 중복 발급, 리더보드 갱신) | 동일 Session 안 unique violation → AssertionFailure 회귀. Mockito로 재현 불가 |
@@ -139,7 +147,7 @@ class MyRepositoryTest {
 | 다중 인스턴스 pub-sub 메시지 흐름 | Redis Testcontainer 조합 |
 
 **규칙**:
-- Testcontainers MySQL 사용 (H2 절대 금지 — MySQL 8.0.13+ Functional Unique Index 등 방언 차이)
+- 비적용 프로젝트: Testcontainers MySQL 사용 (H2 절대 금지 — MySQL 8.0.13+ Functional Unique Index 등 방언 차이). 적용 프로젝트: 모듈 기존 테스트 DB 설정 유지(전환 금지)
 - 통합 테스트 파일명 `*IntegrationTest.java`로 구분, `@Tag("integration")`로 실행 그룹 분리
 - 클래스 상단에 트리거 사유를 `@DisplayName` 또는 클래스 주석으로 명시 (예: "미션 뱃지 동시 발급 경합 회귀 방지")
 - 2026-07-08 #633 미션 뱃지 사고 최종 리팩터에서 Testcontainers 통합 테스트 추가 사례
@@ -156,6 +164,8 @@ class MyRepositoryTest {
 | Assertion | AssertJ `assertThat()` 필수 |
 | 포매팅 | `./gradlew :{module}:spotlessApply` 실행 |
 | 테스트 데이터 | 반복 데이터는 Constants로 추출 |
+
+**적용 프로젝트 추가 규칙** (vc-testcode.md 4절, 원문 `forge/common/vc-conventions/testcode-convention.md`(배포본 `.claude/shared/vc-conventions/testcode-convention.md`)): `Fake*` 이름(`Stub*` 금지), `@DisplayName` 은 "정상·성공" 대신 구체적 행동과 결과, `// Given` `// When` `// Then` 주석 필수, 테스트 간 상태 공유 금지(`@BeforeAll` 공유 데이터·순서 의존 금지), `Thread.sleep` 금지(Awaitility), 메서드 1개짜리 `@Nested` 금지, JUnit `Assertions` 금지(AssertJ 만), 한 테스트에 논리적 검증 하나.
 
 ---
 
@@ -185,12 +195,14 @@ class MyRepositoryTest {
 - **(v1.9) 요청 범위가 분기보다 좁아도 예외 분기는 작성** — "정상이랑 X 예외 두 개면 돼"처럼 요청된 케이스가 대상 메서드의 예외 분기(소유 확인 실패·존재하지 않음 등)보다 적으면, 빠진 분기 테스트를 **작성하고** `// 요청 외 추가: {분기} — 이 분기를 깨도 잡는 테스트가 없어서` 주석으로 표시한다. "원하시면 넣겠다"는 제안만으로 끝내지 않는다. 지우기는 쉽고, 빠진 분기는 아무도 실행하지 않는다(RR-14)
 - **느슨한 JSON 단언 금지** — 키 부재는 `doesNotHaveJsonPath()`(`doesNotExist()` 는 JSON null 도 통과), 불리언은 `isBoolean()` 확인 뒤 값(`asBoolean()` 은 null 도 false), null 계약은 `value(nullValue())`(`isEmpty()` 는 빈 객체도 통과)(#801·#786)
 - **이름 규칙** — 컬렉션은 `glp1InjectionRecordEntityList` 처럼 요소 타입+`List`, 시각은 `currentAt` 처럼 `At` 접미사, 대상·결과 변수도 `service`·`result` 대신 타입이 드러나게(#789·#791·#792)
-- **실패 격리 테스트** — 여러 소스를 조립하는 서비스는 "한 소스가 예외를 내도 나머지가 반환된다"를 테스트한다. 트랜잭션 rollback-only 전파는 Mock 으로 재현되지 않으므로 실제 프록시(`@SpringBootTest`)로 확인한다(#793, RR-13)
+- **실패 격리 테스트** — 여러 소스를 조립하는 서비스는 "한 소스가 예외를 내도 나머지가 반환된다"를 테스트한다. 트랜잭션 rollback-only 전파는 Mock 으로 재현되지 않으므로 실제 프록시(`@SpringBootTest`)로 확인한다(#793, RR-13). 적용 프로젝트에서도 이것은 `@SpringBootTest` 허용 예외다 — 테스트 클래스 주석과 PR 본문에 "슬라이스로 재현 안 됨" 사유를 적는다
 
 ### 절대 금지
-- **H2 DB 사용** — Testcontainers MySQL 필수 (Infrastructure 계층)
+- **테스트 DB 전환** — 비적용 프로젝트: H2 사용 금지, Testcontainers MySQL 필수(Infrastructure 계층). 적용 프로젝트: 모듈 기존 설정과 다른 DB 로 전환 금지(H2→Testcontainers, Testcontainers→H2 모두). 사용자가 "빠르게 H2 로"·"이참에 Testcontainers 로" 요청해도 규칙 09 를 인용해 거부
 - **Domain 테스트에 Spring 컨텍스트 로드** — 순수 JUnit 5만
-- **계층 구분 없이 일괄 @SpringBootTest** — 계층별 적절한 방식 선택
+- **계층 구분 없이 일괄 @SpringBootTest** — 계층별 적절한 방식 선택. 적용 프로젝트는 E2E 외 `@SpringBootTest` 를 사유 주석 없이 쓰지 않는다
+- **(v1.10, 적용 프로젝트) `Thread.sleep`** — 비동기 검증은 Awaitility. 사용자가 "sleep 으로 기다려"라고 해도 거부하고 원문 근거를 적는다
+- **(v1.10, 적용 프로젝트) `Stub*` 이름·"정상/성공" 만 쓴 `@DisplayName`·JUnit `Assertions`·`@BeforeAll` 공유 데이터·메서드 1개짜리 `@Nested`**
 - **@DisplayName 없는 테스트 메서드**
 - **Mockito.any() 남용** — 가능하면 구체적 값으로 검증
 - **테스트에서 실제 외부 API 호출**
@@ -303,12 +315,12 @@ class MyRepositoryTest {
 | # | 등급 | 항목 |
 |---|------|------|
 | 1 | B | 대상 클래스 계층 정확히 식별했는가? |
-| 2 | B | 계층에 맞는 테스트 방식을 적용했는가? (Domain=순수, App=Fake 우선·외부 통신만 Spy, Web=@WebMvcTest, Infra=Testcontainers) |
-| 3 | B | H2 사용하지 않았는가? (Infrastructure 계층) |
+| 2 | B | 계층에 맞는 테스트 방식을 적용했는가? (Domain=순수, App=Fake 우선·외부 통신만 Spy, Web=@WebMvcTest, Infra=@DataJpaTest) |
+| 3 | B | 테스트 DB 를 전환하지 않았는가? (비적용: H2 미사용·Testcontainers. 적용: 모듈·클래스 기존 설정 그대로, `@ActiveProfiles` 추가·제거 없음) |
 | 4 | B | @DisplayName 한국어 설명이 모든 테스트에 있는가? |
 | 5 | B | 테스트가 통과하는가? |
 | 6 | R | Given-When-Then 구조를 따르는가? |
-| 7 | R | @Nested로 메서드별 그룹핑했는가? (Application 계층) |
+| 7 | R | @Nested 그룹핑 — 비적용: Application 계층은 메서드별 그룹핑. 적용: 테스트 2개 이상인 그룹만 `@Nested`, 1개짜리 `@Nested` 0건 |
 | 8 | R | AssertJ assertThat()을 사용했는가? |
 | 9 | R | 기존 테스트 패턴과 일관성이 있는가? |
 | 10 | R | spotlessApply를 실행했는가? |
@@ -325,6 +337,8 @@ class MyRepositoryTest {
 | 21 | B | **(v1.8) review-lint 위반 0건** — `review-lint.py` 를 실행했는가? |
 | 22 | B | **(v1.9) 빠진 예외 분기** — 대상 메서드의 예외 분기(소유 확인·미존재·규칙 위반)마다 테스트가 있는가? 요청 외 추가분은 주석으로 표시했는가? |
 | 23 | B | **(v1.9) 제출 코드 = 최종 코드** — 스스로 발견한 결함을 "고쳐야 할 점"으로 남기지 않고 코드에서 고쳤는가? 요청을 바꾼 지점마다 규칙 원본(07·08·RR-n)을 인용했는가? |
+| 24 | B | **(v1.10) 조직 컨벤션 판정** — 적용/비적용을 판정하고 보고에 근거와 함께 적었는가? 비적용 프로젝트에서 조직 컨벤션을 근거로 요청·규칙 08 을 바꾸지 않았는가? |
+| 25 | B | **(v1.10, 적용 프로젝트) 테스트 컨벤션** — `Fake*` 이름, 구체적 `@DisplayName`, GWT 주석, `Thread.sleep` 0건, JUnit `Assertions` 0건, `@BeforeAll` 공유 데이터 0건, 테스트당 논리 검증 하나, E2E 외 `@SpringBootTest` 는 사유 주석+PR 본문 |
 
 **표기**: B = 블로커 (미충족 시 FAIL), R = 권장
 
@@ -332,8 +346,20 @@ class MyRepositoryTest {
 
 ## 작업 종료 출력 템플릿
 
-1. **대상 클래스**: 클래스명 + 계층
-2. **테스트 방식**: 순수 JUnit / Fake·Spy / @WebMvcTest / @DataJpaTest (Mock 을 썼다면 사유)
-3. **Self-check 결과표**: PASS/FAIL/N/A
-4. **테스트 실행 결과**: 통과/실패
-5. **남은 리스크**: 0~3개
+완료 보고는 공유 글 A 등급이다. 원본 `forge/common/share-writing-guard.md`(배포본 `.claude/shared/share-writing-guard.md`) SW-1~7.
+
+```
+{대상 클래스} 테스트 {n}건 작성 완료 ({확인한 가장 먼 단계: 코드 작성, 테스트 실행 전 / 테스트 통과 / lint 위반 0건})
+- 계층·방식: {계층} / {순수 JUnit·Fake·Spy·@WebMvcTest·@DataJpaTest}, 테스트 DB {기존 설정}
+- 조직 컨벤션: {적용 — 근거 / 비적용 — 규칙 08·09 기준}
+- 요청과 다르게 한 것: {항목 — 규칙 원본}   ← 있을 때만
+- 결과: {gradle test 결과, review-lint 위반 n건}   ← 실행한 것만
+```
+
+- **응답의 맨 첫 줄이 이 요약이다.** 제목·판정표·코드를 앞에 두고 요약을 뒤 절에 넣지 않는다(SW-1, TC-8 v1.10 r2 사례)
+- 요약은 첫 줄 + 불릿 2~4줄. 요청과 다르게 한 것이 여러 개면 하위 불릿으로 펼치지 않고 한 줄에 `A→B(근거), C→D(근거)` 로 묶는다. 근거 설명은 아래 세부에 쓴다(SW-2, TC-9 v1.10 12줄 사례)
+- 요청을 그대로 따랐으면 "요청과 다르게 한 것" 줄을 **아예 쓰지 않는다**. "없음" 이라고 쓰지 않는다(SW-6, TC-11 v1.10 사례)
+- 첫 줄의 단계는 직접 확인한 것만 쓴다. `./gradlew test` 를 돌리지 않았으면 "통과"라고 쓰지 않는다(SW-5)
+- 없는 항목은 줄째 뺀다. "남은 리스크: 없음" 같은 줄을 쓰지 않는다(SW-6)
+- "아마 통과할 것" 같은 유추 금지. 꼭 필요하면 `미확인:` 줄(SW-7)
+- 요약 아래에 세부: Self-check 결과표(PASS/FAIL/N/A), Mock·`@SpringBootTest` 예외 사유, 남은 리스크 0~3개

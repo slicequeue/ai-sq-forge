@@ -31,7 +31,10 @@ maintenance/     → A/S 영역 (실전 피드백, 개선 로그)
 | `forge/common/destructive-write-guard.md` | **파괴적 쓰기 가드** (DW-1~DW-7). 파일을 쓰는 모든 스킬이 참조. 덮어쓰기 전 미커밋 확인·통째 덮기 금지·복구 지점·중복 신설 금지·완료 전 실물 확인 |
 | `forge/common/scope-discipline-guard.md` | **작업 범위 규율 가드** (SC-1~SC-7). 범위 밖은 보고까지만·타 저장소 변경 금지·합의 없는 설계 결정 금지·요청 항목 임의 제외 금지 |
 | `forge/common/review-recurrence-guard.md` | **리뷰 재발 방지 가드** (RR-1~RR-12). PR 262건 리뷰 전수 조사 기반. 장애 시 동작·결정성·벌크 연산·예외 계층·응답 단위·마이그레이션 컨벤션·테스트 실효성 |
-| `forge/common/negative-tc-catalog.md` | Negative TC 패턴 카탈로그 (A~M 카테고리). 하네스 작성 시 참조 |
+| `forge/common/negative-tc-catalog.md` | Negative TC 패턴 카탈로그 (A~O 카테고리). 하네스 작성 시 참조 |
+| `forge/common/review-lint.py` | **리뷰 재발 기계 검사** (RR-L). 바뀐 줄·미추적 새 파일 검사. 옆에 `vc-conventions-guide.md` 가 있으면 조직 컨벤션(VC) 검사 자동 켜짐 |
+| `forge/common/vc-conventions-guide.md` | **조직 코딩 컨벤션 적용 가이드** (virtualcare/coding-conventions PR #7 기준). 적용 판정·우선순위·충돌 판정. 원문 `forge/common/vc-conventions/`(gitignore, `vc-conventions-sync.sh` 로 받음). virtualcare 저장소에만 배포 |
+| `forge/common/share-writing-guard.md` | **공유 글 작성 가드** (SW-1~SW-7, A/B/C 등급). 첫 줄 결론+반영 단계, 빈 칸·유추 금지. 기계 검사 `share-lint.py` |
 
 스킬에서 프로젝트 규칙을 참조할 때는 `forge/common/pasta-rules/{파일명}` 경로를 사용한다.
 
