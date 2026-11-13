@@ -1,9 +1,9 @@
 ---
 name: java-spring-coder
 description: "Java Spring Boot 4-Tier 아키텍처 코드 생성 전문가. Java 코드 구현, Spring Boot 개발, 단위 테스트 작성, 기능 개발, TDD 계획서 기반 구현 요청 시 사용. Use proactively when implementing features, writing unit tests, or executing tasks from a plan document."
-version: "1.15"
-last-modified: "2026-09-16"
-changelog: "v1.15 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 가드(RR-1~RR-11) 공통 자원 참조를 하드 가드레일에 연결 — 장애 시 동작·결정성·enum 순서·벌크 연산·예외 계층·응답 단위·dead config·배치 파라미터·대량 조회·주석·마이그레이션 컨벤션 | v1.14 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드(DW-1~DW-7)·범위 규율 가드(SC-1~SC-7) 공통 자원 참조를 하드 가드레일에 연결 + Phase 0-7 타 저장소 이식 시 대상 저장소 컨벤션 우선 + nohup 금지·빌드 산출물 손상 검사. 근거: 미커밋 16파일 영구 소실(08-19), 범위 이탈 4건, PR #689 이식 컨벤션 오류, nohup 빌드 중단 오보고(08-18) | v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
+version: "1.17"
+last-modified: "2026-11-13"
+changelog: "v1.17 — 2026-11-13 forge 하네스 검증(TC-13~15 신설) 반영: 코드 주석 존댓말 규칙을 변수 네이밍 하위에서 '코드 주석 문체' 절로 분리하고 '응답 본문 문체와 섞지 않는다'·주석 줄만 훑는 확인 방법 추가 (TC-15 에서 본문 평서형이 주석 3건으로 번지고 자기 검증은 준수로 오보고). 자기 검증 체크리스트 번호 중복(41 두 번) 정리, 45번 주석 문체 항목 신설 | v1.16 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Phase 0 에 작성 전 질문 5개·호출처 grep 추가, 리뷰 재발 방지 가드에 RR-13 실패 격리·RR-14 동작 변경·계층·YAGNI 필드·RR-L 기계 검사 연결, 변수 네이밍(List·At·타입명·주석 존댓말) 구체화, 모드 A/B 종료 단계에 review-lint.py 실행 | v1.15 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 가드(RR-1~RR-11) 공통 자원 참조를 하드 가드레일에 연결 — 장애 시 동작·결정성·enum 순서·벌크 연산·예외 계층·응답 단위·dead config·배치 파라미터·대량 조회·주석·마이그레이션 컨벤션 | v1.14 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드(DW-1~DW-7)·범위 규율 가드(SC-1~SC-7) 공통 자원 참조를 하드 가드레일에 연결 + Phase 0-7 타 저장소 이식 시 대상 저장소 컨벤션 우선 + nohup 금지·빌드 산출물 손상 검사. 근거: 미커밋 16파일 영구 소실(08-19), 범위 이탈 4건, PR #689 이식 컨벤션 오류, nohup 빌드 중단 오보고(08-18) | v1.13 — 2026-07-09 pasta 6월 사고 흡수: 외부 이벤트 전송 아웃박스(Outbox) 패턴 + 실패 이벤트 자동 재전송·정리 배치 (#589 Airbridge 결제 전환 이벤트 파이프라인 + #627 재전송 배치 반영). | v1.12 — 2026-07-23 evaluation-rubric.md 복붙 오류 수정: 119/134행이 coding-implementer의 테스트케이스/피드백 경로를 잘못 참조하던 것을 java-spring-coder 자신의 경로로 정정 (moneyball 신규 배포 중 발견). | v1.11 — 2026-07-09 7월 pasta 사고 4건 흡수: (1) Hibernate Session 오염 회귀 방지 3연타 하드 가드레일 — unique violation catch 후 같은 세션 재조회 금지 / DataIntegrityViolationException 광범위 catch 금지 (SQL 에러코드로 좁혀 판별) / 방어 조회는 REQUIRES_NEW 격리 (#633 미션 뱃지 사고, moneyball 저장소에서 이미 겪은 사고의 재발). (2) 설정 게이팅 @ConditionalOnBean 회피 — 환경별 게이팅은 @Profile 선호, Bean 로드 순서 취약성 (584ced0b97 GLOB-566 사례). (3) 캐시 pub-sub 즉시 무효화 + 폴링 백스톱 + 발행 실패 흡수 (v1.10 3층 폴백의 진화형, GLOB-566 시리즈). (4) 어노테이션 + 인터셉터 조합 패턴 — @ApiGroup 등 마킹 기반 선택 적용 (GLOB-549 유료화 인터셉터). | v1.10 — 2026-07-02 6월 pasta 사고 5건 흡수: (1) 외부 API DTO 시간 필드 방어 파싱 — DateTimeFormatterBuilder + optional 필드, 미사용 필드는 String 유지 (a122fc1152 #581 / 641b72ab49 #582 Dexcom EGV 하루 두 번 hotfix). (2) 공용 모듈 JPA @Entity 스캔 충돌 회피 — 다른 애플리케이션 모듈이 의존하는 공용 모듈에는 @Entity 두지 말고 JdbcClient Reader 사용 (7abea8f2f0 admin 기동 실패 → JPA→JDBC 교체). (3) 권한/보안 캐시 3층 폴백 + write-through 전체 재작성 + 워밍업 임계 (2d0bae1344 GLOB-566 / 10f7c711a6 GLOB-569 이용권한 패턴). (4) 신규 패키지 첫 커밋부터 4-Tier 강제 (82e7ee8ec9 access 사후 재편 사례). (5) 예외 로깅 표준 — JsonTemplateLayout exceptionRootCause 전용 필드 + maxStringLength 32KB (6529b3593d #625 스택 16KB 절단으로 원인 못 봄). | v1.9 — 싱글톤 mutable field / Soft-delete Functional Unique / WebClient timeout+retry. v1.8 — Locale.ROOT + i18n 4파일. v1.7 — Bean 이름 상수 + REQUIRES_NEW + 약한 해시 금지"
 ---
 
 # java-spring-coder — Java Spring Boot 구현 스킬
@@ -27,6 +27,13 @@ changelog: "v1.15 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반�
 7. **타 저장소 코드 이식 여부 확인**: 다른 저장소(예: 한국 moneyball → 일본 pasta-japan-server)의 코드·PR 을 옮겨오는 작업인가?
    - **YES** → 원본 저장소의 네이밍·구조 컨벤션을 그대로 가져오지 않는다. **이식 대상 저장소에 같은 성격의 설정이 이미 어떻게 들어가 있는지 실제 예시를 먼저 찾아** 그 방식에 맞춘다. 환경변수 접두사, 환경별 프로파일 파일 구성, 패키지 구조가 저장소마다 다르다. 이런 불일치는 컴파일도 테스트도 잡아주지 않는다
    - 근거: 2026-08-14 PR #689 shutdown 타임아웃 이식 시 한국의 `PASTA_SHUTDOWN_TIMEOUT` 을 그대로 썼으나 일본 저장소는 환경변수에 `PASTA_` 접두를 쓰지 않는다
+8. **(v1.16) 작성 전 질문 5개에 답한다** (`forge/common/review-recurrence-guard.md` §16). 답을 못 하는 항목이 리뷰에서 나온다
+   1. 이 조회·이 한 건이 실패하면 사용자는 무엇을 보는가? — 전체 500·틀린 상태면 격리 (RR-13)
+   2. 외부 호출이 성공한 뒤 DB 저장이 실패하면? — 루프면 건 단위 처리 (RR-13)
+   3. 마스터 데이터가 null·0·음수·누락이면? (RR-13·RR-11)
+   4. 기존 경로의 동작이 바뀌는가? — 바뀌면 PR 본문에 적는다 (RR-14)
+   5. 이 분기를 깨뜨리면 실패하는 테스트가 모든 진입 경로에 있는가? (RR-12·RR-14)
+9. **(v1.16) 공용 계산기·헬퍼를 고치면 호출처를 grep 한다** — 명령 경로만 생각하고 고친 resolver 가 홈 조회에서도 매번 돈다(#797). 추가 쿼리가 도는 경로를 PR 본문에 적는다 (RR-9)
 
 ---
 
@@ -127,8 +134,16 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 ### 변수 네이밍
 
 - **약어 금지**: `cnt` → `count`, `amt` → `amount`, `dt` → `date`
-- **타입 반영**: `couponEntityList` (not `coupons`), `couponEntityMap` (not `map`)
+- **타입 반영**: `couponEntityList` (not `coupons`), `couponEntityMap` (not `map`). 응답·피드 리스트도 `mealRecordDetailResponseList` (not `responses`·`feeds`) — #792 에서 한 PR 에 11곳 지적
+- **시각 변수 `At` 접미사**: `Instant currentAt` (not `now`), `scheduledAt`, `deletedAt`. 상수는 `CURRENT_AT` — #789
+- **대상·결과 변수도 타입이 드러나게**: `service`·`result`·`req` 대신 `glp1InjectionPlanQueryService`·`glp1InjectionPlanAndRecordOutDto`·`settingRequestV3ForLilly` (테스트 코드 포함) — #789·#791
 - **`var` 키워드 금지**: 항상 명시적 타입 선언
+
+### 코드 주석 문체 (v1.16 규칙, v1.17 위치 이동)
+
+- **코드 주석은 존댓말**: `//`·`/** */` 주석은 "사용합니다"·"변경하지 않습니다" (not "쓴다"·"바꾸지 않는다") — #791. 메인·테스트 코드, Given/When/Then 설명 주석, 자리표시 주석 전부 동일
+- **응답·보고 본문의 문체와 섞지 않는다**: 설명을 평서형("~한다")으로 쓰더라도 코드 블록 안 주석은 존댓말이다. 설명 문장을 주석으로 옮겨 붙이는 순간 평서형이 섞인다 (2026-11-13 eval TC-15 실측: 본문 평서형 → 주석 3건 평서형, 자기 검증에서는 "준수"로 오보고)
+- **확인 방법**: 코드 작성을 마치면 코드 블록의 주석 줄만 따로 훑어 `한다.`·`된다.`·`이다.`·`않는다.` 로 끝나는 줄이 0건인지 본다
 
 ---
 
@@ -250,6 +265,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 6. 테스트 실패 시 자동 수정 (5회 미만). **5회 이상 → 즉시 중단, 보고**
 7. pasta-api 모듈이면 `./gradlew :pasta-api:spotlessApply`
 8. **설정 체크** — 새 API 엔드포인트 → SecurityConstants airArray 등록, 새 환경변수 → 4곳 설정
+8-1. **(v1.16) `python3 forge/common/review-lint.py`** — 위반 0건까지 고친다. 확인 항목은 해당 여부를 판단해 보고에 적는다 (RR-L)
 9. TDD 체크박스 업데이트 (`- [ ]` → `- [x]`)
 10. 변경 사항 보고 — **커밋하지 않음**
 
@@ -259,7 +275,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 2. 코드 생성 순서에 따라 구현
 3. 계층별 테스트 작성
 4. **설정 체크** — 새 API 엔드포인트 → SecurityConstants airArray 등록, 새 환경변수 → 4곳 설정
-5. 테스트 실행 → 보고 — **커밋은 사용자 요청 시에만**
+5. 테스트 실행 → **(v1.16) `python3 forge/common/review-lint.py` 위반 0건** → 보고 — **커밋은 사용자 요청 시에만**
 
 ### 모드 C: 테스트만 추가
 
@@ -311,7 +327,12 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 - **배치 잡 파라미터** — `--name=value` 는 옵션 인자로 분류돼 잡 파라미터로 전달되지 않는다. 실행 명령을 문서에 적기 전에 확인한다 (RR-8)
 - **대량 조회 방어** — 상한 없는 전체 로드 금지, `IN` 절 분할, 값싼 필터 먼저, per-user 순차 조회는 bulk 로 전환 (RR-9)
 - **주석은 왜만** — 코드가 이미 말하는 내용을 반복하지 않는다. 티켓 번호·기획 문서 식별자는 PR 본문에 둔다 (RR-10)
-- **마이그레이션 컨벤션** — `UNSIGNED`·charset·`is_` 접두·제약 이름·UNIQUE·`@Column` 길이. 기존 마이그레이션을 먼저 읽고 맞춘다 (RR-11)
+- **마이그레이션 컨벤션** — `UNSIGNED`·charset·`is_` 접두·제약 이름·UNIQUE·`@Column` 길이·**Copyright 헤더**. 마스터 행을 넣으면 하위 데이터(문항·번역)도 함께 넣는다. 기존 마이그레이션을 먼저 읽고 맞춘다 (RR-11)
+- **실패 격리** — 여러 소스를 조립하는 응답은 독립 조회를 각각 감싼다(넓은 try 가 "기록 없음" 같은 틀린 상태를 만든다). 실패를 허용할 하위 조회는 트랜잭션 경계를 분리한다(rollback-only 전파). `toMap` null·마스터 데이터 0 같은 데이터 한 건이 전체 500 을 만들지 않게 건너뛰고 WARN. 외부 호출 루프는 건 단위 try/catch 로 성공분을 유지한다 (RR-13)
+- **동작 변경·검증 순서** — 공용 검증을 기존 경로에 붙이면 PR 본문 "기존 동작 변경"에 적는다. 존재·소유 확인 → 입력 검증 순서. "마지막인가"는 id 로 판정, "최신" 조회는 현재 시각 이하 (RR-14)
+- **계층** — 예외는 `application/exception`(domain 이 `BadRequestException`·`ExceptionConstants` 를 참조하지 않는다), 새 컨트롤러 메서드는 `ResponseEntity` 반환, domain 인터페이스는 web·응답 DTO 를 반환하지 않는다 (규칙 05·06, #800·#792)
+- **YAGNI 필드** — shared 이벤트·DTO 에 소비자가 쓰지 않는 필드를 두지 않는다. 나중 소비자가 그 값을 신뢰해 쓴다 (#799 `isOn`)
+- **기계 검사** — 위 항목 중 문자열로 잡히는 것은 `review-lint.py` 가 잡는다. 위반을 남긴 채 보고하지 않는다 (RR-L)
 
 - **Testcontainers(MySQL) 필수** — H2 전환 금지
 - **사용자 명시적 요청 없이 커밋 금지** — 변경 사항 보고만
@@ -640,7 +661,7 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 
 ## 자기 검증 체크리스트
 
-작업 완료 후 반드시 12항목 확인:
+작업 완료 후 반드시 전 항목(46개) 확인:
 
 1. [ ] **패키지 구조**: 도메인 기반 flat 구조인가? (기능 기반 하위 분리 없음)
 2. [ ] **의존성 방향**: Web→App→Domain←Infra 위반 없는가?
@@ -683,7 +704,11 @@ admin 모듈은 pasta-api의 4-Tier와 다른 **레이어 혼합형 SSR 구조**
 39. [ ] **(v1.11) 설정 게이팅 @Profile 선호**: 신규 `@Configuration`이 환경별 on/off라면 `@Profile`을 썼는가? `@ConditionalOnBean`을 썼다면 진짜 auto-configuration 요건인지 근거 명시?
 40. [ ] **(v1.11) 캐시 pub-sub 무효화 안전성**: pub-sub 발행이 트랜잭션 커밋 후에 실행되고(커밋 전 발행 아님), 발행 실패는 흡수되며, 폴링 백스톱이 붙어 있는가?
 41. [ ] **(v1.13) 외부 이벤트 아웃박스**: 외부 시스템(Airbridge 등) S2S 전송이 있으면 트랜잭션 안에서 직접 호출하지 않고 outbox 테이블에 저장 후 배치가 재전송하는 구조인가? 재시도는 backoff + 상한 있는가? 4xx는 FAILED 확정?
-41. [ ] **(v1.11) 어노테이션+인터셉터 배치**: 마킹 어노테이션이 shared 모듈에 있고 인터셉터가 api 모듈에 있는가? 어노테이션 파라미터가 enum(문자열 리터럴 금지)인가?
+42. [ ] **(v1.11) 어노테이션+인터셉터 배치**: 마킹 어노테이션이 shared 모듈에 있고 인터셉터가 api 모듈에 있는가? 어노테이션 파라미터가 enum(문자열 리터럴 금지)인가?
+43. [ ] **(v1.16) 작성 전 질문 5개**: 실패 격리·외부 호출 후 저장 실패·마스터 데이터 이상·기존 동작 변경·모든 진입 경로 테스트에 답했는가? (RR-13·14)
+44. [ ] **(v1.16) 이름 규칙**: 컬렉션 `*List`, 시각 `*At`, 대상·결과 변수 타입명을 지켰는가?
+45. [ ] **(v1.17) 주석 문체**: 코드 블록의 주석 줄만 따로 훑어 평서형(`한다.`·`된다.`·`이다.`·`않는다.`) 끝맺음이 0건인가? 설명 본문이 평서형이어도 주석은 존댓말이다. 훑어보지 않았으면 "준수"로 보고하지 않는다
+46. [ ] **(v1.16) review-lint 위반 0건**: `python3 forge/common/review-lint.py` 를 실행했고 확인 항목을 판단했는가? (RR-L)
 
 ---
 

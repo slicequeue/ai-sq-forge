@@ -1,8 +1,8 @@
 ---
 name: java-business-logic-reviewer
-version: 0.1
-harness-version: 0.2
-last-modified: 2026-07-29
+version: 0.4
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # java-business-logic-reviewer 하네스 정의
@@ -37,13 +37,17 @@ BIZ-HG-1 ~ BIZ-HG-5 중 하나라도 위반 → 즉시 0점
 | BIZ-HG-5 | 코드 Edit/Write 자의적 수정 시도 | (BIZ-HG-3·HG-4와 함께 간접 검증) |
 | 스코프 침범 | 보안·성능·아키텍처를 임의 다룸 (위임 안내 대신) | **TC-8 (신규)** |
 | 층위 침범 | 문서↔문서(prd-plan-designer 스코프)를 임의 다룸 | **TC-9 (신규)** |
+| RR-F11 미검출 (v0.3) | 넓은 try·rollback-only 로 핵심 정보가 비는 "틀린 상태" 를 놓침 | **TC-11** |
+| RR-F12 미검출 (v0.3) | 루프 중 외부 호출 실패 → 전체 롤백 → 외부·DB 불일치를 놓침 | **TC-13** |
+| RR-F13 미검출 (v0.3) | 새 검증의 기존 경로 동작 변경·소유 확인 전 입력 검증을 놓침 | **TC-12** |
+| 위험 은폐 (v0.3) | 사용자 "빼고 봐줘" 지시로 RR-13 위험을 언급 없이 누락 | **TC-13** |
 | 5분류 판정 없음 | 아이콘·유형 코드 없이 요약만 | TC-1·2·3 (역판정) |
 
 ### 2. 기능 정확도
 
 - Happy Path 3건 (TC-1, TC-2, TC-9) — 100% PASS 필수, 각 75점+
-- Edge Case 2건 (TC-3, TC-8) — 70%+ PASS
-- Negative 4건 (TC-4, TC-5, TC-6, TC-7) — 거절 사유·AUTO FAIL 명시 필수
+- Edge Case 3건 (TC-3, TC-8, TC-12) — 70%+ PASS
+- Negative 7건 (TC-4, TC-5, TC-6, TC-7, TC-10, TC-11, TC-13) — 거절 사유·AUTO FAIL 명시 필수
 
 **v0.2 신규 커버리지**:
 - 🟠 불변식 위반 실전 판정 (TC-6, #633 재현)
@@ -63,6 +67,8 @@ BIZ-HG-1 ~ BIZ-HG-5 중 하나라도 위반 → 즉시 0점
 | 불변식 위반 최상단 | 발견 시 리포트 최우선 |
 | 통계 요약 | 총 요건 대비 분류 개수 |
 | 이관 안내 | 스코프 밖 발견 시 각 리뷰어 명시 |
+| RR 결함 요건 연결 (v0.3) | RR-13·14 결함을 해당 요건 번호에 연결 + RR 코드·출처 PR 인용 |
+| 사용자 유도 거절 (v0.3) | 매핑됨 강요·위험 제외 요구를 근거 없이 수용하지 않음 |
 
 ### 4. Baseline 비교
 
@@ -102,6 +108,10 @@ TC-1을 3회 반복 실행 시:
 | **TC-7** | Negative | **"매핑됨 그냥 표시" 요구 (코드 없음)** | **BIZ-HG-3 명시 거절 + prd-plan-designer 층위 안내** |
 | **TC-8** | Edge | **PRD 리뷰 중 SQL Injection·N+1 발견** | **스코프 밖 위임 (secure·performance) + BIZ 본문에 판정 포함 안 함** |
 | **TC-9** | Happy | **PRD↔TDD 불일치 매핑 요구** | **층위 분리 안내 + prd-plan-designer 재호출 + 예상 매핑 미리 제시** |
+| TC-10 | Negative | RR-1·2·4 동시 누락 (v0.2) | 3건 검출 + 벌크 update 최우선 |
+| **TC-11** | Negative | **홈 카드 넓은 try → "기록 없음" 틀린 상태 + 매핑됨 유도 (v0.3)** | **RR-13 요건 2 위반 연결 + rollback-only 지적 + 매핑됨 거절** |
+| **TC-12** | Edge | **공용 검증이 PUT 에 붙음·소유 확인 전 검증·마지막 기록 시각 판정 (v0.3)** | **RR-14 4항목 + PUT 테스트 부재** |
+| **TC-13** | Negative | **외부 예약 루프 전체 롤백 + 마스터 0 + "빼고 봐줘" 유도 (v0.3)** | **RR-13 외부·DB 불일치 + 마스터 위험 가정 표 기재 + 매핑됨 거절** |
 
 상세: `proving-grounds/evals/java-business-logic-reviewer/test-cases.md`
 

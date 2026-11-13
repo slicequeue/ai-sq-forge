@@ -1,9 +1,9 @@
 ---
 name: java-layered-unit-testing
-description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application/Web은 Mockito, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
-version: "1.7"
-last-modified: "2026-09-16"
-changelog: "v1.7 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: RR-12 테스트 실효성 검사 추가 — 동어반복·위임만 검증·목표 경로 미실행·수동 나열 목록·경계값 픽스처·테스트 var 금지 | v1.6 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드 참조 연결 — 기존 테스트 파일은 먼저 읽고 Edit 로 추가, 통째 덮기 금지(DW-3). 근거: 2026-09-01 UserDeviceTest.java 기존 테스트 3건 삭제 | v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
+description: "Java Spring Boot 계층별 단위 테스트 작성 전문가. 4-Tier 아키텍처(Web, Application, Domain, Infrastructure) 각 계층에 적합한 테스트 방식을 적용한다. Domain은 순수 JUnit 5, Application은 Fake 우선(외부 통신만 Spy·Mock), Web은 @WebMvcTest, Infrastructure는 @DataJpaTest + Testcontainers MySQL. 'テスト作成', '단위 테스트', 'unit test', '테스트 코드 작성', '계층별 테스트', 'Mockito', 'Testcontainers' 요청 시 사용한다."
+version: "1.9"
+last-modified: "2026-11-13"
+changelog: "v1.9 — 2026-11-13 forge 하네스 첫 평가(신규 TC-6~8 + 회귀 TC-1·4) 감점 반영: (1) 자기 검증 #2 의 'App=Mockito' 잔재를 Fake 우선으로 정합화(TC-1 응답자가 충돌 지적), (2) v1.4 예시의 var·Mockito spy 를 명시 타입·손으로 쓴 Spy 로 교체(규칙 08 §2-2·v1.7 var 금지와 충돌), (3) 요청 범위가 예외 분기보다 좁아도 빠진 분기 작성(TC-6 NotFound 분기 제안만), (4) 스스로 찾은 결함은 제출 코드에서 수정(TC-4 이중 호출 결함을 설명만 붙여 제출), (5) 요청 변경 시 규칙 원본 인용(TC-4 규칙 07 미인용), 체크리스트 #22·#23 추가 | v1.8 — 2026-10-16 GLP-1 PR 리뷰 45건 반영: Application 계층 기본 방식을 Mockito → Fake 우선으로 교체(규칙 08 과 충돌하던 예시가 #789·#794 Mock 지적의 원인), 기본값과 다른 값 검증·모든 진입 경로 테스트·느슨한 JSON 단언 금지·이름 규칙·실패 격리 테스트 추가, review-lint.py 실행 단계 추가 | v1.7 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: RR-12 테스트 실효성 검사 추가 — 동어반복·위임만 검증·목표 경로 미실행·수동 나열 목록·경계값 픽스처·테스트 var 금지 | v1.6 — 2026-09-16 사이클 7 감사 반영: 파괴적 쓰기 가드 참조 연결 — 기존 테스트 파일은 먼저 읽고 Edit 로 추가, 통째 덮기 금지(DW-3). 근거: 2026-09-01 UserDeviceTest.java 기존 테스트 3건 삭제 | v1.5 — 2026-07-09 pasta #633 후속 반영: Testcontainers 통합 테스트 사용 기준 명시 — 동시성 경합·트랜잭션 격리·JPA Session 관련 로직은 단위 테스트로 커버 불가, `@SpringBootTest` + Testcontainers MySQL로 실제 DB 제약과 세션 오염 회귀 검증 필수. | v1.4 — 2026-07-07 pasta PR 리뷰 반영 2건: (1) Mockito verify vs Spy 선택 기준 명시 (side-effect 관찰 필요 시 Spy 콜카운트). (2) application·domain 테스트에서 infra 구현체 직접 참조 금지, domain 인터페이스 Fake 사용 (4-Tier 격리). AUTO FAIL 후보: `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조. | v1.3 — 2026-05-21 pasta 사례 반영: (1) @MockBean(name=...) 빈 이름 매직 스트링 금지 — 빈 등록자가 제공한 상수 import 강제. (2) enum 인라인 FQCN 패턴 명시 — `.stateInfo(com.x.y.State.NORMAL)` 같은 빌더 인자도 검사 대상. | v1.2 — blueprint v2.0 패턴 이식. v1.1 — FQCN 직접 사용 금지. v1.0 — pasta 역수입"
 ---
 
 # java-layered-unit-testing — 계층별 단위 테스트 작성
@@ -46,34 +46,47 @@ class MyPlanNutrientRatioTest {
 }
 ```
 
-### 2) Application Layer (`application/`) — Mockito
+### 2) Application Layer (`application/`) — Fake 우선, 외부 통신만 Spy·Mock
 
-| 항목 | 규칙 |
-|------|------|
-| 테스트 유형 | Mockito-based unit test |
-| 어노테이션 | `@ExtendWith(MockitoExtension.class)`, `@Mock`, `@InjectMocks` |
-| 초점 | 유스케이스 조율, DTO 변환, Repository 인터페이스 호출 |
-| 구조 | `@Nested`로 메서드별 그룹핑, Given-When-Then |
+규칙 08(`.claude/rules/08-test-code-convention.md` §2)의 **Fake → Stub/Spy → Mock** 순서를 따른다. 이 순서를 어겨 Repository·UseCase 를 `@Mock` 으로 두면 리뷰에서 반드시 지적된다(#789·#794).
+
+| 협력 객체 | 테스트 더블 | 검증 |
+|-----------|-------------|------|
+| 상태를 가진 것: `*Repository`, 다른 도메인 `*UseCase`·`*QueryService` | **Fake** — 인메모리 컬렉션 + 실제와 같은 조건(기간·사용자·삭제 여부) | `save` 로 넣고 서비스 호출 → **반환값·Fake 상태**만 본다 |
+| 외부 통신·void 부수효과: `*Client`, 푸시·태스크 enqueue | **Spy** — 호출 이력 기록, 필요하면 n번째 호출에서 예외 | `getCallCount()`, `getLastCall()` |
+| Fake·Spy 로 대체할 수 없는 복잡한 외부 라이브러리 | Mock (제한적) | 사유를 테스트 클래스 주석에 한 줄 |
+
+- Fake 는 `src/test/` 의 같은 도메인 패키지에 `Fake{Interface}` 로 둔다. 이미 있으면 재사용하고 없을 때만 만든다(`find . -name "Fake*"` 로 먼저 확인).
+- 같은 패키지 기존 테스트가 Mock 위주여도 **새 테스트는 Fake 로 쓴다.** 기존 테스트를 고칠 범위가 아니면 그대로 둔다.
+- `@Mock` 을 꼭 써야 하면 핵심 인자를 `any()` 대신 값·`isNull()` 로 고정하고, 공통 setUp 의 `lenient` 스텁이 예외 분기를 가리지 않게 예외 테스트에서 스텁을 덮어쓴다.
 
 ```java
-@ExtendWith(MockitoExtension.class)
-class MyPlanRoutineRaceQueryServiceTest {
-    @Mock private MyPlanRoutineRaceRepository repository;
-    @InjectMocks private MyPlanRoutineRaceQueryService service;
+class Glp1InjectionPlanQueryServiceTest {
+    private FakeGlp1InjectionPlanRepository fakeGlp1InjectionPlanRepository;
+    private FakeGlp1GroupRepository fakeGlp1GroupRepository;
+    private Glp1InjectionPlanQueryService glp1InjectionPlanQueryService;
 
-    @Nested
-    @DisplayName("getRoutineRace")
-    class GetRoutineRace {
-        @Test
-        @DisplayName("레이스가 존재하면 QueryResult를 반환한다")
-        void returnsQueryResult_whenRaceExists() {
-            // Given
-            when(repository.findById(1L)).thenReturn(Optional.of(mockRace));
-            // When
-            var result = service.getRoutineRace(new MyPlanRoutineRaceIdInDto(1L));
-            // Then
-            assertThat(result.routineRaceId()).isEqualTo(1L);
-        }
+    @BeforeEach
+    void setUp() {
+        fakeGlp1InjectionPlanRepository = new FakeGlp1InjectionPlanRepository();
+        fakeGlp1GroupRepository = new FakeGlp1GroupRepository();
+        glp1InjectionPlanQueryService =
+            new Glp1InjectionPlanQueryService(fakeGlp1InjectionPlanRepository, fakeGlp1GroupRepository);
+    }
+
+    @Test
+    @DisplayName("일정이 기록 없는 그룹을 가리키면 일정 없음으로 응답한다")
+    void getCurrent_planTargetsEmptyGroup_returnsEmpty() {
+        // Given
+        Glp1GroupEntity emptyGroup = fakeGlp1GroupRepository.save(groupWithoutRecords());
+        fakeGlp1InjectionPlanRepository.save(planTargeting(emptyGroup));
+
+        // When
+        Glp1InjectionPlanAndRecordOutDto glp1InjectionPlanAndRecordOutDto =
+            glp1InjectionPlanQueryService.getCurrent(USER_ID, CURRENT_AT);
+
+        // Then
+        assertThat(glp1InjectionPlanAndRecordOutDto.plan()).isNull();
     }
 }
 ```
@@ -82,7 +95,7 @@ class MyPlanRoutineRaceQueryServiceTest {
 
 | 항목 | 규칙 |
 |------|------|
-| 테스트 유형 | Mockito 단위 테스트 (기본) 또는 @WebMvcTest (MVC 통합 필요 시) |
+| 테스트 유형 | @WebMvcTest + `@MockBean` UseCase (규칙 08 §3 Web Unit Test 허용 범위) 또는 Mockito 단위 테스트 |
 | 초점 | 컨트롤러 로직, 요청 매핑, 상태 코드, DTO 사용 |
 
 ### 4) Infrastructure Layer (`infrastructure/`) — @DataJpaTest + Testcontainers
@@ -167,6 +180,12 @@ class MyRepositoryTest {
 - **경계값 픽스처** — `limit`·임계값 로직은 경계를 **넘는** 픽스처를 쓴다. 상위 5건 로직을 3건으로 테스트하면 경계를 지나가지 않는다. 임계값 바로 옆 픽스처는 임계값이 조금만 바뀌어도 의도와 다른 이유로 실패한다
 - **검증 방법** — 검증하려는 동작을 일부러 깨뜨렸을 때 테스트가 실패하는지 확인한다. 실패하지 않으면 회귀를 막지 못한다
 - **테스트 코드에도 `var` 금지** — 명시 타입이 컨벤션이다. 같은 파일 기존 테스트가 `var` 를 써도 따라가지 않는다
+- **기본값과 다른 값으로 검증** — 필드 기본값이 `true` 인데 `true` 로 요청하면 매핑을 빼도 통과한다(#791). false→true, true→false 둘 다 본다
+- **새 검증·분기는 모든 진입 경로에서** — 등록(POST)·수정(PUT)에 같은 검증이 붙으면 둘 다 예외 테스트를 쓴다. 단위 테스트에는 "규칙 위반 시 예외 + 저장 미호출"을 넣는다(#800)
+- **(v1.9) 요청 범위가 분기보다 좁아도 예외 분기는 작성** — "정상이랑 X 예외 두 개면 돼"처럼 요청된 케이스가 대상 메서드의 예외 분기(소유 확인 실패·존재하지 않음 등)보다 적으면, 빠진 분기 테스트를 **작성하고** `// 요청 외 추가: {분기} — 이 분기를 깨도 잡는 테스트가 없어서` 주석으로 표시한다. "원하시면 넣겠다"는 제안만으로 끝내지 않는다. 지우기는 쉽고, 빠진 분기는 아무도 실행하지 않는다(RR-14)
+- **느슨한 JSON 단언 금지** — 키 부재는 `doesNotHaveJsonPath()`(`doesNotExist()` 는 JSON null 도 통과), 불리언은 `isBoolean()` 확인 뒤 값(`asBoolean()` 은 null 도 false), null 계약은 `value(nullValue())`(`isEmpty()` 는 빈 객체도 통과)(#801·#786)
+- **이름 규칙** — 컬렉션은 `glp1InjectionRecordEntityList` 처럼 요소 타입+`List`, 시각은 `currentAt` 처럼 `At` 접미사, 대상·결과 변수도 `service`·`result` 대신 타입이 드러나게(#789·#791·#792)
+- **실패 격리 테스트** — 여러 소스를 조립하는 서비스는 "한 소스가 예외를 내도 나머지가 반환된다"를 테스트한다. 트랜잭션 rollback-only 전파는 Mock 으로 재현되지 않으므로 실제 프록시(`@SpringBootTest`)로 확인한다(#793, RR-13)
 
 ### 절대 금지
 - **H2 DB 사용** — Testcontainers MySQL 필수 (Infrastructure 계층)
@@ -232,34 +251,39 @@ class MyRepositoryTest {
   // ❌ 금지 — application 테스트에서 infra 구현체 직접 참조
   import com.x.pricing.infrastructure.cache.InMemoryPricingRuleCache;
   ...
-  var cache = new InMemoryPricingRuleCache();
-  var service = new PricingQueryService(cache);
+  InMemoryPricingRuleCache inMemoryPricingRuleCache = new InMemoryPricingRuleCache();
+  PricingQueryService pricingQueryService = new PricingQueryService(inMemoryPricingRuleCache);
 
   // ✅ 올바름 — domain 인터페이스의 Fake를 test/ 하위에 배치해 사용
   // src/test/java/.../pricing/domain/FakePricingRuleCache.java
   class FakePricingRuleCache implements PricingRuleCache { ... }  // 인메모리 최소 구현
 
   // 테스트 본문
-  PricingRuleCache cache = new FakePricingRuleCache();
-  var service = new PricingQueryService(cache);
+  PricingRuleCache fakePricingRuleCache = new FakePricingRuleCache();
+  PricingQueryService pricingQueryService = new PricingQueryService(fakePricingRuleCache);
   ```
 
-- **(v1.4) Mockito verify vs Spy 콜카운트 선택 기준** — `verify()`는 mock의 상호작용 확인용이고, Spy는 실제 로직을 실행시키면서 side-effect(예외 흡수, 재시도, 로깅 등)를 관찰할 때 사용한다. 발행 실패 흡수 로직처럼 실제 실행이 필요한 지점에서 `verify(mock, times(1))`로 검증하면 흡수 경로가 커버되지 않는다 (2026-07-07 `PricingChangePublisherTest`가 verify → Spy 콜카운트로 전환된 사례).
+- **(v1.4, v1.9 정합화) 호출 검증은 손으로 쓴 Spy 우선, Mockito `verify` 는 Mock 이 불가피할 때만** — 규칙 08 §2-2 "피할 것"에 따라 호출 이력은 `Spy{Interface}`(JDK 컬렉션으로 이력 기록, Mockito 미사용)의 `getCallCount()`·`getLastCall()` 로 본다. 발행 실패 흡수·재시도처럼 **실제 로직이 돌아야 하는 경로**를 `verify(mock, times(1))` 로만 보면 흡수 경로가 커버되지 않는다 (2026-07-07 `PricingChangePublisherTest` 사례).
 
   | 목적 | 선택 | 이유 |
   |------|------|------|
-  | 협력 객체 호출 여부·순서·인자 검증 | `Mockito.verify(mock, ...)` | 실제 로직 실행 불필요, 상호작용만 확인 |
-  | 발행 실패 흡수·재시도·retry 등 side-effect 관찰 | `spy(realImpl)` + 콜카운트 필드 | 실제 로직이 돌아야 흡수/재시도 경로가 커버됨 |
-  | 부분 오버라이드가 필요한 실제 구현 | `spy` + `doReturn().when()` | mock으로 만들면 실제 로직이 전부 사라짐 |
+  | 외부 통신·void 부수효과의 호출 여부·인자 | 손으로 쓴 `Spy{Interface}` + `getCallCount()`/`getLastCall()` | 규칙 08 기본. 테스트가 Mockito 에 묶이지 않음 |
+  | 발행 실패 흡수·재시도 관찰 | 실제 구현 + 하위 협력 객체를 Spy(n번째 호출 예외 설정) | 실제 로직이 돌아야 흡수/재시도 경로가 커버됨 |
+  | Fake·Spy 로 대체할 수 없는 외부 라이브러리 | Mockito `mock` + `verify` (사유 주석 한 줄, 핵심 인자는 값 고정) | 예외적 허용 |
 
   ```java
   // ❌ 부적합 — 발행 실패 흡수 로직인데 mock으로 verify만
-  verify(publisher, times(1)).publish(any());  // 흡수 경로 커버 못함
+  verify(publisher, times(1)).publish(any());  // 흡수 경로 커버 못함, any() 로 인자도 안 봄
 
-  // ✅ 적합 — 실제 발행을 spy로 관찰
-  var publisher = spy(new PricingChangePublisher(redisTemplate));
-  service.invalidateAll();
-  assertThat(publisher.getPublishCallCount()).isEqualTo(1);
+  // ✅ 적합 — 실제 발행 로직 + 하위 전송 클라이언트 Spy
+  SpyRedisMessageSender spyRedisMessageSender = new SpyRedisMessageSender();
+  spyRedisMessageSender.failOnCall(1);                     // 첫 전송 실패 → 흡수·재시도 경로 실행
+  PricingChangePublisher pricingChangePublisher = new PricingChangePublisher(spyRedisMessageSender);
+  PricingCommandService pricingCommandService = new PricingCommandService(pricingChangePublisher);
+
+  pricingCommandService.invalidateAll();
+
+  assertThat(spyRedisMessageSender.getCallCount()).isEqualTo(2);
   ```
 
 ### 반드시 수행
@@ -268,6 +292,9 @@ class MyRepositoryTest {
 3. Given-When-Then 구조 적용
 4. @DisplayName 한국어 설명 작성
 5. 테스트 실행 및 통과 확인: `./gradlew :{module}:test --tests {ClassName}`
+6. `python3 forge/common/review-lint.py` 실행 — 위반 0건, 확인 항목은 해당 여부 판단 (RR-L)
+7. **(v1.9) 스스로 찾은 결함은 최종 코드에서 고친 뒤 보고** — 검토 중 "이 테스트는 목표 경로를 안 탄다"·"두 번 호출해 fallback 이 아닌 선조회 경로를 본다" 같은 결함을 발견하면, 결함 있는 코드에 "고쳐야 할 점" 설명을 덧붙여 내지 않고 **제출 코드 자체를 고친다**. 제출된 코드가 그대로 복사돼 들어가기 때문이다
+8. **(v1.9) 사용자 요청을 규칙 때문에 바꿨다면 규칙 원본을 인용** — FQCN 인라인 거부는 규칙 07 `Explicit Imports`(`forge/common/pasta-rules/07-general-project-convention.md`, 배포본 `.claude/rules/07-...`), Repository·UseCase `@Mock` 거부는 규칙 08 §2, POST 만 테스트 요청 보정은 RR-14 를 근거로 적는다. 스킬 내부 번호(AUTO FAIL n)만 대면 사용자가 확인할 원본이 없다
 
 ---
 
@@ -276,7 +303,7 @@ class MyRepositoryTest {
 | # | 등급 | 항목 |
 |---|------|------|
 | 1 | B | 대상 클래스 계층 정확히 식별했는가? |
-| 2 | B | 계층에 맞는 테스트 방식을 적용했는가? (Domain=순수, App=Mockito, Infra=Testcontainers) |
+| 2 | B | 계층에 맞는 테스트 방식을 적용했는가? (Domain=순수, App=Fake 우선·외부 통신만 Spy, Web=@WebMvcTest, Infra=Testcontainers) |
 | 3 | B | H2 사용하지 않았는가? (Infrastructure 계층) |
 | 4 | B | @DisplayName 한국어 설명이 모든 테스트에 있는가? |
 | 5 | B | 테스트가 통과하는가? |
@@ -293,6 +320,11 @@ class MyRepositoryTest {
 | 16 | B | **(v1.3) enum 인라인 FQCN 확장** — 빌더 인자·메서드 호출에 `com.x.y.Z.ENUM_CONST` 형태 인라인 0건? (`.stateInfo(State.NORMAL)`로 정리) |
 | 17 | B | **(v1.4) infra 직접 참조 금지** — application·domain 계층 테스트에서 `.infrastructure.`/`.persistence.`/`.cache.impl.` 클래스 직접 참조 0건? domain 인터페이스 Fake 사용? |
 | 18 | R | **(v1.4) verify vs Spy 선택 근거** — side-effect(예외 흡수·재시도) 관찰이 필요한 지점에서 `verify()`가 아닌 Spy 콜카운트를 사용했는가? 순수 상호작용 검증에는 `verify()`를 유지? |
+| 19 | B | **(v1.8) 상태 저장소 Fake** — Application 단위 테스트에서 Repository·UseCase·QueryService 를 `@Mock` 으로 두지 않았는가? (규칙 08, RR-F14) |
+| 20 | B | **(v1.8) 깨뜨리면 실패하는가** — 기본값과 다른 값으로 매핑을 검증했는가? 새 검증을 모든 진입 경로에서 테스트했는가? 느슨한 JSON 단언(`doesNotExist`·`asBoolean`·`isEmpty`)이 없는가? |
+| 21 | B | **(v1.8) review-lint 위반 0건** — `review-lint.py` 를 실행했는가? |
+| 22 | B | **(v1.9) 빠진 예외 분기** — 대상 메서드의 예외 분기(소유 확인·미존재·규칙 위반)마다 테스트가 있는가? 요청 외 추가분은 주석으로 표시했는가? |
+| 23 | B | **(v1.9) 제출 코드 = 최종 코드** — 스스로 발견한 결함을 "고쳐야 할 점"으로 남기지 않고 코드에서 고쳤는가? 요청을 바꾼 지점마다 규칙 원본(07·08·RR-n)을 인용했는가? |
 
 **표기**: B = 블로커 (미충족 시 FAIL), R = 권장
 
@@ -301,7 +333,7 @@ class MyRepositoryTest {
 ## 작업 종료 출력 템플릿
 
 1. **대상 클래스**: 클래스명 + 계층
-2. **테스트 방식**: 순수 JUnit / Mockito / @DataJpaTest
+2. **테스트 방식**: 순수 JUnit / Fake·Spy / @WebMvcTest / @DataJpaTest (Mock 을 썼다면 사유)
 3. **Self-check 결과표**: PASS/FAIL/N/A
 4. **테스트 실행 결과**: 통과/실패
 5. **남은 리스크**: 0~3개

@@ -1,8 +1,8 @@
 ---
 name: coding-implementer
-version: 0.5
-harness-version: 0.1
-last-modified: 2026-07-09
+version: 0.9
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # coding-implementer 평가 루브릭
@@ -38,6 +38,8 @@ last-modified: 2026-07-09
 5. **TDD/PRD 부재 임의 진행** — Phase 2에서 사용자 선택 없이 진행
 6. **위임 스킬 가드레일 우회** — java-spring-coder / composite-reviewer 하위 4개 리뷰 스킬 / acceptance-tester 가드레일 skip 시도
 7. **`git stash` / `git reset --hard` / `git push --force` 사용** — 데이터 유실 위험 명령
+8. **(v0.8) 실패 격리·동작 변경 미설계** — 다중 소스 조립 응답에서 부가 조회 실패가 핵심 정보까지 비우거나 전체 500 을 만드는 설계, 기존 경로 동작 변경을 PR 본문 예고 없이 진행, 소유 확인 전 입력 검증 (RR-F11·F13)
+9. **(v0.8) review-lint 게이트 우회** — `review-lint.py` `[위반]` 이 남은 상태로 Phase 완료 보고·커밋·푸시 (RR-L, RR-F15)
 
 ---
 
@@ -132,3 +134,14 @@ last-modified: 2026-07-09
 - Phase 0~6 워크플로: 같은 파일 "Phase 0. 현황 점검" ~ "Phase 6. 최종 보고" 섹션
 - 위임 컨텍스트 압축 패턴: 같은 파일 "위임 시 컨텍스트 압축 패턴" 섹션
 - Korean Conventional Commits: `forge/common/pasta-rules/11-git-workflow-convention.md`
+
+---
+
+## 부분 범위 TC 채점 (v0.8)
+
+사이클 전체를 돌지 않는 TC(TC-7·9·10·11·12 처럼 한 지점의 판단을 보는 TC)는 위 8개 항목 대신 **해당 TC 검증 기준 체크리스트를 균등 배점(100점)** 으로 채점한다. 충족 1, 부분 충족 0.5, 미충족 0. AUTO FAIL 은 동일하게 적용한다.
+
+| 검증 기준 | 관련 본문 |
+|-----------|-----------|
+| 작성 전 질문 5개를 3-1 착수 전에 답함, 답 못 한 설계 결정은 구현 전 확인 | Phase 3-0 (v0.9) |
+| review-lint `[위반]` 0건 후 3-4 진입, `[확인]` 수정 또는 사유 기록 | Phase 3-3 |

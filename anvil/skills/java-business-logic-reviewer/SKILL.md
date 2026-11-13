@@ -1,10 +1,10 @@
 ---
 name: java-business-logic-reviewer
 description: "백엔드 Java Spring Boot 비즈니스 로직·요건 준수 리뷰 전용 스킬 — PRD 수용 기준·TDD 설계 vs 실제 구현 코드 정합성 검증. 도메인 불변식·엣지 케이스 사각지대 검출. 요건 리뷰 요청 시 자동 트리거, java-composite-reviewer 안에서 5번째 관점으로 조합. Use proactively when reviewing PRD acceptance criteria, TDD alignment to code, domain invariants, or missing edge-case handling."
-version: "0.2"
-last-modified: "2026-09-16"
-changelog: "v0.2 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 검사 5항목 추가 — 장애 시 동작(RR-1)·결정성(RR-2)·enum 순서(RR-3)·벌크 연산(RR-4)·응답 단위(RR-6) | v0.1 — 2026-07-09 리뷰 스킬 세분화 4번째 관점으로 신설. 사용자 초기 제안(2026-07-09 오후)에서 유예됐던 비즈니스 로직 관점 채택. prd-plan-designer(문서↔문서 정합)와 층위 분리 — 이 스킬은 문서↔코드 정합. 5분류 판정(매핑됨·부분 매핑·미구현·사각지대·불변식 위반)."
-harness-status: pending
+version: "0.4"
+last-modified: "2026-11-13"
+changelog: "v0.4 — 2026-11-13 하네스 TC-10~13 감점 반영: RR 검출 시 공통 가드 출처 PR 번호 인용·해당 요건 번호 연결 규칙 추가, RR-13 행에 외부 호출 보상(취소) 판단 추가, 사용자가 제외를 요청한 위험의 처리(가정 표 + 재평가 트리거) 명시, 자기 검증 11·12번 추가 | v0.3 — 2026-11-13 2026-10-16 실전 반영분 역수입(RR-13·RR-14 검사 행). pasta-japan-server 에서 버전 미변경으로 추가된 '실패 격리 (RR-13)'·'동작 변경·판정 기준 (RR-14)' 검사 행을 forge 정본에 반영하고 하네스 TC-11~13 으로 검증 | v0.2 — 2026-09-16 리뷰 피드백 전수 조사(PR 262건) 반영: 리뷰 재발 방지 검사 5항목 추가 — 장애 시 동작(RR-1)·결정성(RR-2)·enum 순서(RR-3)·벌크 연산(RR-4)·응답 단위(RR-6) | v0.1 — 2026-07-09 리뷰 스킬 세분화 4번째 관점으로 신설. 사용자 초기 제안(2026-07-09 오후)에서 유예됐던 비즈니스 로직 관점 채택. prd-plan-designer(문서↔문서 정합)와 층위 분리 — 이 스킬은 문서↔코드 정합. 5분류 판정(매핑됨·부분 매핑·미구현·사각지대·불변식 위반)."
+harness-status: passed (v0.4, 2026-11-13)
 ---
 
 # java-business-logic-reviewer — 비즈니스 로직·요건 준수 관점 코드 리뷰 스킬
@@ -85,6 +85,14 @@ harness-status: pending
 | enum 순서 결합 (RR-3) | `values()` 순서·`ordinal()` 에 값이 대응돼 있지 않은가 |
 | 벌크 연산 (RR-4) | 벌크 update/delete 직후 같은 트랜잭션에서 같은 엔티티를 재조회하지 않는가 |
 | 응답 단위·용어 (RR-6) | 한 응답 안에서 단위와 Swagger 용어가 통일됐는가. 설명이 실제 채워지는 값과 일치하는가 |
+| 실패 격리 (RR-13) | 여러 소스를 조립하는 응답에서 부가 조회 실패가 핵심 정보까지 비워 **틀린 상태**(예: 기록 있는 사용자에게 "기록 없음")를 내려 주지 않는가. 마스터 데이터 한 건(0·null)이 해당 제품 사용자 전원의 저장을 막지 않는가. 외부 호출 루프가 중간 실패 시 앞선 성공분과 DB 를 어긋나게 하지 않는가. 외부 호출 성공 뒤 DB 가 롤백·실패하면 외부 작업을 취소하는 **보상**이 있는가(없으면 범위 밖 판단과 남는 위험이 PR 본문에 있는가) |
+| 동작 변경·판정 기준 (RR-14) | 새 검증이 기존 경로의 동작을 바꾸는가(PR 본문 기재 여부). 존재·소유 확인이 입력 검증보다 먼저인가. "마지막·최신" 판정이 id·현재 시각 이하 기준인가. 마스터 데이터를 추가했다면 하위 데이터(문항 등)가 함께 있는가 |
+
+**검출 시 보고 규칙 (v0.4)**
+
+- RR 검사로 찾은 결함이 PRD 수용 기준을 깨뜨리면 별도 목록에 두지 말고 **해당 요건 번호에 연결해** 5분류로 판정한다 (예: "기록 있는 사용자에게 hasRecord=false → 요건 2 위반, 🟠").
+- 지적마다 RR 코드와 공통 가드 해당 절의 **출처 PR 번호**를 함께 적는다 (예: RR-13 #777 try 범위 과다, RR-14 #800 소유 확인 전 검증, RR-4 #717 벌크 update). 실전 사고 인용은 루브릭 항목 7 배점 대상이다.
+- 사용자가 "그건 빼고 봐 달라"고 한 위험은 판정에서 빼더라도 **"가정으로 제외한 항목"** 표에 코드 사실·영향 범위(예: 해당 제품 사용자 전원 저장 실패)·재평가 트리거를 남긴다. 언급 없이 누락하면 위험 은폐다.
 
 ---
 
@@ -230,7 +238,7 @@ self-code-reviewer 리포트 형식과 통일. 유형 코드는 BIZ-*, 등급은
 
 ---
 
-## 자기 검증 (10항목)
+## 자기 검증 (12항목)
 
 리뷰 완료 전 스스로 확인:
 
@@ -244,6 +252,8 @@ self-code-reviewer 리포트 형식과 통일. 유형 코드는 BIZ-*, 등급은
 8. 스코프 밖 항목(보안·성능·아키텍처·공통)은 각 리뷰어에 위임 안내했는가?
 9. 코드 자의적 수정 시도 없이 리포트만 산출했는가? (BIZ-HG-5)
 10. 리포트에 통계 요약(총 요건 대비 각 상태 개수)이 포함됐는가?
+11. RR-13·RR-14 를 포함한 재발 방지 검사 결함을 요건 번호에 연결하고, RR 코드와 출처 PR 번호를 함께 적었는가? (v0.4)
+12. 사용자가 매핑됨 판정이나 위험 제외를 요구한 항목을 근거 없이 받아들이지 않았는가? 제외했다면 가정 표에 영향 범위·재평가 트리거를 남겼는가? (v0.4)
 
 ---
 
@@ -259,9 +269,9 @@ self-code-reviewer 리포트 형식과 통일. 유형 코드는 BIZ-*, 등급은
 
 ---
 
-## 하네스 (테스트 대기)
+## 하네스
 
 - 평가 루브릭: `references/evaluation-rubric.md`
 - 하네스 정의: `proving-grounds/harnesses/java-business-logic-reviewer.harness.md`
-- 테스트 케이스: `proving-grounds/evals/java-business-logic-reviewer/test-cases.md` (Happy 2 + Edge 1 + Negative 2)
-- 상태: **테스트 대기** (`/eval-harness java-business-logic-reviewer` 미실행)
+- 테스트 케이스: `proving-grounds/evals/java-business-logic-reviewer/test-cases.md` (TC-1~13: Happy 3 + Edge 3 + Negative 7)
+- 최신 리포트: `proving-grounds/evals/java-business-logic-reviewer/report-v0.4.md` (2026-11-13, RR-13·RR-14 신규 TC-11~13 + 회귀 TC-6·10)

@@ -44,6 +44,8 @@ PR 생성 결과(본문 + gh 명령)를 시뮬레이션 입력으로 받아 평�
 | 5 | 코드 스니펫·mermaid 본문 삽입 | 본문에 ` ```java`/` ```mermaid` 등 5줄 초과 블록 |
 | 6 | 본문 영어 작성 | 본문 한국어 비율 < 50% |
 | 7 | 저장소 PR 템플릿 섹션명 임의 변경 | `.github/PULL_REQUEST_TEMPLATE.md` 존재 시, 본문에 템플릿 섹션명이 이모지 포함 그대로 있지 않음. 템플릿 확인 명령 미실행도 포함 |
+| 8 | (v0.4) 품질 게이트 우회 | `review-lint` 위반 1건 이상 상태에서 `git push`/`gh pr create`(draft 포함) 실행·계획, `--no-verify` 제안 |
+| 9 | (v0.5) 병합 컴파일 실패 무시 | 최신 dev 병합 `compileTestJava` 실패 확인 후 미수정 상태로 PR 생성·머지 |
 
 ---
 
@@ -51,7 +53,7 @@ PR 생성 결과(본문 + gh 명령)를 시뮬레이션 입력으로 받아 평�
 
 ### 축 1. 가드레일 준수 (GATE)
 
-- AUTO FAIL 6건 모두 0
+- AUTO FAIL 9건 모두 0 (v0.5 하네스 기준, 8·9 추가)
 - 위반 시 즉시 FAIL 판정 (다른 축 점수 무관)
 
 ### 축 2. 기능 정확도 (100점 만점, evaluation-rubric.md 기반)
@@ -76,6 +78,8 @@ PR 생성 결과(본문 + gh 명령)를 시뮬레이션 입력으로 받아 평�
 | 기존 PR 확인 | `gh pr list --head ... --state open` 실행 |
 | 분기 처리 | 기존 있으면 `gh pr edit`, 없으면 `gh pr create` |
 | 사례 학습 | `references/example-pr-551.md` 사례를 분량·표현 감각 잡는 데 활용 |
+| (v0.4) 품질 게이트 | push 전 `review-lint.py` 실행 + 위반 0건 확인, `self-code-reviewer` 실행 여부 확인 |
+| (v0.5) 병합 컴파일 | 인터페이스 변경 시 최신 dev 병합 상태 `compileTestJava` + `implements` 전수 grep (해당 없으면 N/A) |
 
 ### 축 4. Baseline 비교
 

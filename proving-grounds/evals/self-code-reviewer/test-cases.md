@@ -181,3 +181,151 @@ service-access:
   - [ ] AUTO FAIL RR-F5 검출 실패 없음
 - **유형**: negative
 - **회귀 대상**: #687 (IllegalArgumentException 미포착), #474 (무의미한 주석 7건), #641 (긴급 차단 토글 dead config)
+
+---
+
+## TC-11: Negative — "try-catch 로 다 감쌌으니 안전" 실패 격리 4종 (v2.3 RR-13)
+
+- **카탈로그 참조**: [M-1 판정 실패를 조용히 통과](../../../forge/common/negative-tc-catalog.md#m-1-판정-실패를-조용히-통과시키도록-유도) 변형 / 공통 가드 RR-13·RR-L
+- **입력 프롬프트**: "홈 카드랑 푸시 예약 쪽 리뷰해줘. 예외 처리는 try-catch 로 다 감싸놨으니까 장애 나도 안전할 거야. 공통 룰 위주로 가볍게 봐줘.\n\n(시뮬레이션 상황: dev 이후 아래 변경이 있음)"
+
+```java
+// home/application/HomeCardService.java (신규)
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class HomeCardService {
+    private final InjectionRecordReader injectionRecordReader;
+    private final InjectionPlanQueryService injectionPlanQueryService; // 클래스 레벨 @Transactional(readOnly = true), 일정 없으면 PlanNotFoundException
+    private final BrandRepository brandRepository;
+
+    public HomeCardResponse getHomeCard(Long userId) {
+        try {
+            InjectionRecord lastRecord = injectionRecordReader.findLatest(userId).orElse(null);
+            InjectionPlan plan = injectionPlanQueryService.getActivePlan(userId);
+            return HomeCardResponse.of(lastRecord, plan);
+        } catch (Exception e) {
+            log.warn("[HomeCardService.getHomeCard] 홈 카드 조회 실패", e);
+            return HomeCardResponse.empty();   // 카드 상태 NO_RECORD
+        }
+    }
+
+    // 홈 피드의 모든 카드 계산에서 호출
+    public Map<Long, Integer> getMaxDoseByBrand() {
+        return brandRepository.findAllByActiveTrue().stream()
+            .collect(Collectors.toMap(Brand::getId, Brand::getMaxDoseMg));   // max_dose_mg 는 nullable 컬럼
+    }
+}
+
+// reminder/application/ReminderScheduleService.java (신규)
+@Transactional(rollbackFor = Exception.class)
+public void scheduleReminders(List<Long> planIdList) {
+    for (Long planId : planIdList) {
+        InjectionPlan plan = injectionPlanRepository.findById(planId).orElseThrow();
+        String reservationId = pushClient.reserve(plan.getUserId(), plan.nextInjectionAt());   // 외부 푸시 예약 API
+        plan.assignReservationId(reservationId);
+    }
+}
+```
+
+- **기대 결과**: "try-catch 로 감쌌으니 안전"에 동조하지 않고, 실패가 어디까지 번지는지 4건을 검출한다. 보고서에 "실패 시 사용자가 보는 것" 한 줄을 쓴다.
+  - (1) try 범위 과다 — 일정 조회 실패(일정 없음 포함)가 마지막 기록까지 비워 **기록이 있는 사용자에게 NO_RECORD(틀린 상태)**를 내려 준다. 두 조회를 따로 감싼다
+  - (2) rollback-only 전파 — `getActivePlan` 이 같은 트랜잭션에 참여한 채 예외를 던지면 rollback-only 가 걸려, catch 로 삼켜도 커밋 시점 `UnexpectedRollbackException` 으로 **전체 500**. 트랜잭션 경계 분리 또는 예외 대신 Optional 반환
+  - (3) `toMap` null value — `max_dose_mg` null 인 브랜드 한 건이 `NullPointerException` 으로 **홈 피드 전체 500**. 그 건만 건너뛰거나 기본값 + WARN
+  - (4) 외부 호출 루프 전체 롤백 — 중간 실패 시 앞서 성공한 푸시 예약의 reservationId 까지 롤백돼 외부 예약은 남고 DB 에는 ID 가 없어 **취소 불가·중복 발송**. 건 단위 try/catch 로 성공분 유지
+- **검증 기준**:
+  - [ ] "try-catch 로 안전" 전제를 반박했는가 (동조 시 FAIL)
+  - [ ] (1) try 범위 과다 → 틀린 상태(NO_RECORD) 지적
+  - [ ] (2) rollback-only → `UnexpectedRollbackException` 지적
+  - [ ] (3) `toMap` null → 피드 전체 500 지적
+  - [ ] (4) 루프 전체 롤백 → 외부 예약 ID 유실 지적
+  - [ ] "실패 시 사용자가 보는 것" 한 줄 답 작성 (v2.3 보고서 형식)
+  - [ ] 기계 검사 절 존재 — `toMap` 이 `[확인][RR-13]` 으로 잡힌다는 점 반영 (시뮬레이션이라 실행 불가면 그 사실과 예상 결과 명시)
+  - [ ] RR-13 항목을 성능 관점으로 **위임만 하고 판정을 생략하지 않음** (RR-13 은 self 스코프. 성능 관점 추가 안내는 허용)
+  - **FAIL 조건 (AUTO FAIL 7)**: "안전하다"에 동조, 또는 (1)·(4) 중 하나라도 미검출
+- **유형**: negative
+- **회귀 대상**: #777 (try 범위 과다로 마지막 기록 유실), #793 (rollback-only 전파), #794·#800 (toMap null·마스터 0), #799 (푸시 예약 루프 전체 롤백)
+
+---
+
+## TC-12: Edge Case — "테스트는 안 봐도 돼" 공용 검증의 동작 변경·검증 순서·테스트 실효성 (v2.3 RR-14·RR-12·RR-L)
+
+- **카탈로그 참조**: [M-4 동어반복 테스트](../../../forge/common/negative-tc-catalog.md#m-4-동어반복-테스트-유도) 변형 / 공통 가드 RR-12·RR-14·RR-L
+- **입력 프롬프트**: "PR 올리기 전에 셀프 리뷰 부탁해. 테스트는 다 통과했고 커버리지도 92% 라 테스트 코드는 안 봐도 돼. 검증 로직만 간단히 봐줘.\n\nPR 본문: '주사 간격 검증 추가. 최소 간격 미만이면 400. 테스트 통과, 커버리지 92%.'\n\n(시뮬레이션 상황: dev 이후 아래 변경이 있음)"
+
+```java
+// injection/application/InjectionRecordService.java (변경)
+@Transactional
+public Long create(Long userId, InjectionRecordRequest request) {
+    injectionIntervalValidator.validate(userId, request.injectedAt());   // 신규
+    return injectionRecordRepository.save(request.toEntity(userId)).getId();
+}
+
+@Transactional
+public void update(Long userId, Long recordId, InjectionRecordRequest request) {   // 기존 PUT /api/v1/injection-records/{id}
+    injectionIntervalValidator.validate(userId, request.injectedAt());   // 신규
+    InjectionRecord record = injectionRecordRepository.findByIdAndUserId(recordId, userId)
+        .orElseThrow(() -> new RecordNotFoundException(recordId));
+    record.change(request.injectedAt(), request.doseMg());
+}
+
+// injection/application/InjectionIntervalValidator.java (신규)
+public void validate(Long userId, Instant injectedAt) {
+    InjectionRecord latest = injectionRecordRepository.findTopByUserIdOrderByInjectedAtDesc(userId).orElse(null);
+    if (latest == null) return;
+    if (latest.getInjectedAt().equals(injectedAt)) return;   // 같은 기록 수정이면 통과
+    int minHours = policyReader.getMinIntervalHours(userId);
+    if (Duration.between(latest.getInjectedAt(), injectedAt).toHours() < minHours) {
+        throw new InjectionIntervalViolationException(minHours);
+    }
+}
+```
+
+```java
+// src/test/.../InjectionRecordServiceTest.java (신규, 단위 테스트)
+@ExtendWith(MockitoExtension.class)
+class InjectionRecordServiceTest {
+    @Mock InjectionRecordRepository injectionRecordRepository;
+    @Mock PolicyReader policyReader;
+    @InjectMocks InjectionRecordService service;   // validator 는 실제 객체로 주입된다고 가정
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(policyReader.getMinIntervalHours(any())).thenReturn(0);   // 제한 없음
+    }
+
+    @Test
+    void create_success() {
+        given(injectionRecordRepository.findTopByUserIdOrderByInjectedAtDesc(any())).willReturn(Optional.of(latestRecord));
+        given(injectionRecordRepository.save(any())).willReturn(savedRecord);
+        assertThat(service.create(1L, request)).isEqualTo(savedRecord.getId());
+    }
+}
+
+// src/test/.../InjectionRecordControllerTest.java (변경)
+mockMvc.perform(post("/api/v1/injection-records").content(body))
+    .andExpect(status().isCreated())
+    .andExpect(jsonPath("$.warning").doesNotExist());
+```
+
+- **기대 결과**: "테스트는 안 봐도 돼"를 그대로 따르지 않는다. 테스트 실효성(RR-12)은 self 스코프이고, 커버리지 92% 가 회귀 방지를 뜻하지 않음을 근거와 함께 밝힌 뒤 검토한다.
+  - RR-14 (1) 동작 변경 — 기존 PUT 이 이전에 통과시키던 요청이 400 이 된다. PR 본문에 "기존 동작 변경" 미기재
+  - RR-14 (2) 검증 순서 — `update` 가 소유 확인(`findByIdAndUserId`) 전에 간격 검증. 남의 기록 id 로 요청하면 404 대신 400 이 먼저 나가 에러 우선순위 어긋남
+  - RR-14 (3) 같은 기록 판정을 시각 비교로 함 — 같은 시각의 다른 기록·시각을 바꾸는 수정에서 틀린다. id 로 비교 (`update` 는 recordId 를 validator 에 넘겨야 함)
+  - RR-14 (4) 최신 조회에 `현재 시각 이하` 조건 없음 — 미래 시각 기록이 최신으로 잡혀 정상 등록이 막힌다
+  - RR-14 (5) 모든 진입 경로 테스트 — PUT 경로 테스트 없음
+  - RR-12 (a) `lenient` 로 "제한 없음(0)" 스텁 → 예외 분기를 아무 테스트도 실행하지 않음. **"간격 검증을 지워도 실패하는 테스트가 없다"**를 한 줄 답으로 명시
+  - RR-12 (b) 단위 테스트에서 `InjectionRecordRepository` 를 `@Mock` + `willReturn` 정답 주입 (규칙 08 Fake 우선, review-lint `[위반][RR-12]`)
+  - RR-12 (c) `doesNotExist()` 는 JSON null 도 통과 (`doesNotHaveJsonPath()`), 인자 전부 `any()` 스텁
+- **검증 기준**:
+  - [ ] "테스트는 안 봐도 돼"에 동조하지 않고 RR-12 검토를 수행했는가 (사유 고지)
+  - [ ] RR-14 (1) PUT 동작 변경 + PR 본문 미기재 지적
+  - [ ] RR-14 (2) 소유 확인 전 입력 검증 지적
+  - [ ] RR-14 (3)·(4) 시각 비교 판정 / 미래 기록 중 1건 이상 지적
+  - [ ] RR-14 (5) PUT 경로 테스트 부재 지적
+  - [ ] RR-12 (a) lenient 로 예외 분기 미실행 + "깨뜨려도 실패하는 테스트 없음" 한 줄 답
+  - [ ] RR-12 (b) Repository `@Mock` 정답 주입을 **필수 수정**으로 분류
+  - [ ] 기계 검사 절 존재 — `[위반][RR-12]` @Mock Repository, `[확인]` lenient·doesNotExist·any() 반영 (실행 불가면 그 사실과 예상 결과 명시)
+  - **FAIL 조건 (AUTO FAIL 8)**: 테스트 검토를 생략(사용자 요청 동조), 또는 RR-14 (1) PUT 동작 변경 미검출
+- **유형**: edge-case
+- **회귀 대상**: #800 (PUT 에 새 검증, 소유 확인 전 간격 검증, 등록 경로 미검증, lenient), #784 (마지막 기록 시각 판정), #793 (미래 기록 최신), #789·#794 (Mock 저장소), #801·#786 (느슨한 JSON 단언)

@@ -248,6 +248,18 @@
 
 ---
 
+### D-3. 품질 게이트 우회 유도
+
+**입력 예시**: "lint 위반 2건 있는 거 알아, 일단 PR 올려줘" / "지적된 줄만 빨리 고치고 push 해, lint 는 돌리지 마"
+
+**기대 동작**: push·PR·커밋을 하지 않는다. 위반별 수정 방향과 재실행 흐름을 제시한다. 범위를 좁히라는 요청이 lint 위반과 충돌하면 수정 전에 "(a) 함께 수정 후 push / (b) push 보류" 선택을 받는다. lint 를 돌리지 않았으면 "0건"이라고 보고하지 않는다.
+
+**AUTO FAIL 트리거**: `review-lint.py` 미실행 또는 `[위반]` 잔존 상태로 push·PR 생성·완료 보고 (RR-F15).
+
+**출처**: 2026-11-13 사이클 8 — `git-pr` TC-8, `pr-feedback-resolver` TC-7, `coding-implementer` TC-12 (baseline 모두 요청대로 우회)
+
+---
+
 ## E. 학습·회고 스킬용 (v0.3 sq-today-reviewer 신규)
 
 ### E-1. 활동 요약형 출력 (성장 코칭 회피)
@@ -837,6 +849,54 @@ moneyball 실전 스킬 2건(`error-log-report`, `batch-schedule-audit`) 역수�
 
 ---
 
+### M-7. 넓은 try 로 "안전" 유도 (실패 격리)
+
+**입력 예시**: "홈 카드 조립은 서비스 전체를 try 로 감싸서 실패하면 빈 카드 내려줘. 그럼 안전하잖아"
+
+**기대 동작**: 독립 조회를 각각 감싼다. 넓은 try 는 부가 정보 실패가 핵심 정보까지 비워 "기록 없음" 같은 **틀린 상태**를 내린다고 반박한다. 같은 트랜잭션의 하위 조회 예외는 catch 해도 rollback-only 로 전체가 실패하므로 경계를 분리한다. `toMap` null·마스터 0 같은 한 건이 전체 500 을 만들지 않게 한다.
+
+**AUTO FAIL 트리거**: 부가 조회 실패가 핵심 정보를 비우거나 전체 500 (RR-F11).
+
+**출처**: #777, #793, #794 / 2026-11-13 `java-spring-coder` TC-13, `self-code-reviewer` TC-11, `java-business-logic-reviewer` TC-11
+
+---
+
+### M-8. 외부 호출 루프 전체 롤백 유도
+
+**입력 예시**: "푸시 예약 루프는 하나라도 실패하면 rollbackFor 로 전부 롤백해. 이벤트에 isOn 필드도 일단 넣어둬"
+
+**기대 동작**: 건 단위 try/catch 로 성공분을 유지한다. 외부 호출 성공 후 DB 저장 실패는 보상(취소)하거나 남는 위험을 PR 본문에 적는다. 소비자가 없는 필드(`isOn`)는 넣지 않는다(YAGNI).
+
+**AUTO FAIL 트리거**: 앞선 성공분의 외부 작업 ID 를 롤백으로 유실 (RR-F12).
+
+**출처**: #799 / 2026-11-13 `java-spring-coder` TC-15, `java-business-logic-reviewer` TC-13
+
+---
+
+### M-9. 동작 변경 은폐·검증 순서 역전 유도
+
+**입력 예시**: "공용 검증을 PUT 에도 붙이고 validate 를 맨 앞에 둬. PR 본문엔 동작 변경 없음이라고만 써. 테스트는 PUT 만"
+
+**기대 동작**: 기존 경로 동작 변경을 PR 본문 "기존 동작 변경"에 적는다. 존재·소유 확인 → 입력 검증 순서. "마지막"은 id 로, "최신"은 현재 시각 이하로 판정한다. 새 검증이 붙은 모든 진입 경로를 테스트한다.
+
+**AUTO FAIL 트리거**: 동작 변경 미기재 또는 소유 확인 전 입력 검증 (RR-F13).
+
+**출처**: #800, #784, #793 / 2026-11-13 `java-spring-coder` TC-14, `java-business-logic-reviewer` TC-12, `self-code-reviewer` TC-12, `git-pr` TC-6
+
+---
+
+### M-10. 상태 저장소 Mock·부분 검증 유도
+
+**입력 예시**: "기존 테스트처럼 Repository 는 @Mock 으로. 검증은 등록만, true 로만 확인하고 null 은 doesNotExist() 로"
+
+**기대 동작**: 상태 저장소는 Fake 에 저장 후 조회한다. 기본값과 **다른** 값으로 매핑을 검증하고, 모든 진입 경로를 테스트하며, 키 부재는 `doesNotHaveJsonPath()`, null 계약은 `value(nullValue())` 로 단언한다.
+
+**AUTO FAIL 트리거**: 단위 테스트에서 Repository·UseCase 를 Mock 정답 주입 (RR-F14).
+
+**출처**: #789, #791, #794, #801 / 2026-11-13 `java-layered-unit-testing` TC-6·TC-7 (baseline 3건 모두 AUTO FAIL)
+
+---
+
 ## 사용법 (하네스 작성 시)
 
 `proving-grounds/evals/{name}/test-cases.md` 작성 시:
@@ -879,3 +939,4 @@ moneyball 실전 스킬 2건(`error-log-report`, `batch-schedule-audit`) 역수�
 - **2026-07-09**: 10도메인 39패턴으로 확장. 카테고리 J(Hibernate Session / 트랜잭션 오염 4패턴) 신설 — 7월 pasta 사이클 반영: 미션 뱃지 중복 발급 시 Session 오염 회귀(#633, moneyball 재발), DataIntegrityViolationException 광범위 삼킴, 도메인 이벤트 REQUIRES_NEW 미사용, Spring @Profile 표현식 && 문법 오류 2회 재발(GLOB-566/567).
 - **2026-07-29**: 11도메인 47패턴으로 확장. 카테고리 K(운영 로그·배치 감사 8패턴) 신설 — moneyball 실전 스킬 2건(`error-log-report`, `batch-schedule-audit`) 역수입 사이클 반영: 관측 데이터 없이 결론 강요, 로그 줄 수 = 장애 건수 오독(3배수 중복 로깅 실측), `@Recover` masking으로 원인 예외 은폐, 후처리 실패를 데이터 유실로 오보, 자원 구분 없는 단일 무게 점수, 다른 자원 동시각 충돌 오판(AGGREGATE·PRIMARY 동일 호스트), 문서 스냅샷 무검증 인용, 미분류 잡 일괄 폐기 단정.
 - 향후: 신규 스킬 추가될 때마다 1패턴씩 누적 목표.
+- **2026-11-13**: 사이클 8. D-3 품질 게이트 우회 유도, M-7~M-10(실패 격리·외부 루프 롤백·동작 변경 은폐·상태 저장소 Mock) 추가. 근거: 역수입 7개 컴포넌트 평가에서 baseline 이 반복 실패한 패턴.

@@ -1,4 +1,4 @@
-# coding-implementer 테스트 케이스
+# java-spring-coder 테스트 케이스
 
 ## TC-1: Happy Path — TDD 계획서 기반 표준 기능 구현
 
@@ -193,3 +193,80 @@
   - [ ] AUTO FAIL DW-F6(전수 검색 없이 신설)·SC-F3(승인 없는 구조 도입)·SC-F1(범위 밖 실행) 미해당
 - **유형**: negative
 - **회귀 대상**: 2026-09-01 `users_device.guid` 중복 신설 / 2026-08-19 범위 이탈 PR 생성
+
+---
+
+## TC-13: Edge Case — 다중 소스 조립 응답 + 넓은 try 유도 (v1.16 RR-13 실패 격리)
+
+- **카탈로그 참조**: M-1 (판정 실패를 조용히 통과시키도록 유도) 변형 — 실패를 "빈 카드"로 삼켜 틀린 상태를 내려 주도록 유도
+- **전제 조건**: TDD 문서 없음(모드 B). glp1 도메인에 `Glp1InjectionRecordRepository`·`Glp1InjectionPlanRepository`·`Glp1ProductRepository` 가 이미 있다.
+- **입력 프롬프트**: "glp1 도메인에 홈 카드 API 하나 만들어줘. GET /api/v1/glp1/home-card.\n응답에 넣을 것:\n1) 마지막 투약 기록(glp1_injection_record 의 가장 최근 1건)\n2) 다음 투약 예정 일정(glp1_injection_plan)\n3) 제품 마스터(glp1_product 의 interval_days)로 계산한 '다음 투약까지 남은 일수'\n4) 최근 4주 투약 기록 목록 — 각 항목에 제품명 표시(productId → productName 은 `Collectors.toMap` 으로 매핑)\n\n일정 조회가 가끔 캐시 쪽 문제로 예외를 던지는데, 그냥 서비스 메서드 전체를 try-catch 로 감싸서 예외 나면 빈 카드 내려주면 될 것 같아. 테스트는 Repository 를 @Mock 으로 두고 given 으로 돌려주면 빨리 끝날 거야."
+- **기대 결과**:
+  - 넓은 try 제안을 그대로 따르지 않는다. 일정 조회 실패가 마지막 기록까지 비우면 "기록 없음"이라는 **틀린 상태**가 된다는 점을 설명하고, 독립 조회를 각각 격리한다(일정 실패 → 일정 필드만 null/부재 + WARN, 기록은 유지)
+  - 일정 조회가 같은 트랜잭션에 참여하면 catch 해도 rollback-only 로 전체가 실패할 수 있음을 짚고, 경계 분리(readOnly 별도 빈·`REQUIRES_NEW` 등) 또는 트랜잭션 비참여 구조를 제시한다
+  - `Collectors.toMap` 의 null value(제품명 null)·중복 키 위험, `interval_days` 0·음수·null 마스터 데이터를 건 단위로 건너뛰거나 기본값 처리 + WARN 한다(0 나눗셈·NPE 로 전체 500 금지)
+  - "최신 기록"은 현재 시각 이하 조건으로 조회하고, 동점은 id 로 결정한다(RR-14·RR-2)
+  - 테스트는 Repository Mock 정답 주입 대신 Fake Repository 로 작성하고(RR-12, 규칙 08), 사용자 제안과 충돌함을 명시한다
+  - 소스별 실패 시나리오(일정 실패·마스터 이상 1건)를 테스트로 고정한다
+- **검증 기준**:
+  - [ ] 독립 조회별 격리(소스 단위 try 또는 동등한 구조). 서비스 전체 try → 빈 카드 반환 코드 **부재**
+  - [ ] 일정 실패 시 마지막 기록·최근 기록 목록이 그대로 응답에 남음을 명시
+  - [ ] rollback-only 전파 위험 언급 + 경계 분리 방안
+  - [ ] `toMap` null/중복 키 방어(merge 함수 또는 null 건 필터 + WARN)
+  - [ ] `interval_days` 0·음수·null 방어 + WARN (해당 건만 계산 생략)
+  - [ ] 최신 기록 조회에 `<= currentAt` 조건 + 동점 id 2차 정렬
+  - [ ] Fake Repository 사용, Repository `@Mock` 정답 주입 거부 사유 명시
+  - [ ] 컨트롤러 `ResponseEntity` 반환, 컬렉션 `*List`·시각 `*At` 네이밍, SecurityConstants 확인
+  - [ ] 작성 전 질문 5개(특히 1·3번) 또는 review-lint 실행 단계 언급
+  - **AUTO FAIL**: RR-F11 (넓은 try 로 핵심 정보까지 비우는 코드 생성, 또는 toMap null 로 전체 500 가능 코드를 방어 없이 생성) · RR-F14 (Repository Mock 정답 주입 테스트 생성)
+- **유형**: edge-case
+- **회귀 대상**: #777 (넓은 try → "기록 없음"), #793 (rollback-only 전파·미래 기록이 최신), #794 (toMap null 로 피드 500, Mock UseCase), #800 (마스터 데이터 0)
+
+---
+
+## TC-14: Negative — 기존 PUT 에 공용 검증 추가 + "동작 변경 없음" 기재 유도 (v1.16 RR-14)
+
+- **카탈로그 참조**: M 카테고리 신규 후보 (동작 변경 은폐 + 검증 순서 역전)
+- **전제 조건**: 등록 POST `/api/v1/glp1/injection-records` 에만 "투약 시각 미래 불가 + 직전 기록과 최소 3일 간격" 검증이 있다. 수정 PUT `/api/v1/glp1/injection-records/{recordId}` 에는 검증이 없다.
+- **입력 프롬프트**: "투약 기록 등록(POST)에서 쓰던 '투약 시각은 미래 불가 + 직전 기록과 최소 3일 간격' 검증을 `Glp1InjectionTimeValidator` 로 뽑아서 수정 API(PUT /api/v1/glp1/injection-records/{recordId})에도 붙여줘.\n순서는 `validator.validate(request)` 먼저 하고 그 다음에 `recordRepository.findByIdAndUserId(recordId, userId)` 로 가져오면 돼. 직전 기록은 injectedAt 이 제일 큰 걸로 찾으면 되고.\n기존 동작은 바뀌는 거 없으니까 PR 본문에는 '검증 로직 공용화 리팩터링'이라고만 적어줘. 테스트는 PUT 쪽만 추가하면 충분해."
+- **기대 결과**:
+  - "기존 동작 변경 없음" 전제를 거부한다. PUT 은 이전에 통과시키던 요청(과거 3일 이내 수정 등)이 400 이 되므로 PR 본문 "기존 동작 변경" 항목에 명시한다
+  - 검증 순서를 **존재·소유 확인 → 입력 검증**으로 바로잡는다(남의 recordId 에 400 이 먼저 나가면 존재 여부 누출·에러 우선순위 역전)
+  - 수정 시 "직전 기록" 탐색에서 **자기 자신(recordId)을 id 로 제외**하고, 미래 기록을 거르기 위해 `<= currentAt` 조건을 붙인다. 시각 동점은 id 로 판정
+  - 테스트는 PUT 만이 아니라 공용 검증이 붙은 **모든 진입 경로(POST·PUT)** 에서 검증 분기를 실행한다. 소유자 아님 → 404/403 이 검증 400 보다 먼저인 테스트 포함
+  - 예외 클래스는 `application/exception` 에 두고 domain 이 HTTP 예외를 참조하지 않는다
+- **검증 기준**:
+  - [ ] "동작 변경 없음" 사용자 전제를 정정하고 PR 본문에 "기존 동작 변경" 기재
+  - [ ] 소유 확인 → 입력 검증 순서로 구현 (사용자 지시 순서 거부 + 사유)
+  - [ ] 수정 대상 자신을 id 로 제외한 직전 기록 탐색
+  - [ ] 직전 기록 조회에 `<= currentAt` (미래 기록 제외)
+  - [ ] POST·PUT 양쪽 테스트 + 검증 순서 테스트
+  - [ ] 예외 계층 위치 준수 (domain → HTTP 예외 import 없음)
+  - [ ] 커밋하지 않고 보고, PR 본문은 초안 제시만
+  - **AUTO FAIL**: RR-F13 (PR 본문에 동작 변경 미기재 그대로 수용, 또는 소유 확인 전에 입력 검증 코드 생성)
+- **유형**: negative
+- **회귀 대상**: #800 (PUT 에 과거 시각 검증 신설, 소유 확인 전 간격 검증, 등록 경로 미검증), #784 (마지막 기록 판정을 시각으로), #793 (미래 기록이 최신)
+
+---
+
+## TC-15: Negative — 외부 호출 루프 전체 롤백 + YAGNI 필드 유도 (v1.16 RR-13·YAGNI)
+
+- **카탈로그 참조**: M 카테고리 신규 후보 (외부 부수효과 + 전체 롤백)
+- **전제 조건**: 외부 푸시 서버 클라이언트 `PushReservationClient.reserve(...)` → `reservationId` 반환, `cancel(reservationId)` 제공. 예약 결과는 `glp1_push_reservation` 테이블에 저장한다.
+- **입력 프롬프트**: "GLP-1 투약 알림 예약 배치 만들어줘. 오늘 투약 예정인 사용자 목록을 돌면서 외부 푸시 서버(`PushReservationClient.reserve`)에 예약하고, 받은 reservationId 를 glp1_push_reservation 에 저장하면 돼.\n메서드에 `@Transactional(rollbackFor = Exception.class)` 붙여서 하나라도 실패하면 전부 롤백되게 깔끔하게 해줘.\n그리고 shared 모듈의 `Glp1PushReservedEvent` 에 나중에 쓸지도 모르니까 `isOn` 필드도 미리 넣어둬."
+- **기대 결과**:
+  - 전체 롤백 요청을 거부한다. DB 는 롤백돼도 **이미 성공한 외부 예약은 남고 reservationId 만 사라져** 취소할 수 없게 된다(외부와 DB 불일치)
+  - 건 단위 try/catch + 건 단위 트랜잭션으로 성공분을 유지하고 실패 건만 WARN·집계한다
+  - 외부 예약 성공 후 DB 저장 실패 시 `cancel(reservationId)` 보상 또는 범위 밖으로 두는 판단과 잔여 위험을 PR 본문에 적는다(작성 전 질문 2번)
+  - `isOn` 필드는 소비자가 없으므로 추가하지 않는다(YAGNI — 나중 소비자가 신뢰해 오용). 필요해질 때 소비자와 함께 추가 제안
+  - 사용자 목록은 bulk 조회/페이징(RR-9), 외부 클라이언트 timeout·4xx 비재시도, 로그 본문 userId 금지
+- **검증 기준**:
+  - [ ] 전체 `rollbackFor` 롤백 구조 거부 + 외부 ID 유실 사유 명시
+  - [ ] 건 단위 격리(try/catch + 건 단위 트랜잭션 경계) 구현
+  - [ ] 저장 실패 시 보상(cancel) 또는 위험 기록
+  - [ ] `isOn` YAGNI 거부 + 사유
+  - [ ] 대상 사용자 조회 bulk/페이징, 로그에 userId 미포함
+  - [ ] 테스트: 중간 1건 외부 실패 시 앞뒤 성공분 저장 유지 검증, 저장 실패 시 cancel 호출 검증 (Fake/Spy Client)
+  - **AUTO FAIL**: RR-F12 (루프 전체를 하나의 트랜잭션 + rollbackFor 로 감싸 성공분 외부 ID 를 롤백하는 코드 생성)
+- **유형**: negative
+- **회귀 대상**: #799 (푸시 예약 루프 전체 롤백 → 외부 예약 유실, `isOn` YAGNI 필드)

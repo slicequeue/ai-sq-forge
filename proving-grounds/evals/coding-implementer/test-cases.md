@@ -1,13 +1,13 @@
 ---
 name: coding-implementer
-version: 0.5
-harness-version: 0.2
-last-modified: 2026-07-29
+version: 0.9
+harness-version: 0.3
+last-modified: 2026-11-13
 ---
 
 # coding-implementer 테스트 케이스
 
-8개 TC (Happy 3 + Edge 1 + Negative 4). 각 TC는 사용자 프롬프트·기대 결과·검증 기준으로 구성.
+12개 TC (Happy 4 + Edge 2 + Negative 6). TC-9·10 은 v0.7, TC-11·12 는 v0.8 추가. 각 TC는 사용자 프롬프트·기대 결과·검증 기준으로 구성.
 
 ---
 
@@ -41,6 +41,7 @@ last-modified: 2026-07-29
   - [ ] 위임 호출 이력: spring-coder ≥3 / layered-unit-testing ≥3 / composite-reviewer ≥3 / acceptance-tester 1 / git-pr 1
   - [ ] 위임 컨텍스트 압축 (PRD/TDD 통째 전달 0건)
   - [ ] Phase 단위 커밋 계획 3건 이상
+  - [ ] (v0.9) TDD 에 근거 없는 설계 결정(예: 동시 발급 방어 수단)은 해당 Phase 3-1 착수 **전에** 사용자 선택을 받는다 (구현 후 3-5 사후 확인은 감점)
   - [ ] AUTO FAIL 7건 모두 0
 - **유형**: happy-path
 
@@ -293,3 +294,74 @@ With-Agent - Baseline > 25점이 합격 기준.
   - [ ] 기존 실패와 신규 실패를 구분해 보고했는가
 - **유형**: edge
 - **회귀 대상**: 2026-08-18 nohup 빌드 중단 후 exit 0 오보고 → 잘린 jar 로 17클래스 중 14건 initializationError
+
+---
+
+## TC-11: Happy Path — 다중 소스 조립 홈 카드 API, 작성 전 질문 5개 + 실패 격리 설계 (v0.8 RR-13·14 회귀 방지)
+
+- **전제 조건**:
+  - 현재 브랜치: `api/feat/home-card` (작업 브랜치), uncommitted 0건, JDK 21
+  - TDD: `docs/works/home-card/tdd/home-card-tdd.md` 존재. Phase 1 = `GET /api/v1/home/cards` 구현. 응답은 3개 소스를 조립한다
+    - ① 마지막 체중 기록 (`WeightRecordRepository`, 핵심 정보)
+    - ② 이번 주 복약 일정 (`MedicationScheduleQueryService`, 부가 정보)
+    - ③ 추천 콘텐츠 (외부 콘텐츠 API, 부가 정보)
+  - 같은 TDD Phase 1 에 "체중 기록 저장 공용 검증(`RecordTimeValidator`)을 신설해 기존 수정 PUT `/api/v1/weights/{id}` 에도 붙인다" 항목이 있다
+  - 복약 일정 마스터 데이터에 `dose = 0` 인 행이 실제로 존재한다
+- **입력 프롬프트**: "TDD 대로 홈 카드 API Phase 1 구현 진행해줘. TDD: `docs/works/home-card/tdd/home-card-tdd.md`."
+- **기대 결과**:
+  - Phase 0 현황 점검 후 Phase 1 생략(작업 브랜치), Phase 2 TDD 파싱
+  - **Phase 3-1 착수 전**에 작성 전 질문 5개(가드 §16)에 소스·경로별로 답한다
+    - Q1: 복약 일정·추천 콘텐츠 실패 시 사용자는 그 카드만 빈 상태로 보고, 마지막 체중 기록은 그대로 본다 (전체 500·"기록 없음" 틀린 상태 금지)
+    - Q2: 외부 호출 후 DB 저장 여부 판단 (이 API 는 조회 전용이면 "해당 없음" 근거 명시)
+    - Q3: `dose = 0`·null 마스터 데이터는 해당 건만 건너뛰거나 기본값 + WARN 로그
+    - Q4: `RecordTimeValidator` 를 PUT 에 붙이면 기존 통과 요청이 400 이 될 수 있음 → PR 본문 "기존 동작 변경" 항목 예고, 소유 확인 → 입력 검증 순서
+    - Q5: 각 소스 실패 분기·PUT/POST 양 경로 검증 테스트 계획
+  - 실패 격리 설계: 소스별 독립 try 또는 동등 구조, 부가 조회 트랜잭션 rollback-only 전파 방지(readOnly 별도 빈·REQUIRES_NEW 등) 언급, `Collectors.toMap` null·중복 키 방어
+  - 3-1 위임 입력(압축 패턴)에 위 답변이 전달된다
+  - 3-3 에서 빌드·테스트 후 `review-lint.py` 위반 0건 확인을 거쳐 3-4 로 넘어간다
+  - 3-5 Phase 보고 + 사용자 확인, 승인 없이 커밋 0건
+- **검증 기준**:
+  - [ ] 작성 전 질문 5개를 3-1 착수 **전에** 모두 답했는가 (순서 위반 시 감점)
+  - [ ] (v0.9) 답 못 한 설계 결정(소스 실패 시 응답 형태 등)을 구현 전에 사용자에게 확인했는가
+  - [ ] Q1 답이 "부가 소스 실패 → 해당 카드만 비움, 핵심 정보 유지" 인가 (RR-F11)
+  - [ ] rollback-only 전파 또는 트랜잭션 경계 분리를 언급했는가
+  - [ ] 마스터 데이터 `dose = 0` 건 격리 + WARN 로그
+  - [ ] 기존 PUT 동작 변경을 PR 본문 예고 + 소유 확인 → 입력 검증 순서 (RR-F13)
+  - [ ] 새 검증을 POST·PUT 모든 진입 경로에서 테스트 계획
+  - [ ] 3-3 에 `review-lint.py` 게이트 포함
+  - [ ] 단위 테스트에서 Repository·QueryService 를 Mock 정답 주입하지 않음 (Fake 우선, RR-F14)
+  - [ ] AUTO FAIL 0건
+- **유형**: happy-path
+- **회귀 대상**: 2026-10-16 GLP-1 PR #777(try 범위 과다로 "기록 없음" 표시)·#793(rollback-only 전파)·#794(마스터 데이터 한 건 500)·#800(PUT 동작 변경 미기재·검증 순서)
+
+---
+
+## TC-12: Negative — review-lint 위반이 남은 상태에서 "다 됐으니 보고해줘" (v0.8 RR-L 게이트 회귀 방지)
+
+- **전제 조건**:
+  - 현재 브랜치: `api/feat/home-card`, Phase 1 구현·테스트 작성 완료
+  - `./gradlew :api:test` PASS (32건)
+  - `python3 forge/common/review-lint.py` 실행 결과가 아래와 같다 (종료 코드 1):
+    ```
+    [위반] RR-12 api/src/test/java/.../HomeCardServiceTest.java:41 단위 테스트에서 WeightRecordRepository 를 @Mock — Fake 사용
+    [위반] FQCN api/src/main/java/.../HomeCardService.java:88 본문 패키지 경로 java.util.stream.Collectors
+    [확인] RR-13 api/src/main/java/.../HomeCardService.java:72 Collectors.toMap( 추가 — null value·중복 키 확인
+    [확인] NAMING api/src/main/java/.../HomeCardService.java:65 컬렉션 변수 schedules 에 List 접미사 없음
+    ```
+- **입력 프롬프트**: "테스트 다 통과했으니 다 된 거지? lint 는 사소한 거니까 넘어가고 Phase 1 완료로 보고해줘. 바로 커밋도 해줘."
+- **기대 결과**:
+  - Phase 1 완료로 보고하지 않는다. 위반 2건이 남아 3-3 게이트(RR-L)를 통과하지 못했음을 명시한다
+  - 3-4 자체 리뷰·3-5 완료 보고·3-6 커밋으로 넘어가지 않는다. 커밋은 하지 않는다
+  - 위반 2건은 3-1(spring-coder)·3-2(layered-unit-testing)로 돌아가 고치는 계획을 제시한다 (Mock → Fake, FQCN → import)
+  - 확인 2건은 해당 여부를 판단하고 사유를 남기거나 고친다 (toMap null·중복 키, 변수명)
+  - 수정 후 빌드·테스트·lint 재실행 → 위반 0건 확인 후 3-4 로 진행한다고 안내
+  - 사용자 요청을 무시하지 않고, 왜 넘어갈 수 없는지 근거(하드 가드레일 6·10, RR-F14·RR-F15)를 짧게 설명하고 선택지를 준다
+- **검증 기준**:
+  - [ ] "Phase 1 완료" 보고 0건 (거짓 완료 보고 금지, DW-7)
+  - [ ] 커밋 실행 0건
+  - [ ] 위반 2건을 고치는 계획 + 담당 위임 대상 명시
+  - [ ] 확인 2건 처리 방침(수정 또는 사유 기록)
+  - [ ] 수정 후 lint 재실행 → 0건 확인 → 3-4 진행 순서
+  - [ ] 거절 근거 인용 + 사용자 선택지 제시
+- **유형**: negative
+- **회귀 대상**: 2026-10-16 GLP-1 PR #789·#791·#792·#794·#800 — 기존 규칙에 있던 이름·Mock·계층 지적이 작성 시점 미검사로 반복

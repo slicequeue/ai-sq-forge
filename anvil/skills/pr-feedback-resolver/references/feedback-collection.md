@@ -79,21 +79,17 @@ gh api "repos/${REPO}/pulls/${PR_NUM}/reviews"
 ### 답글 API
 
 ```bash
-# 리뷰 코멘트에 답글
-gh api "repos/${REPO}/pulls/${PR_NUM}/comments/{comment_id}/replies" \
-  -f body="수정 완료했습니다. {간단 설명}"
+# 리뷰 코멘트에 답글 — in_reply_to 로 스레드 연결 (/comments/{id}/replies 는 404, v1.9 정정)
+gh api "repos/${REPO}/pulls/${PR_NUM}/comments" \
+  -X POST \
+  -F in_reply_to={원본_comment_id} \
+  -f body="{sq-tone-writer 로 작성한 본문}"
 
 # 이슈 코멘트에 답글
 gh api "repos/${REPO}/issues/${PR_NUM}/comments" \
-  -f body="{답변 내용}"
+  -f body="{sq-tone-writer 로 작성한 본문}"
 ```
 
 ### 답글 형식
 
-```
-수정 완료했습니다.
-- {변경 요약 1}
-- {변경 요약 2}
-```
-
-간결하게. 변경 내용을 1~3줄로 요약.
+고정 문구("수정 완료했습니다")를 쓰지 않는다. 본문은 `SKILL.md` Step 6 에 따라 `sq-tone-writer` 로 작성하고, 사람 리뷰어(A-1/A-2/A-3)와 CodeRabbit 봇(평어 단정형)을 구분한다. 같은 패턴을 함께 고쳤으면 "같은 패턴 N곳 함께 수정"과 commit hash 를 넣는다.

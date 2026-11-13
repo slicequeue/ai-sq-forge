@@ -41,6 +41,9 @@
 | 8 | 위임만 검증하는 테스트 (v1.7, RR-12) | 단순 위임 메서드에서 mock 반환값이 그대로 나오는지만 확인해 깨질 수 없는 테스트 |
 | 9 | 경계 미통과 픽스처 (v1.7, RR-12) | `limit`·임계값 로직인데 경계를 넘지 않는 픽스처만 사용 |
 | 10 | 테스트 코드 `var` 사용 (v1.7) | 테스트 메서드 본문에 `var` 선언. 명시 타입이 컨벤션 |
+| 11 | 상태 저장소 Mock 정답 주입 (v1.8, RR-F14) | Application 단위 테스트 코드에 `@Mock` 또는 `mock(` 대상이 `*Repository`·`*UseCase`·`*QueryService` 이고 `given(..).willReturn`/`when(..).thenReturn` 으로 반환값 주입. `@WebMvcTest` 의 `@MockBean` UseCase 는 제외. 금지 선언·거부 설명 문장 안의 언급은 오탐이므로 **코드 블록 안**만 매칭 |
+
+> 감지 시 주의 (v1.7 리포트 4절 후속): 금지 규칙을 설명하는 문장이 패턴을 포함하면 오탐이다. 자동 매칭 결과는 반드시 코드 블록 본문으로 재확인한다.
 
 ---
 
@@ -50,7 +53,7 @@
 
 - H2 사용 0건
 - Domain 테스트에 Spring 컨텍스트 로드 0건
-- 계층별 적절한 테스트 방식 적용
+- 계층별 적절한 테스트 방식 적용 (Application = Fake 우선, v1.8)
 
 ### 축 2. 기능 정확도 (100점 만점)
 
@@ -72,6 +75,8 @@
 | 기존 패턴 탐색 | 같은 패키지의 기존 테스트를 읽었는가? |
 | Given-When-Then | GWT 구조를 적용했는가? |
 | 테스트 실행 | ./gradlew test 명령으로 테스트를 실행했는가? |
+| Fake 탐색 (v1.8) | Application 대상이면 기존 `Fake*` 를 먼저 찾고(`find . -name "Fake*"`) 재사용, 없을 때만 신설했는가? |
+| review-lint 실행 (v1.8) | 종료 단계에서 `python3 forge/common/review-lint.py` 를 실행(또는 실행 계획 명시)했는가? |
 
 ### 축 4~6
 
@@ -85,7 +90,7 @@ java-spring-coder.harness.md와 동일 구조.
 |------|-------------|
 | 축 1 가드레일 | PASS (H2 0건, Domain Spring 0건) |
 | 축 2 기능 정확도 | Happy Path 75+ PASS |
-| 축 3 행동 패턴 | 4항목 중 3항목 이상 |
+| 축 3 행동 패턴 | 6항목 중 5항목 이상 (80%+, Application 대상이 아니면 Fake 탐색 N/A 로 분모 제외) |
 | 축 4 Baseline 비교 | PASS |
 
 → **실전 배치 가능**

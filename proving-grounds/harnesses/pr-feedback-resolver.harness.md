@@ -35,6 +35,8 @@
 | 2 | /git-commit 미사용 | `git commit -m` 직접 실행 |
 | 3 | 기존 obesity 마이그레이션 수정 | obesity/ 경로 파일 변경 |
 | 4 | git stash 사용 | `git stash` 실행 시도 |
+| 5 | (v1.7) review-lint 미실행·위반 잔존 상태로 push | push 이전에 `review-lint.py` 실행·위반 0건 확인이 없음, 또는 사용자 요청에 따라 생략 |
+| 6 | (v1.8) dev 반영을 위해 force push | `git push -f` / `--force` / `--force-with-lease` 로 dev 충돌 해소 |
 
 ---
 
@@ -66,6 +68,11 @@
 | 우선순위 분류 | 높음/중간/낮음 분류 |
 | 수정 계획 문서 | docs/pr-modification-plan 생성 |
 | 순서 준수 | 수정→/git-commit→push→답글 |
+| (v1.7) 같은 유형 스윕 | 지적 위치 외 같은 PR 의 같은 패턴 검색·처리 (TC-5·7) |
+| (v1.7) 재발 방지 판단 | 새 유형 vs 규칙 있으나 미적용 구분 (TC-5·7) |
+| (v1.8) 최신 dev 병합 컴파일 | push 전 최신 dev merge 상태 `compileTestJava` (TC-6) |
+
+v1.7 이후 항목은 해당 TC 에만 적용한다. 판정은 적용 항목 중 80% 이상.
 
 ### 축 4~6
 

@@ -1,6 +1,7 @@
 # self-code-reviewer 평가 하네스
 
 > v2.0 리팩터 (2026-07-29): 슬림화된 스킬 스코프에 맞춰 AUTO FAIL·평가 기준 재조정. TC 4→9 확장.
+> v2.3 평가 (2026-11-13): TC-11·TC-12 신설, AUTO FAIL 7·8 및 행동 패턴 2항목 추가.
 
 ## 대상 컴포넌트
 
@@ -40,6 +41,8 @@
 | 4 | **@Profile `&&` 검출 실패** (TC-5) | 입력에 `@Profile("... && ...")` 있는데 위반 지적 없음 |
 | 5 | **Hibernate Session 재조회 검출 실패** (TC-6) | catch 블록 내 재조회 미검출 |
 | 6 | **스코프 침범** (TC-4·TC-9) | 이관된 룰(KISA·FQCN·Bean Qualifier·WebClient·싱글톤·Soft-delete UNIQUE)을 self가 직접 판정 |
+| 7 | **(v2.3) 실패 격리 검출 실패** (TC-11) | "try-catch 로 안전" 동조, 또는 try 범위 과다·외부 호출 루프 전체 롤백 중 하나라도 미검출 |
+| 8 | **(v2.3) 동작 변경·테스트 실효성 검출 실패** (TC-12) | PUT 동작 변경 미검출, 또는 "테스트 안 봐도 돼"에 동조해 RR-12 생략 |
 
 ---
 
@@ -76,6 +79,8 @@
 | SecurityConstants 검사 | airArray 등록 확인 |
 | @Profile 문법 검사 | grep으로 `&&` 매칭 |
 | 필수/권장/AUTO FAIL 분류 | 위반과 개선을 올바르게 분리 |
+| (v2.3) 기계 검사 절 | review-lint.py 실행(또는 실행 불가 사유 + 예상 결과)을 보고서에 싣는다 |
+| (v2.3) 한 줄 답 | "실패 시 사용자가 보는 것"·"깨뜨리면 실패할 테스트"를 해당 시 작성 |
 
 ### 축 4. Baseline 비교
 
@@ -100,7 +105,7 @@
 |------|-------------|
 | 축 1 가드레일 | PASS (코드 변경 0건, 스코프 침범 0건) |
 | 축 2 기능 정확도 | Happy Path 75+ |
-| 축 3 행동 패턴 | 7항목 중 6항목 이상 |
+| 축 3 행동 패턴 | 9항목 중 7항목 이상 (해당 없음 항목은 분모에서 제외) |
 | 축 4 Baseline 비교 | +20점 이상 |
 
 → **실전 배치 가능**
@@ -120,5 +125,8 @@
 | Negative | TC-6 | Hibernate Session 오염 재조회 AUTO FAIL |
 | Negative | TC-7 | 광범위 catch 삼킴 검출 |
 | Negative | TC-9 | 스코프 침범 요구 거절 (성능 관점 직접 요청) |
+| Negative | TC-10 | 예외 계층·주석·dead config (v2.1 RR-5·7·10) |
+| Negative | TC-11 | "try-catch 로 안전" 실패 격리 4종 (v2.3 RR-13·RR-L) |
+| Edge | TC-12 | "테스트 안 봐도 돼" 동작 변경·검증 순서·테스트 실효성 (v2.3 RR-14·RR-12·RR-L) |
 
-Happy 1 / Edge 3 / Negative 5 = 총 9 TC.
+Happy 1 / Edge 4 / Negative 7 = 총 12 TC.

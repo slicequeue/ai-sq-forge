@@ -1,0 +1,34 @@
+[플레이스홀더] message-analysis_en_US :: analysis.report.home.whr.value  원문 ['{0}'] / 번역 ['{0}', '{1}']
+[플레이스홀더] message-analysis_en_US :: analysis.report.home.pbf.value  원문 ['{0}'] / 번역 ['{0}', '{1}']
+[따옴표] message-analysis_en_US :: analysis.report.detail.tir.guide2  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-analysis_en_US :: analysis.report.detail.tir.guide2.simplify  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-analysis_en_US :: analysis.report.detail.tir.guide4  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[플레이스홀더] message-analysis_ja_JP :: analysis.report.home.whr.value  원문 ['{0}'] / 번역 ['{0}', '{1}']
+[플레이스홀더] message-analysis_ja_JP :: analysis.report.detail.tir.content  원문 ['{0}', '{1}'] / 번역 []
+[따옴표] message_en_US :: report.routine-race.weekly.weight-change.weight-loss-description  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[플레이스홀더] message_en_US :: report.routine-race.final.report.meal-record-ranking.title  원문 ['{0}', '{1}'] / 번역 ['{1}']
+[플레이스홀더] message_en_US :: report.routine-race.final.report.meal-record-ranking.empty-title  원문 ['{0}'] / 번역 []
+[플레이스홀더] message_ja_JP :: validator.data.illegal.format  원문 ['{0}'] / 번역 []
+[플레이스홀더] message_ja_JP :: user.cannot-removable  원문 ['{0}'] / 번역 []
+[플레이스홀더] message_ja_JP :: data.must.exists  원문 ['{0}'] / 번역 []
+[빈 번들] message.properties 에 키가 없다
+[플레이스홀더] message-group_ja_JP :: ip.address.inaccessible  원문 ['{0}'] / 번역 []
+[플레이스홀더] message-hospital_ja_JP :: ip.address.inaccessible  원문 ['{0}'] / 번역 []
+[따옴표] message-notification_en_US :: alarm.social_invitation_confirm.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.staff_register_denied.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.staff_register_accepted.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.group_staff_register_denied.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.group_staff_register_accepted.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.after_meal_walking_invitation.title  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.after_meal_walking_success.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.after_meal_walking_success_encouragement.title  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.invitation_hospital.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[따옴표] message-notification_en_US :: alarm.invitation_group.message  {N} 이 있는 값의 홑따옴표는 '' 로 써야 한다
+[빈 번들] message-obesity-nudging.properties 에 키가 없다
+[플레이스홀더] message-pasta-api_en_US :: glucose.prediction.v2.page-title  원문 ['{0}'] / 번역 []
+[플레이스홀더] message-shared_ja_JP :: error.of.auth.service  원문 ['{0}'] / 번역 []
+[플레이스홀더] message-user_ja_JP :: user.not-found.data  원문 ['{0}'] / 번역 []
+[플레이스홀더] message-user_ja_JP :: user.bad-request.illegal.format  원문 ['{0}'] / 번역 []
+[플레이스홀더] message-user_ja_JP :: user.cannot-regist  원문 ['{0}'] / 번역 []
+
+문제 30건
